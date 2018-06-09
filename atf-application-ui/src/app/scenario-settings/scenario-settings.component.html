@@ -1,0 +1,75 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<div class="breadcrumb-search">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]="'/'">{{'Projects' | translate}}</a></li>
+    <li *ngIf="project" class="breadcrumb-item"><a [routerLink]="['/project', project.code]">{{project.code}}. {{project.name}}</a></li>
+    <li class="breadcrumb-item" *ngIf="scenario && scenario.scenarioGroup && project">
+      <a [routerLink]="['/project', scenario.projectCode]" [queryParams]="{scenarioGroup: scenario.scenarioGroup}">{{scenario.scenarioGroup}}</a>
+    </li>
+    <li *ngIf="scenario" class="breadcrumb-item"><a [routerLink]="['/project/' + projectCode + '/scenario', (scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code]">{{scenario.code}}. {{scenario.name}}</a></li>
+    <li class="breadcrumb-item active">{{'Settings' | translate}}</li>
+  </ol>
+  <app-search [projectCode]="projectCode"></app-search>
+</div>
+
+<div *ngIf="scenario">
+  <button style="margin: 15px;" class="btn btn-success" (click)="save()">{{'Save scenario settings' | translate}}</button>
+
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3">
+        <label>{{'Name' | translate}}</label>
+      </div>
+      <div class="col-sm-9">
+        <input class="form-control" title="{{'Scenario name' | translate}}" [(ngModel)]="scenario.name"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <label>{{'Scenario group' | translate}}</label>
+      </div>
+      <div class="col-sm-9">
+        <select class="form-control" title="{{'Scenario group' | translate}}" *ngIf="project" [(ngModel)]="scenario.scenarioGroup">
+          <option [ngValue]="null">{{'[no group]' | translate}}</option>
+          <option  *ngFor="let scenarioGroup of project.groupList" [ngValue]="scenarioGroup">{{scenarioGroup}}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <label>{{'Before scenario ignore' | translate}}</label>
+      </div>
+      <div class="col-sm-9">
+        <input type="checkbox" title="" [(ngModel)]="scenario.beforeScenarioIgnore"/>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-3">
+        <label>{{'After scenario ignore' | translate}}</label>
+      </div>
+      <div class="col-sm-9">
+          <input type="checkbox" title="" [(ngModel)]="scenario.afterScenarioIgnore"/>
+      </div>
+    </div>
+  </div>
+</div>

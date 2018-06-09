@@ -1,0 +1,75 @@
+/*
+ * Copyright 2018 BSC Msc, LLC
+ *
+ * This file is part of the AuTe Framework project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+input[type=checkbox] {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.failedScenario {
+  background: rgba(247, 186, 163, 0.5);
+}
+
+.passedScenario {
+  background: rgba(181, 241, 181, 0.5);
+}
+
+.container-fluid {
+  padding-top: 7px;
+  padding-bottom: 25px;
+}
+
+.row.result {
+  background: #fff;
+  margin: 10px;
+  padding: 10px 0;
+}
+
+#scenarioHeader {
+  transition: 0.5s all;
+}
+
+#scenarioHeader.sticky,
+#scenarioHeader.full-page {
+  background: lightgray;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+}
+
+#scenarioHeader.full-page {
+  bottom: 0;
+}
+
+#scenarioHeader.sticky.failedScenario,
+#scenarioHeader.full-page.failedScenario {
+  background: rgb(247, 186, 163);
+}
+
+#scenarioHeader.sticky.passedScenario,
+#scenarioHeader.full-page.passedScenario {
+  background: rgb(181, 241, 181);
+}
+
+.row.result.title-result-container {
+  height: 90%;
+  overflow: auto;
+}

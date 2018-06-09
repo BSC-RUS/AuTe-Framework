@@ -1,0 +1,37 @@
+/* You can add global styles to this file, and also import other style files */
+
+.form-control .diff-content {
+  white-space: pre-wrap;
+}
+.form-control .added-row {
+  background-color: #dfd;
+  display: inline-block;
+  width: 100%;
+}
+.form-control .removed-row {
+  background-color: #fdd;
+  display: inline-block;
+  width: 100%;
+}
+
+.form-control .unchanged-row {
+  display: inline-block;
+  width: 100%;
+}
+
+.form-control .added {
+  background-color: #afa;
+  font-weight: bold;
+}
+.form-control .removed {
+  background-color: #fbb;
+  font-weight: bold;
+}
+
+.pretransparent {
+  background-color: transparent;
+  border: none;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  display: inline-block;
+}

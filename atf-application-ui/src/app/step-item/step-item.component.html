@@ -1,0 +1,475 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<div class="container-fluid" style="padding-bottom: 30px;">
+  <div class="row">
+    <div class="col-sm-10">
+      <textarea autosize rows="1" style="font-weight: bold; border-width: 0; box-shadow: none;" placeholder="{{'Step description' | translate}}" class="form-control" title="" [(ngModel)]="step.stepComment" ></textarea>
+    </div>
+    <div class="col-sm-1">
+      <input style="padding: 6px 1px;" placeholder="{{'Timeout (ms)' | translate}}" class="form-control" title="" [(ngModel)]="step.timeoutMs" />
+    </div>
+    <div class="col-sm-1 text-right" *ngIf="showUpDownDeleteCloneButtons">
+      <button class="btn btn-xs btn-block btn-default" (click)="upStep()"><span class="glyphicon glyphicon-hand-up"></span> {{'Up' | translate}}</button>
+      <div class="clearfix"></div>
+      <button class="btn btn-xs btn-block btn-default" (click)="downStep()"><span class="glyphicon glyphicon-hand-down"></span> {{'Down' | translate}}</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="input-group">
+        <div class="input-group-btn">
+          <select class="form-control" title="{{'Request method' | translate}}" [(ngModel)]="step.stepMode">
+            <option [ngValue]="null" hidden>REST</option>
+            <option [ngValue]="'REST'">REST</option>
+            <option [ngValue]="'JMS'">JMS</option>
+          </select>
+        </div>
+        <div class="input-group-btn" *ngIf="calculateStepMode() == 'REST'">
+          <select class="form-control" title="{{'Request method' | translate}}" [(ngModel)]="step.requestMethod">
+            <option [ngValue]="'POST'">POST</option>
+            <option [ngValue]="'GET'">GET</option>
+            <option [ngValue]="'PUT'">PUT</option>
+            <option [ngValue]="'DELETE'">DELETE</option>
+          </select>
+        </div>
+        <input
+          placeholder="{{'Relative url. Example' | translate}}: /relative/url?parameter=value"
+          class="form-control"
+          title=""
+          [(ngModel)]="step.relativeUrl"
+          *ngIf="calculateStepMode() == 'REST'" />
+        <input
+          placeholder="{{'Output queue name' | translate}}"
+          class="form-control"
+          style="width: 50%;"
+          title=""
+          [(ngModel)]="step.mqOutputQueueName"
+          *ngIf="calculateStepMode() == 'JMS'" />
+        <input
+          placeholder="{{'Input queue name' | translate}}"
+          class="form-control"
+          style="width: 50%;"
+          title=""
+          [(ngModel)]="step.mqInputQueueName"
+          *ngIf="calculateStepMode() == 'JMS'" />
+        <div class="input-group-btn">
+          <button class="btn btn-default" title="{{'Delete' | translate}}" *ngIf="showUpDownDeleteCloneButtons" (click)="deleteStep()"><span class="glyphicon glyphicon-minus"></span> {{'Delete' | translate}}</button>
+          <button class="btn btn-default" title="{{'Disabled toggle' | translate}}" *ngIf="!step.disabled" (click)="disabledToggle()"><span class="glyphicon glyphicon-flag"></span> {{'Disable' | translate}}</button>
+          <button class="btn btn-default" title="{{'Disabled toggle' | translate}}" style="color: red;" *ngIf="step.disabled" (click)="disabledToggle()"><span class="glyphicon glyphicon-flag"></span> {{'Disabled' | translate}}</button>
+          <button class="btn btn-success" title="{{'Clone' | translate}}" *ngIf="showUpDownDeleteCloneButtons && step.code" (click)="cloneStep()"><span class="glyphicon glyphicon-paste"></span> {{'Clone' | translate}}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <ul class="nav nav-tabs">
+        <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
+        <li [class.active]="tab == 'scenarioVariables'">
+          <a href="#" (click)="selectTab('scenarioVariables')">{{'Scenario variables' | translate}} <span *ngIf="step.jsonXPath || (step.savedValuesCheck && Object.keys(step.savedValuesCheck).length)" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'headers'">
+          <a href="#" (click)="selectTab('headers')">{{'Headers' | translate}} <span *ngIf="step.requestHeaders" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'sql'">
+          <a href="#" (click)="selectTab('sql')">Sql <span *ngIf="step.sqlDataList?.length > 0" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'mqResponses'">
+          <a href="#" (click)="selectTab('mqResponses')">{{'Mock responses' | translate}} <span *ngIf="step.mockServiceResponseList?.length > 0 || step.mqMessages?.length > 0 || step.mqMockResponseList?.length > 0" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'mqRequests'">
+          <a href="#" (click)="selectTab('mqRequests')">{{'Mock requests' | translate}} <span *ngIf="step.expectedServiceRequestList?.length > 0 || step.parseMockRequestUrl || (step.expectedMqRequestList?.length > 0 || step.scenarioVariableFromMqRequestList?.length > 0)" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'polling'">
+          <a href="#" (click)="selectTab('polling')">{{'Polling' | translate}} <span *ngIf="step.usePolling" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'parameterSet'">
+          <a href="#" (click)="selectTab('parameterSet')">{{'Test cases' | translate}} <span *ngIf="step.stepParameterSetList && step.stepParameterSetList.length != 0" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'script'">
+          <a href="#" (click)="selectTab('script')">{{'Script' | translate}} <span *ngIf="step.script" class="glyphicon glyphicon-tag"></span></a>
+        </li>
+        <li [class.active]="tab == 'json'"><a href="#" (click)="selectTab('json')">json</a></li>
+      </ul>
+      <div class="tab-content" style="padding: 10px;">
+        <div *ngIf="tab == 'details'" class="row">
+          <div class="col-sm-6">
+            <div class="row">
+              <div class="col-sm-6" *ngIf="calculateStepMode() == 'REST'">
+                <label>{{'Request body type' | translate}}:</label>
+              </div>
+              <div class="col-sm-6" *ngIf="calculateStepMode() == 'JMS'">
+                <label>{{'Wait response timeout' | translate}}:</label>
+              </div>
+              <div class="col-sm-3">
+                <label>{{'Number of repetitions' | translate}}:</label>
+              </div>
+              <div class="col-sm-3">
+                <label>{{'Ignore response' | translate}}:</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6" *ngIf="calculateStepMode() == 'REST'">
+                <select class="form-control" title="{{'Request body type' | translate}}" [(ngModel)]="step.requestBodyType">
+                  <option [ngValue]="'JSON'">{{'JSON request body (default)' | translate}}</option>
+                  <option [ngValue]="'FORM'">{{'FORM-data request body' | translate}}</option>
+                </select>
+              </div>
+              <div class="col-sm-6" *ngIf="calculateStepMode() == 'JMS'">
+                <input title="" placeholder="N or variable (ms, 1000 default)" class="form-control" [(ngModel)]="step.mqTimeoutMs"/>
+              </div>
+              <div class="col-sm-3">
+                <input title="" placeholder="N or variable" class="form-control" [(ngModel)]="step.numberRepetitions"/>
+              </div>
+              <div class="col-sm-3" style="text-align: center; padding-top: 10px;">
+                <input title="" type="checkbox" [(ngModel)]="step.expectedResponseIgnore"><br/>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="row">
+              <div class="col-sm-4" *ngIf="calculateStepMode() == 'REST'">
+                <label>{{'Expected status' | translate}}:</label>
+              </div>
+              <div class="col-sm-4">
+                <label>{{'Compare mode' | translate}}:</label>
+              </div>
+              <div class="col-sm-4" *ngIf="step.responseCompareMode == 'JSON'">
+                <label>{{'JSON compare mode' | translate}}:</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-4" *ngIf="calculateStepMode() == 'REST'">
+                <input title="" placeholder="Example: 200, 404, 500, [empty]" class="form-control" [(ngModel)]="step.expectedStatusCode"/>
+              </div>
+              <div class="col-sm-4">
+                <select class="form-control" title="{{'Compare mode' | translate}}" [(ngModel)]="step.responseCompareMode">
+                  <option [ngValue]="'JSON'">JSON (default)</option>
+                  <option [ngValue]="'FULL_MATCH'">Full match</option>
+                  <option [ngValue]="'IGNORE_MASK'">Mask *ignore*</option>
+                </select>
+              </div>
+              <div class="col-sm-4" *ngIf="step.responseCompareMode == 'JSON'">
+                <select class="form-control" title="{{'JSON compare mode' | translate}}" [(ngModel)]="step.jsonCompareMode">
+                  <option [ngValue]="'NON_EXTENSIBLE'">NON_EXTENSIBLE (Default. Not extensible, non-strict array ordering)</option>
+                  <option [ngValue]="'STRICT'">STRICT (Not extensible, strict array ordering)</option>
+                  <option [ngValue]="'LENIENT'">LENIENT (Extensible, non-strict array ordering)</option>
+                  <option [ngValue]="'STRICT_ORDER'">STRICT_ORDER (Extensible, strict array ordering)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="clearfix"></div>
+          <div class="col-sm-6" *ngIf="calculateStepMode() == 'REST'">
+            <label>{{'Request body' | translate}}:</label>
+            <div *ngIf="step.requestBodyType != 'FORM'">
+              <textarea title="{{'Request body' | translate}}" class="form-control" rows="10" [(ngModel)]="step.request"></textarea>
+            </div>
+            <div *ngIf="step.requestBodyType == 'FORM'">
+              <label>
+                <input title="" type="checkbox" [(ngModel)]="step.multipartFormData">
+                {{'multipart/form-data' | translate}}
+              </label>
+              <div class="clearfix"></div>
+              <div *ngFor="let formData of step.formDataList" class="request-body-field">
+                <input class="form-control request-body-field__name" placeholder="{{'Field name' | translate}}" title="" [(ngModel)]="formData.fieldName"/>
+                <select class="form-control request-body-field__type" title="{{'Field type' | translate}}" [(ngModel)]="formData.fieldType">
+                  <option [ngValue]="'TEXT'">{{'Text (default)' | translate}}</option>
+                  <option [ngValue]="'FILE'">{{'File' | translate}}</option>
+                </select>
+                <ng-container *ngIf="formData.fieldType == 'FILE'">
+                  <input class="form-control" placeholder="{{'File path' | translate}}" title="" [(ngModel)]="formData.filePath"/>
+                  <input class="form-control" placeholder="{{'MIME type' | translate}}" title="" [(ngModel)]="formData.mimeType"/>
+                </ng-container>
+                <input class="form-control" *ngIf="formData.fieldType != 'FILE'" placeholder="{{'Field value' | translate}}" title="" [(ngModel)]="formData.value"/>
+                <button class="btn btn-default request-body-field__remove" (click)="removeFormData(formData)">-</button>
+              </div>
+              <button class="btn" style="margin-top: 7px; margin-left: 7px;" (click)="addFormData()">{{'Add field' | translate}}</button>
+            </div>
+          </div>
+          <div class="col-sm-6" *ngIf="calculateStepMode() == 'REST'">
+            <label>{{'Expected response' | translate}}:</label>
+            <textarea title="{{'Expected response' | translate}}" class="form-control" rows="10" [(ngModel)]="step.expectedResponse"></textarea>
+          </div>
+          <div class="col-sm-6" *ngIf="calculateStepMode() == 'JMS'">
+            <label>{{'Request JMS body' | translate}}:</label>
+            <textarea title="{{'Request body' | translate}}" class="form-control" rows="10" [(ngModel)]="step.request"></textarea>
+          </div>
+          <div class="col-sm-6" *ngIf="calculateStepMode() == 'JMS'">
+            <label>{{'Expected JMS response' | translate}}:</label>
+            <textarea title="{{'Expected response' | translate}}" class="form-control" rows="10" [(ngModel)]="step.expectedResponse"></textarea>
+          </div>
+        </div>
+        <div *ngIf="tab == 'scenarioVariables'">
+          <div class="row">
+            <div class="col-sm-6">
+              <label>{{'Expected response' | translate}}</label>
+              <textarea title="{{'Expected response' | translate}}" class="form-control" rows="13" [(ngModel)]="step.expectedResponse"></textarea>
+            </div>
+            <div class="col-sm-6">
+              <label>{{'Scenario variables' | translate}} (JSON XPath):</label>
+              <textarea placeholder="parameterName = $.element.items[2].title" rows="13" title="{{'Request headers' | translate}}" class="form-control" [(ngModel)]="step.jsonXPath"></textarea>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="tab == 'sql'">
+          <div *ngFor="let sqlData of step.sqlDataList">
+            <div class="row">
+              <div class="col-sm-12">
+                <label>{{'Sql parameters' | translate}}</label>
+                <input placeholder="paramNameFirst, paramNameSecond" class="form-control" title="" [(ngModel)]="sqlData.sqlSavedParameter"/>
+                <label>{{'Sql query' | translate}}</label>
+                <input placeholder="select fieldFirst, fieldSecond from myTable" class="form-control" title="" [(ngModel)]="sqlData.sql"/>
+                <label>{{'Sql return type' | translate}}</label>
+                <select class="form-control" title="{{'Sql return type' | translate}}" [(ngModel)]="sqlData.sqlReturnType" style="width: auto">
+                  <option [ngValue]="'MAP'">{{'Map (default)' | translate}}</option>
+                  <option [ngValue]="'OBJECT'">{{'Object' | translate}}</option>
+                  <option [ngValue]="'LIST'">{{'List' | translate}}</option>
+                  <option [ngValue]="'ROW'">{{'Row' | translate}}</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-12">
+                <button class="btn btn-default" (click)="removeSqlData(sqlData)">
+                  <span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}
+                </button>
+              </div>
+            </div>
+            <hr/>
+          </div>
+          <button class="btn btn-default" (click)="addSqlData()">
+            <span class="glyphicon glyphicon-plus"></span> {{'Add' | translate}}
+          </button>
+        </div>
+        <div *ngIf="tab == 'scenarioVariables' || tab == 'sql'">
+          <div class="row">
+            <div class="col-sm-12">
+              <hr/>
+              <label>{{'Check scenario variables' | translate}}</label>
+            </div>
+          </div>
+          <div class="row" *ngFor="let checkedValueName of (step.savedValuesCheck ? Object.keys(step.savedValuesCheck) : [])">
+            <div class="col-sm-4" style="text-align: right;">
+              <label>
+                <a href="#" (click)="updateCheckedValueName(checkedValueName)">{{checkedValueName}} <small><span class="glyphicon glyphicon-edit"></span></small></a>
+              </label>
+            </div>
+            <div class="col-sm-8">
+              <div class="input-group">
+                <input placeholder="{{'Checked value' | translate}}" title="" class="form-control" [(ngModel)]="step.savedValuesCheck[checkedValueName]"/>
+                <span class="input-group-btn">
+                  <button class="btn btn-default" (click)="removeCheckedValue(checkedValueName)"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <button class="btn btn-default" (click)="addCheckedValue()"><span class="glyphicon glyphicon-plus"></span> {{'Add' | translate}}</button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="tab == 'headers'">
+          <label>{{'Request headers' | translate}}:</label>
+          <textarea placeholder="HeaderName: headerValue" rows="5" title="{{'Request headers' | translate}}" class="form-control" [(ngModel)]="step.requestHeaders"></textarea>
+        </div>
+        <div *ngIf="tab == 'mqResponses'">
+          <h4>{{'REST mock responses' | translate}}</h4>
+          <div class="row" *ngFor="let mockServiceResponse of step.mockServiceResponseList">
+            <div class="col-sm-12">
+              <app-mock-service-response [mockServiceResponse]="mockServiceResponse" (onDelete)="removeMockServiceResponse(mockServiceResponse)"></app-mock-service-response>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-default" (click)="addMockServiceResponse()"><span class="glyphicon glyphicon-plus"></span> {{'Add REST-mock' | translate}}</button>
+
+          <hr/>
+          <h4>{{'Messages Queue' | translate}}</h4>
+          <div class="row" *ngFor="let mqMessage of step.mqMessages">
+            <div class="col-sm-12">
+              <label>{{'Queue name' | translate}}</label>
+              <div class="input-group" style="margin-bottom: 5px;">
+                <input title="{{'Queue name' | translate}}" class="form-control" [(ngModel)]="mqMessage.queueName"/>
+                <span class="input-group-btn">
+                  <button class="btn btn-sm btn-default" style="line-height: 1.9;" (click)="removeMqMessage(mqMessage)"><span class="glyphicon glyphicon-minus"></span>{{'Remove' | translate}}</button>
+                </span>
+              </div>
+            </div>
+            <div class="col-sm-12">
+              <label>{{'Queue message' | translate}}</label>
+              <textarea class="form-control" placeholder="{{'Queue message' | translate}}" title="" rows="7" [(ngModel)]="mqMessage.message"></textarea>
+            </div>
+            <ng-container *ngIf="mqMessage.properties?.length > 0">
+              <div class="col-sm-12">
+                <label>{{'Mq properties' | translate}}</label>
+              </div>
+              <div class="col-sm-5">
+                <label>{{'Name' | translate}}</label>
+              </div>
+              <div class="col-sm-5">
+                <label>{{'Value' | translate}}</label>
+              </div>
+            </ng-container>
+            <ng-container *ngFor="let property of mqMessage.properties">
+              <div class="col-sm-5" >
+                <input title="{{'Name' | translate}}" placeholder="messageId, correlationId, replyTo, timestamp, contentType, contentEncoding, ..." class="form-control" [(ngModel)]="property.name"/>
+              </div>
+              <div class="col-sm-6">
+                <input title="{{'Value' | translate}}" [placeholder]="property.name == 'timestamp' ? 'dd-MM-yyyy,HH:mm:ss aaa' : ''" class="form-control" [(ngModel)]="property.value"/>
+              </div>
+              <div class="col-sm-1">
+                <button class="btn btn-sm btn-default" (click)="removeMqProperty(mqMessage, property)"><span class="glyphicon glyphicon-minus"></span></button>
+              </div>
+            </ng-container>
+            <div class="col-sm-12">
+              <button class="btn btn-sm btn-default" (click)="addMqProperty(mqMessage)"><span class="glyphicon glyphicon-plus"></span> {{'Add property' | translate}}</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-default" (click)="addMqMessage()"><span class="glyphicon glyphicon-plus"></span> {{'Add message' | translate}}</button>
+
+          <hr/>
+          <h4>{{'MQ mock responses' | translate}}</h4>
+          <div class="row" *ngFor="let mqMockResponse of step.mqMockResponseList">
+            <div class="col-sm-12">
+              <app-mq-mock-response [mqMockResponse]="mqMockResponse" (onDelete)="removeMqMockResponse(mqMockResponse)"></app-mq-mock-response>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-default" (click)="addMqMockResponse()"><span class="glyphicon glyphicon-plus"></span> {{'Add MQ mock' | translate}}</button>
+        </div>
+        <div *ngIf="tab == 'mqRequests'">
+          <h4>{{'Expected REST requests' | translate}}</h4>
+          <div class="row" style="margin-bottom: 40px;" *ngFor="let expectedServiceRequest of step.expectedServiceRequestList">
+            <div class="col-sm-12">
+              <div class="input-group" style="margin-bottom: 5px;">
+                <input placeholder="{{'Service name' | translate}} *" class="form-control" title="" [style.border-color]="expectedServiceRequest.serviceName ? '' : 'red'" [(ngModel)]="expectedServiceRequest.serviceName"/>
+                <span class="input-group-btn">
+                  <button class="btn" (click)="removeExpectedServiceRequest(expectedServiceRequest)"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+                </span>
+              </div>
+              <div class="row">
+                <div class="col-sm-9">
+                  <input class="form-control" placeholder="{{'Ignored tags' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="expectedServiceRequest.ignoredTags"/>
+                </div>
+                <div class="col-sm-3">
+                  <input class="form-control" placeholder="{{'Repeat count' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="expectedServiceRequest.count"/>
+                </div>
+              </div>
+              <textarea class="form-control" placeholder="{{'Expected request' | translate}}" title="" rows="7" [(ngModel)]="expectedServiceRequest.expectedServiceRequest"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-sm  btn-default" (click)="addExpectedServiceRequest()"><span class="glyphicon glyphicon-plus"></span> {{'Add expected mock request' | translate}}</button>
+
+          <hr/>
+          <h4>{{'Save scenario variables from REST request' | translate}}</h4>
+          <div class="row">
+            <div class="col-sm-12">
+              <label>{{'Mock URL' | translate}}</label>
+              <input title="{{'Mock URL' | translate}}" class="form-control" [(ngModel)]="step.parseMockRequestUrl"/>
+            </div>
+            <div class="col-sm-12">
+              <label>{{'XML XPath' | translate}}</label>
+              <input title="{{'XML XPath' | translate}}" class="form-control" [(ngModel)]="step.parseMockRequestXPath"/>
+            </div>
+            <div class="col-sm-12">
+              <label>{{'Scenario variable name' | translate}}</label>
+              <input title="{{'Scenario variable name' | translate}}" class="form-control" [(ngModel)]="step.parseMockRequestScenarioVariable"/>
+            </div>
+          </div>
+
+          <hr/>
+          <h4>{{'Save scenario variables from MQ request' | translate}}</h4>
+          <div class="row" *ngIf="step.scenarioVariableFromMqRequestList?.length > 0">
+            <div class="col-sm-3">
+              <label>{{'Source queue name' | translate}}</label>
+            </div>
+            <div class="col-sm-4">
+              <label>{{'XPath' | translate}}</label>
+            </div>
+            <div class="col-sm-3">
+              <label>{{'Variable name' | translate}}</label>
+            </div>
+          </div>
+          <div class="row" *ngFor="let variableFromMq of step.scenarioVariableFromMqRequestList">
+            <div class="col-sm-3">
+              <input placeholder="{{'Source queue name' | translate}} *" class="form-control" title="" [(ngModel)]="variableFromMq.sourceQueue"/>
+            </div>
+            <div class="col-sm-4">
+              <input class="form-control"  placeholder="{{'XPath' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="variableFromMq.xpath"/>
+            </div>
+            <div class="col-sm-3">
+              <input class="form-control" placeholder="{{'Variable name' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="variableFromMq.variableName"/>
+            </div>
+            <div class="col-sm-2">
+              <button class="btn" (click)="removeVariableFromMq(variableFromMq)"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-default" (click)="addVariableFromMq()"><span class="glyphicon glyphicon-plus"></span> {{'Add scenario variable' | translate}}</button>
+          <hr/>
+          <h4>{{'Expected MQ requests' | translate}}</h4>
+          <div class="row" style="margin-bottom: 40px;" *ngFor="let expectedMqRequest of step.expectedMqRequestList">
+            <div class="col-sm-12">
+              <div class="input-group" style="margin-bottom: 5px;">
+                <input placeholder="{{'Source queue name' | translate}} *" class="form-control" title="" [style.border-color]="expectedMqRequest.sourceQueue ? '' : 'red'" [(ngModel)]="expectedMqRequest.sourceQueue"/>
+                <span class="input-group-btn">
+                  <button class="btn" (click)="removeExpectedMqRequest(expectedMqRequest)"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+                </span>
+              </div>
+              <div class="row">
+                <div class="col-sm-8">
+                  <input class="form-control" placeholder="{{'Ignored tags' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="expectedMqRequest.ignoredTags"/>
+                </div>
+                <div class="col-sm-4">
+                  <input class="form-control" placeholder="{{'Repeat count' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="expectedMqRequest.count"/>
+                </div>
+              </div>
+              <textarea class="form-control" placeholder="{{'Expected MQ request' | translate}}" title="" rows="7" [(ngModel)]="expectedMqRequest.requestBody"></textarea>
+            </div>
+          </div>
+          <button class="btn btn-sm  btn-default" (click)="addExpectedMqRequest()"><span class="glyphicon glyphicon-plus"></span> {{'Add expected mock MQ request' | translate}}</button>
+        </div>
+        <div *ngIf="tab == 'polling'">
+          <div class="row">
+            <div class="col-sm-2">
+              <label>
+                <input type="checkbox" title="Use polling" [(ngModel)]="step.usePolling"/>
+                {{'Use polling' | translate}}
+              </label>
+            </div>
+            <div class="col-sm-10">
+              <label>{{'Polling' | translate}} json xpath:</label>
+              <input placeholder="$.body.items" class="form-control" title="{{'Polling' | translate}} json xpath" [(ngModel)]="step.pollingJsonXPath" />
+              <div class="help-block">{{'Waiting for json element exists. Example' | translate}}: $.body.items</div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="tab == 'parameterSet'">
+          <app-step-parameter-set [stepParameterSetList]="step.stepParameterSetList"></app-step-parameter-set>
+        </div>
+        <div *ngIf="tab == 'script'">
+          <label>{{'Script' | translate}}:</label>
+          <textarea placeholder="" rows="6" title="{{'Script' | translate}}" class="form-control" [(ngModel)]="step.script"></textarea>
+          <div class="help-block">
+            <pre>stepStatus.exception - String. Если поле заполнено, то возникнет ошибка с указанным в поле текстом.<br/>scenarioVariables - Map. Список всех переменных сценария, доступны чтение и запись.<br/>response.statusCode - int. Код ответа.<br/>response.content - String. Содержимое ответа.<br/>response.headers - Map. Заголовки ответа. Пример: response.headers['header-name'][0]<br/>Пример сохранения заголовка в переменную:<br/>scenarioVariables.MY_VARIABLE = response.headers.get('header-name')[0];</pre>
+          </div>
+        </div>
+        <div *ngIf="tab == 'json'"><pre>{{step | json}}</pre></div>
+      </div>
+    </div>
+  </div>
+</div>

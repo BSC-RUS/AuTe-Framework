@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Diff page</title>
+    <style>
+        .json-pane {
+            width: 48%;
+            display: inline-block;
+        }
+
+        .json-result-pane {
+            background-color: #eee;
+            overflow: scroll;
+            height: 750px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            padding: 6px 12px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <label for="sync-scroll">Synchronize scroll</label>
+    <input id="sync-scroll" type="checkbox" checked/>
+</div>
+{% autoescape 'html' %}
+<div class="json-pane">
+    <h2>Actual</h2>
+    <div id="actual-pane" class="json-result-pane">
+    <pre>
+        {%- for diff in diffs -%}
+            {%- if diff.operation == 'EQUAL' -%}
+                <span>{{- diff.text -}}</span>
+            {%- elseif diff.operation == 'INSERT' -%}
+                <span style="background-color: #afa">{{- diff.text -}}</span>
+            {%- endif -%}
+        {%- endfor %}
+    </pre>
+    </div>
+</div>
+<div class="json-pane">
+    <h2>Expected</h2>
+    <div id="expected-pane" class="json-result-pane">
+    <pre>
+        {%- for diff in diffs -%}
+            {%- if diff.operation == 'EQUAL' -%}
+                <span>{{- diff.text -}}</span>
+            {%- elseif diff.operation == 'DELETE' -%}
+                <span style="background-color: #fbb">{{- diff.text -}}</span>
+            {%- endif -%}
+        {%- endfor %}
+    </pre>
+    </div>
+</div>
+{% endautoescape %}
+<script type="application/javascript">
+    const actualPane = document.getElementById('actual-pane');
+    const expectedPane = document.getElementById('expected-pane');
+    const syncScroll = document.getElementById('sync-scroll');
+    var synchronizeActual = true;
+    var synchronizeExpected = true;
+
+    actualPane.onscroll = function () {
+        if (!syncScroll.checked) {
+            return;
+        }
+        if (!synchronizeActual) {
+            synchronizeExpected = true;
+            expectedPane.scrollTop = actualPane.scrollTop;
+            expectedPane.scrollLeft = actualPane.scrollLeft;
+        }
+        synchronizeActual = false;
+    };
+
+    expectedPane.onscroll = function () {
+        if (!syncScroll.checked) {
+            return;
+        }
+        if (!synchronizeExpected) {
+            synchronizeActual = true;
+            actualPane.scrollTop = expectedPane.scrollTop;
+            actualPane.scrollLeft = expectedPane.scrollLeft;
+        }
+        synchronizeExpected = false;
+    }
+</script>
+</body>

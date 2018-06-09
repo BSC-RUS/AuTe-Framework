@@ -1,0 +1,23 @@
+.form-control {
+  overflow: auto;
+  height: 600px;
+  background-color: #eee;
+
+  .diff-content {
+    white-space: pre-wrap;
+  }
+  .added-row {
+    background-color: #dfd;
+  }
+  .removed-row {
+    background-color: #fdd;
+  }
+  .added {
+    background-color: #afa;
+    font-weight: bold;
+  }
+  .removed {
+    background-color: #fbb;
+    font-weight: bold;
+  }
+}

@@ -1,0 +1,93 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<ng-container *ngIf="project">
+  <div class="breadcrumb-search">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]="'/'">{{'Projects' | translate}}</a></li>
+      <li class="breadcrumb-item active">{{project.code}}. {{project.name}}</li>
+    </ol>
+    <app-search [projectCode]="project.code"></app-search>
+  </div>
+
+  <h4>{{project.name}}</h4>
+  <a [routerLink]="['/project/' + project.code + '/settings']">{{'Settings' | translate}}</a>
+
+  <nav aria-label="Scenario groups">
+    <ul class="pagination">
+      <li [class.active]="!filter">
+        <a href="#" (click)="selectAllGroups()">{{'All' | translate}}</a>
+      </li>
+      <li [class.active]="filter && !filter.scenarioGroup">
+        <a href="#" (click)="selectGroup()">{{'Without group' | translate}}</a>
+      </li>
+      <li [class.active]="filter && group == filter.scenarioGroup" *ngFor="let group of project.groupList">
+        <a href="#" (click)="selectGroup(group)">{{group}}</a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container-fluid" style="background-color: #f5f5f5; padding-top: 10px;">
+    <div class="row">
+      <div style="height: 40px;" class="col-sm-7">
+        <label>
+          <input class="select-all" type="checkbox" title="{{'Select' | translate}}" [checked]="selectAllFlag" (click)="selectAll()" />
+        </label>
+        <button class="btn btn-sm btn-default" (click)="executeSelectedScenarios()">{{'Execute selected scenarios' | translate}}</button>
+        <button class="btn btn-sm btn-default" (click)="getReportsBySelectedScenarios()">{{'Get report on selected scenarios' | translate}}</button>
+      </div>
+      <div class="col-sm-1" style="font-weight: bold;" [style.color]="failCount > 0 ? 'red' : ''">
+        {{failCount}}
+      </div>
+      <div class="col-sm-4">
+        <div class="progress" style="background-color: #fff;">
+          <div class="progress-bar progress-bar-striped"
+               role="progressbar"
+               [class.active]="executingStateExecuted != executingStateTotal"
+               [style.display]="executingStateTotal > 0 ? '' : 'none'"
+               [style.width]="(5 + executingStateExecuted / executingStateTotal * 95) + '%'">
+            {{Math.round(executingStateExecuted / executingStateTotal * 100)}}%
+            {{executingStateExecuted > 0 ? '(' + executingStateExecuted + '/' + executingStateTotal + ')' : ''}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="min-height: 33px;" [style.display]="isDisplayScenario(scenario) ? '' : 'none'" *ngFor="let scenario of scenarioList">
+    <app-scenario-list-item [scenario]="scenario" [projectCode]="project.code" (onStateChange)="onStateChange($event, scenario)" (cbStateChange)="onCbStateChange($event, scenario)"></app-scenario-list-item>
+  </div>
+
+  <div class="container">
+    <div class="panel panel-default">
+      <div class="panel-body">
+        <label>{{'Create new scenario' | translate}}</label>
+        <div class="input-group">
+          <input placeholder="{{'Scenario name' | translate}}" class="form-control" title="{{'Scenario name' | translate}}" [(ngModel)]="newScenarioName" />
+          <span class="input-group-btn">
+            <button class="btn btn-success" (click)="saveNewScenario()"><span class="glyphicon glyphicon-plus"></span> {{ 'Create' | translate}}</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</ng-container>
+<div class="help-block" *ngIf="!project">
+  <span class="glyphicon glyphicon-time"></span>
+  {{'Loading' | translate}}
+</div>

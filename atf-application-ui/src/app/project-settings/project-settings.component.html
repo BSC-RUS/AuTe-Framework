@@ -1,0 +1,141 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a [routerLink]="'/'">{{'Projects' | translate}}</a></li>
+  <li *ngIf="project" class="breadcrumb-item"><a [routerLink]="['/project', project.code]">{{project.code}}. {{project.name}}</a></li>
+  <li class="breadcrumb-item active">{{'Settings' | translate}}</li>
+</ol>
+
+<div class="container-fluid" *ngIf="project">
+  <h3>{{project.name}}</h3>
+  <button class="btn btn-success" style="margin-bottom: 15px;" (click)="save()">{{'Save project settings' | translate}}</button>
+  <div>
+    <ul class="nav nav-tabs">
+      <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
+      <li [class.active]="tab == 'stand'"><a href="#" (click)="selectTab('stand')">{{'Stand' | translate}}</a></li>
+      <li [class.active]="tab == 'groupList'"><a href="#" (click)="selectTab('groupList')">{{'Groups' | translate}}</a></li>
+      <li [class.active]="tab == 'json'"><a href="#" (click)="selectTab('json')">{{'json' | translate}}</a></li>
+    </ul>
+    <div class="tab-content" style="padding: 10px;">
+      <div [style.display]="tab == 'details' ? '' : 'none'">
+        <label>{{'Project name' | translate}}</label>
+        <input class="form-control" title="" [(ngModel)]="project.name"/>
+
+        <label>{{'Before scenario' | translate}}</label>
+        <select class="form-control" title="{{'Before scenario' | translate}}" [(ngModel)]="project.beforeScenarioPath">
+          <option [ngValue]="null">{{'disabled' | translate}}</option>
+          <option *ngFor="let scenario of scenarioList" [ngValue]="(scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code">{{scenario.name}}</option>
+        </select>
+
+        <label>{{'After scenario' | translate}}</label>
+        <select class="form-control" title="{{'After scenario' | translate}}" [(ngModel)]="project.afterScenarioPath">
+          <option [ngValue]="null">{{'disabled' | translate}}</option>
+          <option *ngFor="let scenario of scenarioList" [ngValue]="(scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code">{{scenario.name}}</option>
+        </select>
+
+        <label>{{'Project code' | translate}}</label>
+        <input disabled class="form-control" title="" [ngModel]="project.code"/>
+
+        <hr/>
+        <label style="margin-top: 8px;">
+          <input type="checkbox" style="height: 25px;" title="" [(ngModel)]="project.useRandomTestId"/>
+          {{'Use random testId' | translate}}
+        </label>
+        <div class="clearfix"></div>
+
+        <label>{{'TestId header name' | translate}}</label>
+        <input class="form-control" title="" [(ngModel)]="project.testIdHeaderName"/>
+      </div>
+      <div [style.display]="tab == 'groupList' ? '' : 'none'">
+        <div *ngFor="let group of project.groupList; let i = index;">
+          <div class="col-sm-4" style="margin-bottom: 7px;">
+            <a style="cursor: pointer; " (click)="renameGroup(project.groupList[i]); false;"><small><span class="glyphicon glyphicon-edit"></span></small> <b>{{project.groupList[i]}}</b></a>
+            <span class="input-group-btn">
+              <button class="btn btn-sm btn-default" (click)="removeScenarioGroup(group)"><span class="glyphicon glyphicon-minus"></span>{{'Remove' | translate}}</button>
+            </span>
+          </div>
+        </div>
+        <div class="clearfix"></div>
+        <button class="btn btn-success" style="margin-top: 7px;" (click)="addGroup()"><span class="glyphicon glyphicon-plus"></span> {{'Add group' | translate}}</button>
+      </div>
+      <div [style.display]="tab == 'stand' ? '' : 'none'">
+        <div style="border: none;" class="list-group-item" *ngIf="project.stand">
+          <div class="row">
+            <div class="col-sm-12">
+              <label>{{'Service URL' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.stand.serviceUrl"/>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-4">
+              <label>{{'Data base URL' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.stand.dbUrl"/>
+            </div>
+            <div class="col-sm-4">
+              <label>{{'Data base User' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.stand.dbUser"/>
+            </div>
+            <div class="col-sm-4">
+              <label>{{'Data base Password' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.stand.dbPassword"/>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <label>{{'WireMock URL' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.stand.wireMockUrl"/>
+            </div>
+          </div>
+        </div>
+        <hr/>
+        <label>{{'AMQP broker' | translate}}</label>
+        <div style="border: none;" class="list-group-item" *ngIf="project.amqpBroker">
+          <div class="row">
+            <div class="col-sm-12">
+              <label>{{'Broker type' | translate}}</label>
+              <div class="input-group-btn">
+                <select disabled class="form-control" title="{{'Broker type' | translate}}" [ngModel]="project.amqpBroker.mqService">
+                  <option [ngValue]="null">{{'disabled' | translate}}</option>
+                  <option [ngValue]="'ACTIVE_MQ'">Active MQ</option>
+                  <option [ngValue]="'RABBIT_MQ'">Rabbit MQ</option>
+                  <option [ngValue]="'IBM_MQ'">IBM MQ</option>
+                </select>
+              </div>
+
+              <label>{{'Host' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.amqpBroker.host"/>
+
+              <label>{{'Port' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.amqpBroker.port"/>
+
+              <label>{{'Username' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.amqpBroker.username"/>
+
+              <label>{{'Password' | translate}}</label>
+              <input disabled class="form-control" title="" [ngModel]="project.amqpBroker.password"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div [style.display]="tab == 'json' ? '' : 'none'">
+        <pre>{{project | json}}</pre>
+      </div>
+    </div>
+  </div>
+</div>
