@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPattern": "/mockDkboDebtServiceSoap11"
+  },
+  "response": {
+    "status": 200,
+    "bodyFileName": "dkboDebt/mockDkboDebtServiceSoap11.xml",
+    "headers": {
+      "Content-Type": "application/xop+xml",
+      "Cache-Control": "max-age=86400"
+    }
+  }
+}

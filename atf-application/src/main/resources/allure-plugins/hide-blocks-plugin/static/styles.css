@@ -1,0 +1,4 @@
+div.widget.island[data-id="retry-trend"],
+div.widget.island[data-id="categories-trend"] {
+    display: none !important;
+}

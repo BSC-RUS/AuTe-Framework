@@ -1,0 +1,96 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<button style="margin: 10px 0 0 10px;" class="btn btn-default" (click)="updateRequestList()"><span class="glyphicon glyphicon-refresh"></span> Update request list</button>
+<select style="margin: 10px 0 0 0;" title="Limit" class="btn btn-default" [(ngModel)]="requestLimit">
+  <option [ngValue]="10">10</option>
+  <option [ngValue]="30">30</option>
+  <option [ngValue]="50">50</option>
+  <option [ngValue]="100">100</option>
+  <option [ngValue]="200">200</option>
+  <option [ngValue]="null">All</option>
+</select>
+<button style="margin: 10px 0 0 10px;" class="btn btn-default" (click)="clearRequestList()"><span class="glyphicon glyphicon-remove"></span> Clear request list</button>
+<div class="help-block" *ngIf="!selectedRequest && !requestList">
+  Loading...
+</div>
+<div *ngIf="!selectedRequest && requestList">
+  <table style="margin-top: 10px;" class="table table-hover">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Method</th>
+        <th>Url</th>
+        <th>Response code</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody style="cursor: pointer;">
+      <tr *ngFor="let request of requestList.requests" (click)="select(request)">
+        <td>{{request.request.loggedDateString}}</td>
+        <td>{{request.request.method}}</td>
+        <td>{{request.request.absoluteUrl}}</td>
+        <td>{{request.response.status}}</td>
+        <td>{{request.request.headers.hasOwnProperty('testidheader') ? 'AT' : ''}}{{request.request.url.indexOf('/mq_') >= 0 ? ' MQ' : ''}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div style="margin: 10px;" *ngIf="selectedRequest">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="list-group">
+          <a style="overflow: hidden;" class="list-group-item" href="#" [class.active]="request === selectedRequest" *ngFor="let request of requestList.requests" (click)="select(request)">{{request.request.url}}</a>
+        </div>
+      </div>
+      <div class="col-sm-9">
+        <button style="margin: 10px 0;" class="btn btn-default" (click)="selectedRequest = null"><span class="glyphicon glyphicon-backward"></span> Return to list</button>
+        <h4>{{selectedRequest.request.absoluteUrl}}</h4>
+        <small class="help-block">{{selectedRequest.request.loggedDateString}}</small>
+        <ul class="nav nav-tabs">
+          <li [class.active]="tab == 'summary'"><a href="#" (click)="selectTab('summary')">Summary</a></li>
+          <li [class.active]="tab == 'headers'"><a href="#" (click)="selectTab('headers')">Headers</a></li>
+          <li [class.active]="tab == 'json'"><a href="#" (click)="selectTab('json')">json</a></li>
+        </ul>
+        <div class="tab-content" style="padding: 10px;">
+
+          <div [style.display]="tab == 'summary' || tab == 'all' ? '' : 'none'">
+            <h3>Request body</h3>
+            <div style="overflow: scroll; height: auto; white-space: pre; background-color: #eee;" class="form-control">{{selectedRequest.request.body}}</div>
+            <h3>Response body</h3>
+            <div style="overflow: scroll; height: auto; white-space: pre; background-color: #eee;" class="form-control">{{selectedRequest.response.body}}</div>
+          </div>
+
+          <div [style.display]="tab == 'headers' || tab == 'all' ? '' : 'none'">
+            <h3>Request headers</h3>
+            <div *ngFor="let key of (selectedRequest.request.headers | ObjNgFor)">
+              {{key}}: {{selectedRequest.request.headers[key]}}
+            </div>
+          </div>
+
+          <div [style.display]="tab == 'json' || tab == 'all' ? '' : 'none'">
+            <h3>WireMock request details</h3>
+            <div style="overflow: scroll; height: auto; white-space: pre; background-color: #eee;" class="form-control">{{selectedRequest | json}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

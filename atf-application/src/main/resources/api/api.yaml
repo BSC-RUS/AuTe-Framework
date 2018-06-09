@@ -1,0 +1,747 @@
+swagger: '2.0'
+info:
+  description: AutoTester-UI REST API
+  version: 4.0.0
+  title: AutoTester-UI REST API
+  contact:
+    email: Stanislav.Doroshin@bsc-ideas.com
+host: piphagor.bscmsc.ru
+basePath: /rest
+tags:
+  - name: Project
+    description: Autotes project, contains Scenario list
+  - name: Scenario
+    description: Scenario of Project, contains Step list
+  - name: Step
+    description: Step of Scenario, contains details about one request to service
+  - name: Test execution
+    description: ''
+  - name: Version
+    description: Components versions
+schemes:
+  - http
+paths:
+  /projects:
+    get:
+      tags:
+        - Project
+      summary: Get project list
+      description: ''
+      operationId: getProjects
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Project'
+  '/projects/{projectCode}':
+    get:
+      tags:
+        - Project
+      summary: Get project details
+      description: ''
+      operationId: getProjectDetail
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: projectCode
+          in: path
+          required: true
+          type: integer
+          format: int64
+      responses:
+        '404':
+          description: Project not found
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Project'
+    put:
+      tags:
+        - Project
+      summary: Update project details with stands and scenario groups
+      description: ''
+      operationId: saveProject
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: projectCode
+          in: path
+          description: Project code
+          required: true
+          type: integer
+          format: int64
+        - in: body
+          name: body
+          description: Project details
+          required: true
+          schema:
+            $ref: '#/definitions/Project'
+      responses:
+        '404':
+          description: Project not found
+        '200':
+          description: 'Updated project-object'
+          schema:
+            $ref: '#/definitions/Project'
+  '/projects/{projectCode}/scenarios':
+    get:
+      tags:
+        - Scenario
+        - Project
+      summary: Get Scenario
+      operationId: getScenarioList
+      parameters:
+        - name: projectCode
+          in: path
+          type: integer
+          required: true
+      responses:
+        200:
+          description: Scenario list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Scenario'
+        404:
+          description: Project not found
+    post:
+      tags:
+        - Scenario
+        - Project
+      summary: Create new Scenario
+      operationId: createScenario
+      parameters:
+        - name: projectCode
+          in: path
+          type: integer
+          required: true
+        - name: body
+          in: body
+          required: true
+          description: Scenario object to create
+          schema:
+            $ref: '#/definitions/Scenario'
+      responses:
+        404:
+          description: Project not found
+        200:
+          description: Scenario created
+          schema:
+            $ref: '#/definitions/Scenario'
+  '/projects/{projectCode}/search':
+      post:
+        tags:
+          - Scenario
+          - Project
+        summary: Search scenario by StepRelativeUrl
+        operationId: searchScenario
+        parameters:
+          - name: projectCode
+            in: path
+            type: integer
+            required: true
+          - name: body
+            in: body
+            required: true
+            description: Search object
+            schema:
+              $ref: '#/definitions/ProjectSearchRo'
+        responses:
+          200:
+              description: Returns list of found scenarios
+              schema:
+                type: array
+                items:
+                  $ref: '#/definitions/Scenario'
+  '/projects/{projectCode}/scenarios/{scenarioGroup}/{scenarioCode}':
+    get:
+      tags:
+        - Scenario
+      summary: Get Scenario details
+      operationId: getScenarioDetail
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+      responses:
+        404:
+          description: Scenario not found
+        200:
+          description: Scenario details
+          schema:
+            $ref: '#/definitions/Scenario'
+    put:
+      tags:
+        - Scenario
+      summary: Update Scenario details
+      operationId: saveScenarioDetails
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Scenario'
+      responses:
+        404:
+          description: Scenario not found
+        200:
+          description: Scenario saved
+          schema:
+            $ref: '#/definitions/Scenario'
+    delete:
+      tags:
+        - Scenario
+      summary: Delete Scenario
+      operationId: deleteScenario
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+      responses:
+        404:
+          description: Scenario not found
+        200:
+          description: Scenario deleted
+  '/projects/{projectCode}/scenarios/{scenarioGroup}/{scenarioCode}/steps':
+    get:
+      tags:
+        - Step
+        - Scenario
+      summary: Get Step list
+      operationId: getSteps
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Step list
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Step'
+        404:
+          description: Scenario not found
+    put:
+      tags:
+        - Step
+        - Scenario
+      summary: Save step list
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Step'
+      responses:
+        404:
+          description: Scenario not found
+        200:
+          description: Step list saved
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Step'
+  '/projects/{projectCode}/scenarios/{scenarioGroup}/{scenarioCode}/steps/{stepCode}':
+    put:
+      tags:
+        - Step
+      summary: Update Step details
+      operationId: updateStep
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+        - name: stepCode
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Step'
+      responses:
+        404:
+          description: Step not found
+        200:
+          description: Step updated
+          schema:
+            $ref: '#/definitions/Step'
+  '/projects/{projectCode}/scenarios/{scenarioGroup}/{scenarioCode}/steps/{stepCode}/clone':
+    post:
+      tags:
+        - Step
+      summary: Clone Step
+      operationId: cloneStep
+      parameters:
+        - name: projectCode
+          in: path
+          type: string
+          required: true
+        - name: scenarioGroup
+          in: path
+          type: string
+          required: true
+          description: Scenario group code (not required)
+        - name: scenarioCode
+          in: path
+          type: string
+          required: true
+        - name: stepCode
+          in: path
+          required: true
+          type: string
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Step'
+      responses:
+        200:
+          description: Step updated
+          schema:
+            $ref: '#/definitions/Step'
+  '/projects/{projectCode}/scenarios/{scenarioGroup}/{scenarioCode}/start':
+    post:
+      tags:
+        - Test execution
+      summary: Start executing
+      parameters:
+        - name: projectCode
+          in: path
+          required: true
+          type: string
+        - name: scenarioGroup
+          in: path
+          required: true
+          type: string
+          description: not required
+        - name: scenarioCode
+          in: path
+          required: true
+          type: string
+      responses:
+        404:
+          description: Scenario not found
+        200:
+          description: 'Test execution information: executionUuid'
+          schema:
+            $ref: '#/definitions/StartScenarioInfo'
+  '/execution/{executionUuid}/stop':
+    post:
+      tags:
+        - Test execution
+      summary: Stop scenario execution
+      parameters:
+        - name: executionUuid
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: empty
+  '/execution/{executionUuid}/status':
+      get:
+        tags:
+          - Test execution
+        summary: Get execution status
+        parameters:
+          - name: executionUuid
+            in: path
+            required: true
+            type: string
+        responses:
+          200:
+            description: empty
+            schema:
+              $ref: '#/definitions/ExecutionResult'
+  '/execution/{executionUuid}/report':
+    get:
+      tags:
+        - Reports
+      summary: Get Allure report
+      parameters:
+        - name: executionUuid
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Zip archive
+  '/execution/multiple-reports':
+    post:
+      tags:
+        - Reports
+      summary: Get Allure reports by multiple executionUuid
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/MultipleReportsRequest'
+      responses:
+        200:
+          description: Zip archive
+  '/version/manager':
+    get:
+      tags:
+        - Version
+      summary: Get AT-manager version
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Version'
+  '/version/executor':
+    get:
+      tags:
+        - Version
+      summary: Get AT-executor version
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Version'
+  '/version/wiremock':
+    get:
+      tags:
+        - Version
+      summary: Get AT-Wiremock version
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Version'
+
+definitions:
+  Project:
+    type: object
+    properties:
+      code:
+        type: string
+      name:
+        type: string
+      beforeScenarioPath:
+        type: string
+      afterScenarioPath:
+        type: string
+      stand:
+        $ref: '#/definitions/Stand'
+      useRandomTestId:
+        type: boolean
+      testIdHeaderName:
+        type: string
+      amqpBroker:
+        $ref: '#/definitions/AmqpBroker'
+      groupList:
+        type: array
+        items:
+          type: string
+  Stand:
+    type: object
+    properties:
+      url:
+        type: string
+  AmqpBroker:
+    type: object
+    properties:
+      mqService:
+        type: string
+      host:
+        type: string
+      port:
+        type: integer
+      username:
+        type: string
+      password:
+        type: string
+  Scenario:
+    type: object
+    properties:
+      code:
+        type: string
+      projectCode:
+        type: string
+      name:
+        type: string
+      scenarioGroup:
+        type: string
+      stepList:
+        type: array
+        items:
+          $ref: '#/definitions/Step'
+      beforeScenarioIgnore:
+        type: boolean
+      afterScenarioIgnore:
+        type: boolean
+      failed:
+        type: boolean
+  Step:
+    type: object
+    properties:
+      code:
+        type: string
+      relativeUrl:
+        type: string
+      requestMethod:
+        type: string
+      request:
+        type: string
+      requestFile:
+        type: string
+      requestHeaders:
+        type: string
+      expectedResponse:
+        type: string
+      expectedResponseFile:
+        type: string
+      expectedResponseIgnore:
+        type: boolean
+      expectedStatusCode:
+        type: integer
+      sql:
+        type: string
+      sqlSavedParameter:
+        type: string
+      jsonXPath:
+        type: string
+      requestBodyType:
+        type: string
+      usePolling:
+        type: boolean
+      pollingJsonXPath:
+        type: string
+      mockServiceResponseList:
+        type: object
+        description: 'Map<String, String>'
+      disabled:
+        type: boolean
+      stepComment:
+        type: string
+      savedValuesCheck:
+        type: object
+        description: 'Map<String, String>'
+      stepParameterSetList:
+        type: array
+        items:
+          $ref: '#/definitions/StepParameterSet'
+      expectedServiceRequestList:
+        type: array
+        items:
+          $ref: '#/definitions/ExpectedServiceRequest'
+      mqName:
+        type: string
+      mqMessage:
+        type: string
+      mqMessageFile:
+        type: string
+      responseCompareMode:
+        type: string
+      formDataList:
+        type: array
+        items:
+          $ref: '#/definitions/FormData'
+      multipartFormData:
+        type: boolean
+      jsonCompareMode:
+        type: string
+      script:
+        type: string
+  StepResult:
+    type: object
+    properties:
+      testId:
+        type: string
+      step:
+        $ref: '#/definitions/Step'
+      result:
+        type: string
+      details:
+        type: string
+      expected:
+        type: string
+      actual:
+        type: string
+      requestUrl:
+        type: string
+      requestBody:
+        type: string
+      pollingRetryCount:
+        type: integer
+      savedParameters:
+        type: string
+      description:
+        type: string
+      editable:
+        type: boolean
+  ProjectSearchRo:
+    type: object
+    properties:
+      relativeUrl:
+        type: string
+  FormData:
+    type: object
+    properties:
+      fieldName:
+        type: string
+      fieldType:
+        type: string
+      value:
+        type: string
+      filePath:
+        type: string
+      mimeType:
+        type: string
+  ExecutionResult:
+    type: object
+    properties:
+      scenarioResultList:
+        type: array
+        items:
+          $ref: '#/definitions/ScenarioResult'
+      finished:
+        type: boolean
+  ScenarioResult:
+    type: object
+    properties:
+      scenario:
+        $ref: '#/definitions/Scenario'
+      stepResultList:
+        type: array
+        items:
+          $ref: '#/definitions/StepResult'
+      totalSteps:
+        type: integer
+  StepParameterSet:
+    type: object
+    properties:
+      stepParameterList:
+        type: array
+        items:
+          $ref: '#/definitions/StepParameter'
+      description:
+        type: string
+  StepParameter:
+    type: object
+    properties:
+      name:
+        type: string
+      value:
+        type: string
+  ExpectedServiceRequest:
+    type: object
+    properties:
+      code:
+        type: string
+      serviceName:
+        type: string
+      expectedServiceRequest:
+        type: string
+      expectedServiceRequestFile:
+        type: string
+      ignoredTags:
+        type: string
+  MultipleReportsRequest:
+    type: object
+    description: Request for get report by multiple executionUuid
+    properties:
+      executionUuidList:
+        type: array
+        items:
+          type: string
+  StartScenarioInfo:
+    type: object
+    properties:
+      runningUuid:
+        type: string
+  Version:
+    type: object
+    description: Component's version
+    properties:
+      implementationVersion:
+        type: string
+      implementationDate:
+        type: string
+externalDocs:
+  description: Find out more about Swagger
+  url: 'http://swagger.io'

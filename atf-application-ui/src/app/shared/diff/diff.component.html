@@ -1,0 +1,63 @@
+<!--
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ This file is part of the AuTe Framework project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<div class="col-sm-6">
+  <label>{{'Actual' | translate}}</label>
+  <div class="form-control"
+       #actual
+       appTextSelect
+       [appSyncScroll]="syncScroll && expected">
+    <div *ngFor="let item of actualDiff" [class.added-row]="item.added">
+      <ng-container *ngIf="item.rowDiff">
+        <span
+          *ngFor="let rowItem of item.rowDiff"
+          class="diff-content"
+          [class.added]="rowItem.added">{{rowItem.value}}</span>
+      </ng-container>
+      <ng-container *ngIf="!item.rowDiff">
+        <span class="diff-content" [class.added]="item.added">{{item.value}}</span>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<div class="col-sm-6">
+  <label>{{'Expected' | translate}}</label>
+  <div class="form-control"
+       #expected
+       appTextSelect
+       [appSyncScroll]="syncScroll && actual">
+    <div *ngFor="let item of expectedDiff" [class.removed-row]="item.removed">
+      <ng-container *ngIf="item.rowDiff">
+        <span
+          *ngFor="let rowItem of item.rowDiff"
+          class="diff-content"
+          [class.removed]="rowItem.removed">{{rowItem.value}}</span>
+      </ng-container>
+      <ng-container *ngIf="!item.rowDiff">
+        <span class="diff-content" [class.removed]="item.removed">{{item.value}}</span>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<div class="col-sm-12">
+  <label>
+    <input type="checkbox" [(ngModel)]="syncScroll"> {{'Synchronize scrolling' | translate}}
+  </label>
+</div>

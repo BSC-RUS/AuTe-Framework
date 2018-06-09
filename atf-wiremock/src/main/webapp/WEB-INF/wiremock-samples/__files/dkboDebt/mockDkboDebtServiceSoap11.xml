@@ -1,0 +1,22 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:myg="http://www.mygemini.com/schemas/mygemini/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <myg:dkbo_debt_response>
+            <myg:system_block>
+                <myg:originator>?</myg:originator>
+                <myg:mean_for>?</myg:mean_for>
+                <myg:document_id>?</myg:document_id>
+                <myg:event>?</myg:event>
+                <myg:event_time>?</myg:event_time>
+            </myg:system_block>
+            <myg:body>
+                <!--You have a CHOICE of the next 2 items at this level-->
+                <myg:dkbo_debt>
+                    <myg:dkbo_id>1</myg:dkbo_id>
+                    <myg:sum>1</myg:sum>
+                    <myg:currency_code>RUR</myg:currency_code>
+                </myg:dkbo_debt>
+            </myg:body>
+        </myg:dkbo_debt_response>
+    </soapenv:Body>
+</soapenv:Envelope>

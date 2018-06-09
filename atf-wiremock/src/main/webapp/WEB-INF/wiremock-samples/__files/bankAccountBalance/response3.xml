@@ -1,0 +1,24 @@
+<nonAtResponse/>
+<!--soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:myg="http://www.mygemini.com/schemas/mygemini/" xmlns:clip="http://schemas.bcs.ru/is/clipboard/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <myg:balance_response>
+            <myg:system_block>
+                <clip:originator>FUCK</clip:originator>
+                <clip:mean_for>FUCK</clip:mean_for>
+                <clip:document_id>123</clip:document_id>
+                <clip:event>NotChanged</clip:event>
+                <clip:event_time>2011-03-23T00:00:00</clip:event_time>
+            </myg:system_block>
+            <myg:body>
+                <myg:account>
+                    <myg:contract_id>fake</myg:contract_id>
+                    <myg:account_number>40817810112333331111</myg:account_number>
+                    <myg:balance>10002225556667.10</myg:balance>
+                    <myg:owned_balance>0</myg:owned_balance>
+                    <myg:loan_balance>0</myg:loan_balance>
+                </myg:account>
+            </myg:body>
+        </myg:balance_response>
+    </soapenv:Body>
+</soapenv:Envelope-->

@@ -1,0 +1,51 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:myg="http://www.mygemini.com/schemas/mygemini/" xmlns:clip="http://schemas.bcs.ru/is/clipboard/">
+    <soapenv:Header/>
+    <soapenv:Body>
+        <myg:balance_response>
+            <myg:system_block>
+                <clip:originator>FUCK</clip:originator>
+                <clip:mean_for>FUCK</clip:mean_for>
+                <clip:document_id>123</clip:document_id>
+                <clip:event>NotChanged</clip:event>
+                <clip:event_time>2011-03-23T00:00:00</clip:event_time>
+            </myg:system_block>
+            <myg:body>
+
+
+                <myg:account>
+                    <myg:account_number>40817810503122851901</myg:account_number>
+                    <myg:balance>55002</myg:balance>
+                    <myg:owned_balance>8000.5</myg:owned_balance>
+                    <myg:loan_balance>45001</myg:loan_balance>
+                </myg:account>
+
+                <myg:account>
+                    <myg:account_number>40817840203121931901</myg:account_number>
+                    <myg:balance>8000.5</myg:balance>
+                    <myg:owned_balance>8000.5</myg:owned_balance>
+                    <myg:loan_balance>8000.5</myg:loan_balance>
+                </myg:account>
+                <myg:account>
+                    <myg:account_number>40817978803121931901</myg:account_number>
+                    <myg:balance>8000.5</myg:balance>
+                    <myg:owned_balance>8000.5</myg:owned_balance>
+                    <myg:loan_balance>8000.5</myg:loan_balance>
+                </myg:account>
+                <myg:account>
+                    <myg:account_number>40817810603126731901</myg:account_number>
+                    <myg:balance>80000.5</myg:balance>
+                    <myg:owned_balance>80000.5</myg:owned_balance>
+                    <myg:loan_balance>800000.5</myg:loan_balance>
+                </myg:account>
+
+
+
+                <myg:operation_result>
+                    <myg:request_id>814c594e-ba0c-4100-aea3-87e4dca0e6f3</myg:request_id>
+                    <myg:result_code>0</myg:result_code>
+                    <myg:message xmlns:nil="true"/>
+                </myg:operation_result>
+            </myg:body>
+        </myg:balance_response>
+    </soapenv:Body>
+</soapenv:Envelope>

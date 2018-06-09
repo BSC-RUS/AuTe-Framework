@@ -1,0 +1,27 @@
+param($branch)
+
+$manager_ui_path = "C:\projects\common-auto-test\rest-at-manager-ui"
+
+try {
+    $current_location = (gl).path
+    cd $manager_ui_path
+    if ($branch -ne $null) {
+        Write-Host "Change git branch to $branch"
+        $current_branch = git rev-parse --abbrev-ref HEAD
+        git checkout $branch
+    }
+    Write-Host "Run build..."
+    npm run build
+    if ($branch -ne $null) {
+        git checkout $current_branch
+    }
+    Write-Host "Copying files..."
+    ls "dist" | %{
+        Write-Host "Copy $($_.name)..."
+        Copy-Item -Path $_.FullName -Recurse -Force -Destination "$current_location\src\main\resources\static"
+    }
+    cd $current_location
+    Write-Host -ForegroundColor Green "Frontend updated"
+} catch {
+    Write-Host -ForegroundColor Red "Frontend not updated"
+}

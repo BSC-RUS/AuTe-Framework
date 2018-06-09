@@ -1,0 +1,19 @@
+{
+    "priority": 100,
+    "request": {
+        "method": "POST",
+        "urlPattern": "/mockBankAccountBalanceWebServiceSoap11_2",
+        "bodyPatterns": [
+            {
+                "matchesXPath": "//*[local-name()='account' and text()='40817810503140001939']"
+            }
+        ]
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "bankAccountBalance/response1.xml",
+        "headers": {
+            "Content-Type": "application/xop+xml"
+        }
+    }
+}

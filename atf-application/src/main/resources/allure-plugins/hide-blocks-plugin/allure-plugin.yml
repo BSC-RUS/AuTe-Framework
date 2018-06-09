@@ -1,0 +1,5 @@
+id: hide-blocks-plugin
+name: Hide blocks plugin
+description: Hides unused blocks in a report
+cssFiles:
+  - styles.css

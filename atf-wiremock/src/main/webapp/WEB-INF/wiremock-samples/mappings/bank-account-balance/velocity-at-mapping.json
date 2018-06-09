@@ -1,0 +1,18 @@
+{
+    "priority": 50,
+    "request": {
+        "method": "POST",
+        "urlPattern": "/mockBankAccountBalanceWebServiceSoap11",
+        "headers": {
+            "testIdHeader": { "equalTo": "ololoshka" }
+        }
+    },
+    "response": {
+        "status": 200,
+        "bodyFileName": "at-velocity.vm",
+        "headers": {
+            "Content-Type": "application/xop+xml"
+        },
+        "transformers": ["velocity-response-transformer"]
+    }
+}
