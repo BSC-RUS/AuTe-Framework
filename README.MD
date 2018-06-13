@@ -51,7 +51,7 @@ Check configuration with `git config -l`
 
 ## Build and run wiremock ##
 1. Clone project
-1. Build project with install nodeJS packages `mvn clean pacakge -P npm-install`
+1. Build project with install nodeJS packages `mvn clean package -P npm-install`
 1. Create working directory
 1. Place in working directory:
     * *atf-wiremock-version.jar*
