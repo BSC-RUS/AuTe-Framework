@@ -10,16 +10,6 @@ Name | Description
 [atf-application-ui](atf-application-ui) | Frontend for AuTe Framework
 [atf-wiremock-ui](atf-wiremock-ui) | Frontend for Wiremock
 
-## GIT configuration ##
-Configure git before commiting.
-Execute following commands from command line:
-```
-git config user.name "John Doe"
-git config user.email johndoe@example.com
-```
-
-Check configuration with `git config -l`
-
 ## Requirements ##
  * JDK 1.8
  * Apache Maven 3
