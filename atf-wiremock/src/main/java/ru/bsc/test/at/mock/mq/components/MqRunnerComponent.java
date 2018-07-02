@@ -24,6 +24,7 @@ import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.PropertiesYaml;
@@ -52,6 +53,9 @@ public class MqRunnerComponent {
 
     @Value("${mq.port}")
     private Integer mqPort;
+
+    @Value("${mq.channel}")
+    private String mqChannel;
 
     @Value("${mq.username}")
     private String mqUsername;
@@ -183,7 +187,8 @@ public class MqRunnerComponent {
                         mqUsername,
                         mqPassword,
                         mqPort,
-                        testIdHeaderName
+                        testIdHeaderName,
+                        mqChannel
                 );
         }
     }

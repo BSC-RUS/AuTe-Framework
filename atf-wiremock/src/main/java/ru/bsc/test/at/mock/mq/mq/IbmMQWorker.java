@@ -19,7 +19,6 @@
 package ru.bsc.test.at.mock.mq.mq;
 
 import org.apache.commons.collections.Buffer;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,11 +43,13 @@ public class IbmMQWorker extends AbstractMqWorker {
 
     private final Buffer fifo;
     private Integer port;
+    private String channel;
 
-    public IbmMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, Integer port, String testIdHeaderName) {
+    public IbmMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, Integer port, String testIdHeaderName, String channel) {
         super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
         this.fifo = fifo;
         this.port = port;
+        this.channel = channel;
     }
 
 
@@ -57,7 +58,7 @@ public class IbmMQWorker extends AbstractMqWorker {
     void runWorker() {
         ConnectionFactory connectionFactory;
         try {
-            connectionFactory = createConnectionFactory(brokerUrl, port);
+            connectionFactory = createConnectionFactory(brokerUrl, port, channel);
         } catch (ReflectiveOperationException e) {
             logger.error("{}", e);
             return;
@@ -173,7 +174,7 @@ public class IbmMQWorker extends AbstractMqWorker {
         // Do nothing
     }
 
-    private QueueConnectionFactory createConnectionFactory(String host, Integer port) throws ReflectiveOperationException {
+    private QueueConnectionFactory createConnectionFactory(String host, Integer port, String channel) throws ReflectiveOperationException {
         QueueConnectionFactory connectionFactory;
         try {
             connectionFactory = (QueueConnectionFactory) Class.forName("com.ibm.mq.jms.MQQueueConnectionFactory").newInstance();
@@ -183,6 +184,7 @@ public class IbmMQWorker extends AbstractMqWorker {
 
         invoke(connectionFactory, "setHostName", host);
         invoke(connectionFactory, "setPort", port);
+        invoke(connectionFactory, "setChannel", channel);
         invoke(connectionFactory, "setTransportType", 1);
         return connectionFactory;
     }
