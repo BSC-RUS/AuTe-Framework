@@ -148,7 +148,11 @@ public class MqRunnerComponent {
     }
 
     private MqBrokerType getBrokerType() {
-        return MqBrokerType.valueOf(this.mqManager);
+        if(CollectionUtils.arrayToList(MqBrokerType.values()).contains(this.mqManager)){
+            return MqBrokerType.valueOf(this.mqManager);
+        } else {
+            return MqBrokerType.IBM_MQ;
+        }
     }
 
     private AbstractMqWorker createMqBroker(String sourceQueueName) {
