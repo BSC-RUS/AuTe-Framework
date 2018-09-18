@@ -23,6 +23,7 @@ import ru.bsc.test.at.executor.exception.ComparisonException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Set;
 
 import static junit.framework.TestCase.assertTrue;
@@ -177,9 +178,12 @@ public class ServiceRequestsComparatorHelperTest {
 
     @Test
     public void compareWSRequestRealNotEqualTestCOM236(){
+        Set<String> ignoreSet = new HashSet<>();
+        ignoreSet.add("sendDate");
+        ignoreSet.add("text");
         invokeCompareWSRequest("{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15*ignore*\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}",
                                "{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15T10:17:03.813Z\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}",
-                null);
+                ignoreSet);
     }
 
     @Test
