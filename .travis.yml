@@ -1,2 +1,4 @@
 language: java
+jdk: oraclejdk8
+
 mvn clean package -P npm-install
