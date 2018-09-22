@@ -6,7 +6,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: webpackcontrib/circleci-node-jdk8
+      - image: benoj/circleci-aws-jdk8-node
 
     working_directory: ~/repo
 
