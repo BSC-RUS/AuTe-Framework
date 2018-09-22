@@ -19,6 +19,11 @@
             <name>maven central</name>
             <url>https://repo.maven.apache.org/maven2/</url>
         </repository>
+        <repository>
+            <id>spring-repo</id>
+            <name>spring repo</name>
+            <url>https://repo.spring.io/</url>
+        </repository>
     </repositories>
 
     <properties>
