@@ -179,7 +179,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     });
                 }
                 mockDefinition.getResponse().setHeaders(headers);
-                String contentType = StringUtils.isNoneBlank(mockServiceResponse.getContentType()) ?
+                String contentType = StringUtils.isNotBlank(mockServiceResponse.getContentType()) ?
                         mockServiceResponse.getContentType() :
                         DEFAULT_CONTENT_TYPE;
                 mockDefinition.getResponse().getHeaders().put("Content-Type", contentType);
