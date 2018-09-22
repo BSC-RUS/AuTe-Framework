@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/openjdk:8-jdk
+      - image: webpackcontrib/circleci-node-jdk8
       
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -29,10 +29,7 @@ jobs:
           - v1-dependencies-{{ checksum "pom.xml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-          
-      - run:
-        sudo npm install -g npm@latest
-        
+      
       - run:
         mvn clean package -P npm-install
 
