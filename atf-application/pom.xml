@@ -25,7 +25,6 @@
         <hibernate-validator.version>5.1.3.Final</hibernate-validator.version>
         <commons-collections.version>3.2.1</commons-collections.version>
         <commons-io.version>2.4</commons-io.version>
-        <commons-lang.version>2.6</commons-lang.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
         <lombok.version>1.16.20</lombok.version>
     </properties>
