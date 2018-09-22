@@ -3,4 +3,5 @@ jdk: oraclejdk8
 node_js:
   - "iojs"
   - "7"
+install: true
 script: mvn clean package -P npm-install
