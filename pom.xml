@@ -8,6 +8,19 @@
     <name>atf</name>
     <packaging>pom</packaging>
 
+    <repositories>
+        <repository>
+            <id>hand-china</id>
+            <name>ojdbc repo</name>
+            <url>http://nexus.saas.hand-china.com/content/repositories/rdc</url>
+        </repository>
+        <repository>
+            <id>maven-central</id>
+            <name>maven central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
+
     <properties>
         <start-class />
     </properties>
