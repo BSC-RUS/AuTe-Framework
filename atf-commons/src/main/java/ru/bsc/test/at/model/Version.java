@@ -29,7 +29,7 @@ import java.util.Properties;
 import java.util.jar.JarFile;
 
 import static java.lang.Thread.currentThread;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Created by smakarov

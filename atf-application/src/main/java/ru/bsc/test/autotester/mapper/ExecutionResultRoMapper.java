@@ -31,8 +31,6 @@ import ru.bsc.test.autotester.ro.ScenarioResultRo;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 @Mapper(config = Config.class)
 public abstract class ExecutionResultRoMapper {
 
