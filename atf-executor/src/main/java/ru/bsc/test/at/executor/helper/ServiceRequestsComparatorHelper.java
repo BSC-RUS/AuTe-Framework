@@ -34,8 +34,8 @@ import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.evaluateExpressions;
 import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.insertSavedValues;
 

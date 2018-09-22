@@ -36,7 +36,7 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
 
 /**
