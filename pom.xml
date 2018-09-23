@@ -22,7 +22,7 @@
         <repository>
             <id>spring-repo</id>
             <name>spring repo</name>
-            <url>https://repo.spring.io/</url>
+            <url>http://repo.spring.io/plugins-release/</url>
         </repository>
     </repositories>
 
