@@ -79,11 +79,3 @@ response.status | response status
 response.body | response body
 response.headers | response headers
 uuid | mock's uuid
-
-## IBM MQ mocking ##
-For mocking IBM MQ you have to find and download
-* com.ibm.mq.allclient.jar
-* jms.jar
-and put it in `/lib` folder or another.
-You can find ibm libs in fix pack [Fix Pack 8.0.0.5 for WebSphere MQ v8](http://www-01.ibm.com/support/docview.wss?uid=swg21982686) or copy it from installed IBM product.
-You have to put these libs in application classpath for atf-application and for atf-wiremock.
