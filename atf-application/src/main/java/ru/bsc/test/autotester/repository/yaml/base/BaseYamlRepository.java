@@ -21,7 +21,7 @@ package ru.bsc.test.autotester.repository.yaml.base;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.util.YamlUtils;
 import ru.bsc.test.autotester.component.Translator;

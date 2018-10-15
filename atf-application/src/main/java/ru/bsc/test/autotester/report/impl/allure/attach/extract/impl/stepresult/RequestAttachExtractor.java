@@ -18,7 +18,7 @@
 
 package ru.bsc.test.autotester.report.impl.allure.attach.extract.impl.stepresult;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import ru.bsc.test.at.executor.model.FieldType;
 import ru.bsc.test.at.executor.model.RequestBodyType;

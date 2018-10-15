@@ -25,7 +25,7 @@ import ru.bsc.test.at.model.Version;
 @RestController
 public class VersionController {
 
-    private final Version version = Version.load();
+    private final Version version = Version.load("atf-wiremock");
 
     @GetMapping("/__version")
     public Version version() {

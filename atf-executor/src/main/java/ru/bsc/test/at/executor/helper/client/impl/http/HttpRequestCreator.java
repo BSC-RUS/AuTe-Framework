@@ -18,7 +18,7 @@
 
 package ru.bsc.test.at.executor.helper.client.impl.http;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.*;
 
 import java.net.URI;

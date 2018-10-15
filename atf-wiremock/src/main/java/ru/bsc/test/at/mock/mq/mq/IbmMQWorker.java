@@ -20,7 +20,7 @@ package ru.bsc.test.at.mock.mq.mq;
 
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.io.Charsets;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ReflectionUtils;
@@ -35,7 +35,7 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @SuppressWarnings("Duplicates")
 public class IbmMQWorker extends AbstractMqWorker {

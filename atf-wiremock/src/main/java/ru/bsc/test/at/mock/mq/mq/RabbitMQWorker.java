@@ -20,7 +20,7 @@ package ru.bsc.test.at.mock.mq.mq;
 
 import com.rabbitmq.client.*;
 import org.apache.commons.collections.Buffer;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 public class RabbitMQWorker extends AbstractMqWorker {
 

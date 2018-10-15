@@ -37,14 +37,14 @@ import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang.ObjectUtils.defaultIfNull;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.evaluateExpressions;
 import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.insertSavedValues;
 
 /**
  * Created by sdoroshin on 30.05.2017.
- *
  */
 public class ServiceRequestsComparatorHelper {
 
@@ -54,23 +54,23 @@ public class ServiceRequestsComparatorHelper {
 
 
     private void compareWSRequest(String expectedRequest, String actualRequest, Set<String> ignoredTags) throws ComparisonException {
-        try{
+        try {
             compareWSRequestAsXml(expectedRequest, actualRequest, ignoredTags);
-        }catch (XMLUnitException uException){
+        } catch (XMLUnitException uException) {
             // определяем, что упало при парсинге XML, пытаемся сравнить как JSON
             try {
                 compareWSRequestAsJson(expectedRequest, actualRequest, ignoredTags);
-            } catch(JsonParsingException ex) {
+            } catch (JsonParsingException ex) {
                 // определяем, что упало при парсинге JSON, далее сравниваем как строку
                 if (uException.getCause() instanceof SAXParseException) {
-                    compareWSRequestAsString(expectedRequest, actualRequest);
+                    compareWSRequestAsString(defaultString(expectedRequest), actualRequest);
                 }
             }
         }
     }
 
     private void compareWSRequestAsXml(String expectedRequest, String actualRequest, Set<String> ignoredTags) throws ComparisonException {
-        Diff diff = DiffBuilder.compare(expectedRequest)
+        Diff diff = DiffBuilder.compare(defaultString(expectedRequest))
                 .withTest(actualRequest)
                 .checkForIdentical()
                 .ignoreComments()
@@ -89,11 +89,13 @@ public class ServiceRequestsComparatorHelper {
             om.readValue(expectedRequest, Map.class);
             om.readValue(actualRequest, Map.class);
         } catch (Exception e) {
-            JsonParsingException jsonEx = new JsonParsingException(e);
-            throw jsonEx;
+            throw new JsonParsingException(e);
         }
 
         try {
+            if (ignoringPaths == null) {
+                ignoringPaths = Collections.emptySet();
+            }
             String[] ignoringPathsArr = new String[ignoringPaths.size()];
             JsonAssert.assertJsonEquals(
                     expectedRequest,
@@ -109,13 +111,13 @@ public class ServiceRequestsComparatorHelper {
         String[] split = expectedRequest.replaceAll(CLEAR_STR_PATTERN, "").replaceAll(NBS_PATTERN, " ").split(IGNORE);
         actualRequest = actualRequest.replaceAll(CLEAR_STR_PATTERN, "").replaceAll(NBS_PATTERN, " ");
 
-        if(split.length == 1 && !Objects.equals(defaultIfNull(split[0],""), defaultIfNull(actualRequest,""))){
+        if (split.length == 1 && !Objects.equals(defaultIfNull(split[0], ""), defaultIfNull(actualRequest, ""))) {
             throw new ComparisonException("", expectedRequest, actualRequest);
         }
 
         int i = 0;
         boolean notEquals = false;
-        for (String s : split){
+        for (String s : split) {
             i = actualRequest.indexOf(s.trim(), i);
             if (i < 0) {
                 notEquals = true;
@@ -176,10 +178,10 @@ public class ServiceRequestsComparatorHelper {
         String requestExpression = insertSavedValues(request.getExpectedServiceRequest(), variables);
         String requestText = evaluateExpressions(requestExpression, variables, null);
         Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
-                                  Arrays.stream(request.getIgnoredTags().split(","))
-                                          .map(String::trim)
-                                          .collect(Collectors.toSet()) :
-                                  null;
+                Arrays.stream(request.getIgnoredTags().split(","))
+                        .map(String::trim)
+                        .collect(Collectors.toSet()) :
+                null;
         for (WireMockRequest actualRequest : actualRequests) {
             compareWSRequest(requestText, actualRequest.getBody(), ignoredTags);
         }

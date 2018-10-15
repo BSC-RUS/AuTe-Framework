@@ -55,7 +55,7 @@ public class MockServiceResponse implements AbstractModel {
         response.setPassword(getPassword());
         response.setPathFilter(getPathFilter());
         if(headers != null) {
-            response.setHeaders(headers.stream().map(h -> h.copy()).collect(Collectors.toList()));
+            response.setHeaders(headers.stream().map(HeaderItem::copy).collect(Collectors.toList()));
         }
         return response;
     }

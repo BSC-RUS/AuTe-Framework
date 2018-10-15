@@ -21,7 +21,7 @@ package ru.bsc.test.autotester.report.impl.allure.attach.extract.impl.stepresult
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.bsc.test.at.executor.model.FieldType;

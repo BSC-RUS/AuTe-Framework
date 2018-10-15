@@ -18,7 +18,7 @@
 
 package ru.bsc.test.autotester.controller.rest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.bsc.test.autotester.exception.ResourceNotFoundException;

@@ -19,7 +19,7 @@
 package ru.bsc.test.at.executor.step.executor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.api.ClientCommonResponse;
 import ru.bsc.test.at.executor.helper.client.impl.http.ClientHttpRequest;
@@ -35,7 +35,7 @@ import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
 
 @Slf4j

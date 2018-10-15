@@ -25,6 +25,7 @@
         <hibernate-validator.version>5.1.3.Final</hibernate-validator.version>
         <commons-collections.version>3.2.1</commons-collections.version>
         <commons-io.version>2.4</commons-io.version>
+        <commons-lang.version>2.6</commons-lang.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
         <lombok.version>1.16.20</lombok.version>
     </properties>
@@ -250,24 +251,8 @@
             </plugin>
 
             <plugin>
-                <groupId>ru.concerteza.buildnumber</groupId>
-                <artifactId>maven-jgit-buildnumber-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Project-Version>${project.version}</Project-Version>
-                            <Build-Time>${maven.build.timestamp}</Build-Time>
-                            <Git-Commits-Count>${git.commitsCount}</Git-Commits-Count>
-                            <Git-Short-Revision>${git.shortRevision}</Git-Short-Revision>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
             </plugin>
 
             <plugin>

@@ -1,0 +1,31 @@
+server.port=1398
+logging.file=mount/logs/atf-wiremock.log
+logging.level.ru.bsc=DEBUG
+
+# IMB MQ
+mq.manager=IBM_MQ
+mq.host=
+mq.port=
+mq.username=
+mq.password=
+mq.default.destination.queue.name=
+mq.channel=
+
+# Active MQ
+# mq.manager=ACTIVE_MQ
+# mq.host=
+# mq.username=
+# mq.password=
+# mq.default.destination.queue.name=
+
+# Rabbit MQ
+# mq.manager=RABBIT_MQ
+# mq.host=
+# mq.host=
+# mq.port=
+# mq.username=
+# mq.password=
+# mq.default.destination.queue.name=
+
+properties.yaml.file=mount/conf/properties.yml
+test.id.header.name=testIdHeader

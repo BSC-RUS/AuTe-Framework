@@ -19,7 +19,7 @@
 package ru.bsc.test.autotester.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
@@ -41,9 +41,8 @@ import java.util.List;
 public class VersionServiceImpl implements VersionService {
     private static final String WIREMOCK_VERSION_PATH = "__version";
 
+    private final Version applicationVersion = Version.load("atf-application");
     private final List<WiremockVersion> wiremockVersions = new ArrayList<>();
-
-    private Version applicationVersion;
 
     @Autowired
     public VersionServiceImpl(EnvironmentProperties env, RestTemplateBuilder builder) {
@@ -52,9 +51,6 @@ public class VersionServiceImpl implements VersionService {
 
     @Override
     public Version getApplicationVersion() {
-        if (applicationVersion == null) {
-            applicationVersion = Version.load();
-        }
         return applicationVersion;
     }
 
@@ -81,7 +77,7 @@ public class VersionServiceImpl implements VersionService {
 
     private String getVersionUrl(StandProperties properties) {
         return properties.getWireMockUrl() +
-               (properties.getWireMockUrl().endsWith("/") ? "" : "/") +
-               WIREMOCK_VERSION_PATH;
+                (properties.getWireMockUrl().endsWith("/") ? "" : "/") +
+                WIREMOCK_VERSION_PATH;
     }
 }

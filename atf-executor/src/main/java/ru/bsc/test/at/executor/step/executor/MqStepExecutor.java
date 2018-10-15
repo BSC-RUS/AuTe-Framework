@@ -18,7 +18,7 @@
 
 package ru.bsc.test.at.executor.step.executor;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.api.ClientResponse;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
