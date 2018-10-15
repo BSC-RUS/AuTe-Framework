@@ -33,4 +33,13 @@ public class ComparisonException extends RuntimeException {
                 actualRequest
         ));
     }
+
+    public ComparisonException(String diff, String expectedRequest, String actualRequest) {
+        super(String.format(
+                "Service request error (request differences):%s\n\tExpected: %s\n\tActual: %s\n",
+                diff,
+                expectedRequest,
+                actualRequest
+        ));
+    }
 }

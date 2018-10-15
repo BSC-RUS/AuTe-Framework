@@ -18,6 +18,8 @@
 
 package ru.bsc.test.at.executor.helper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.javacrumbs.jsonunit.JsonAssert;
 import org.xml.sax.SAXParseException;
 import org.xmlunit.XMLUnitException;
 import org.xmlunit.builder.DiffBuilder;
@@ -26,6 +28,7 @@ import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockRequest;
 import ru.bsc.test.at.executor.ei.wiremock.model.WireMockRequest;
 import ru.bsc.test.at.executor.exception.ComparisonException;
+import ru.bsc.test.at.executor.exception.JsonParsingException;
 import ru.bsc.test.at.executor.model.ExpectedServiceRequest;
 import ru.bsc.test.at.executor.model.Project;
 import ru.bsc.test.at.executor.model.Step;
@@ -54,9 +57,14 @@ public class ServiceRequestsComparatorHelper {
         try{
             compareWSRequestAsXml(expectedRequest, actualRequest, ignoredTags);
         }catch (XMLUnitException uException){
-            // определяем, что упало при парсинге XML, далее сравниваем как строку
-            if(uException.getCause() instanceof SAXParseException){
-                compareWSRequestAsString(expectedRequest, actualRequest);
+            // определяем, что упало при парсинге XML, пытаемся сравнить как JSON
+            try {
+                compareWSRequestAsJson(expectedRequest, actualRequest, ignoredTags);
+            } catch(JsonParsingException ex) {
+                // определяем, что упало при парсинге JSON, далее сравниваем как строку
+                if (uException.getCause() instanceof SAXParseException) {
+                    compareWSRequestAsString(expectedRequest, actualRequest);
+                }
             }
         }
     }
@@ -75,12 +83,34 @@ public class ServiceRequestsComparatorHelper {
         }
     }
 
+    private void compareWSRequestAsJson(String expectedRequest, String actualRequest, Set<String> ignoringPaths) throws ComparisonException {
+        ObjectMapper om = new ObjectMapper();
+        try {
+            om.readValue(expectedRequest, Map.class);
+            om.readValue(actualRequest, Map.class);
+        } catch (Exception e) {
+            JsonParsingException jsonEx = new JsonParsingException(e);
+            throw jsonEx;
+        }
+
+        try {
+            String[] ignoringPathsArr = new String[ignoringPaths.size()];
+            JsonAssert.assertJsonEquals(
+                    expectedRequest,
+                    actualRequest,
+                    JsonAssert.whenIgnoringPaths(ignoringPaths.toArray(ignoringPathsArr))
+            );
+        } catch (AssertionError err) {
+            throw new ComparisonException(err.getMessage(), expectedRequest, actualRequest);
+        }
+    }
+
     private void compareWSRequestAsString(String expectedRequest, String actualRequest) throws ComparisonException {
         String[] split = expectedRequest.replaceAll(CLEAR_STR_PATTERN, "").replaceAll(NBS_PATTERN, " ").split(IGNORE);
         actualRequest = actualRequest.replaceAll(CLEAR_STR_PATTERN, "").replaceAll(NBS_PATTERN, " ");
 
         if(split.length == 1 && !Objects.equals(defaultIfNull(split[0],""), defaultIfNull(actualRequest,""))){
-            throw new ComparisonException(null, expectedRequest, actualRequest);
+            throw new ComparisonException("", expectedRequest, actualRequest);
         }
 
         int i = 0;
@@ -94,7 +124,7 @@ public class ServiceRequestsComparatorHelper {
         }
 
         if (notEquals) {
-            throw new ComparisonException(null, expectedRequest, actualRequest);
+            throw new ComparisonException("", expectedRequest, actualRequest);
         }
 
     }
