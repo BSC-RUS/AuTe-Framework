@@ -35,6 +35,7 @@
   "Add group": "Добавить группу",
   "Service URL": "URL сервиса",
   "HTTP Status": "HTTP код",
+  "HTTP Method": "HTTP метод",
   "Set as default": "Использовать по умолчанию",
   "Used by default": "Использовать по умолчанию",
   "Data base URL": "URL базы данных",

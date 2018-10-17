@@ -134,7 +134,6 @@
         <dependency>
             <groupId>com.ibm.mq</groupId>
             <artifactId>com.ibm.mq.allclient</artifactId>
-            <version>9.1.0.0</version>
         </dependency>
 
         <!-- test libs -->

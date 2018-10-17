@@ -35,6 +35,7 @@
   "Add group": "Add group",
   "Service URL": "Service URL",
   "HTTP Status": "HTTP status code",
+  "HTTP Method": "HTTP method",
   "Set as default": "Set as default",
   "Used by default": "Used by default",
   "Data base URL": "Data base URL",

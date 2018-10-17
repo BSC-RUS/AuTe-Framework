@@ -147,6 +147,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.ibm.mq</groupId>
+            <artifactId>com.ibm.mq.allclient</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>

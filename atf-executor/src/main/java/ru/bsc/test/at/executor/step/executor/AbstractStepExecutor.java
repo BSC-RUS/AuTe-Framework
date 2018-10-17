@@ -155,8 +155,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
             for (MockServiceResponse mockServiceResponse : responseList) {
                 MockDefinition mockDefinition = new MockDefinition(priority--, project.getTestIdHeaderName(), testId);
                 mockDefinition.getRequest().setUrl(mockServiceResponse.getServiceUrl());
-                // SOAP always POST
-                mockDefinition.getRequest().setMethod("POST");
+                mockDefinition.getRequest().setMethod(mockServiceResponse.getHttpMethodOrDefault());
                 if(isNotEmpty(mockServiceResponse.getPassword()) || isNotEmpty(mockServiceResponse.getUserName())){
                     BasicAuthCredentials credentials = new BasicAuthCredentials();
                     credentials.setPassword(mockServiceResponse.getPassword());
