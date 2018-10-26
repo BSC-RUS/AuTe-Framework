@@ -77,6 +77,14 @@ export class MappingDetailComponent implements OnInit {
       });
   }
 
+  deleteMock() {
+    if (confirm('Confirm: delete mock')) {
+      this.wireMockService
+        .deleteOne(this.mapping)
+        .then(() => this.router.navigate(['/mapping']));
+    }
+  }
+
   addBodyPattern() {
     if (!this.mapping.request.bodyPatterns) {
       this.mapping.request.bodyPatterns = [];
@@ -98,8 +106,7 @@ export class MappingDetailComponent implements OnInit {
         // noinspection JSIgnoredPromiseFromCall
         this.router.navigate(['/mapping', this.mapping.uuid]);
         const toastOptions: ToastOptions = {
-          title: 'Applied',
-          msg: 'Маппинг применен',
+          title: 'Маппинг применен',
           showClose: true,
           timeout: 5000,
           theme: 'bootstrap'

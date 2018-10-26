@@ -27,6 +27,12 @@
         <h4><small>{{baseUrl}}/bsc-wire-mock</small>{{mapping.request.url ? mapping.request.url : mapping.request.urlPattern}}</h4>
       </div>
 
+      <div style="float: right">
+        <ng-container *ngIf="mapping.uuid">
+          <button class="btn btn-danger" (click)="deleteMock();">Delete mock</button>
+        </ng-container>
+      </div>
+
       <div class="form-group">
         <label>Request mapping</label>
       </div>
@@ -118,6 +124,15 @@
       </div>
 
       <div class="form-group">
+        <div class="col-sm-2">
+          <label>HTTP status code</label>
+          <div class="form-horizontal">
+            <input class="form-control" placeholder="HTTP status code" title="" [(ngModel)]="mapping.response.status">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
         <div class="col-sm-12">
           <label>Headers</label>
           <div class="form-horizontal">
@@ -148,8 +163,8 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <button class="btn btn-primary" style="float: right;" (click)="applyMapping()">Применить маппинг</button>
+      <div style="float: right">
+        <button class="btn btn-primary" (click)="applyMapping()">Применить маппинг</button>
       </div>
 
       <div class="form-group" style="display: none;">

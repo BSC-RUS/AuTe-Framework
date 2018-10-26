@@ -24,12 +24,14 @@ import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.exception.ScenarioStopException;
 import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.ServiceRequestsComparatorHelper;
+import ru.bsc.test.at.executor.model.MockServiceResponse;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.model.StepParameterSet;
 import ru.bsc.test.at.executor.model.StepResult;
 import ru.bsc.test.at.executor.service.api.Executor;
 import ru.bsc.test.at.executor.service.api.StepExecutorRequest;
 import ru.bsc.test.at.executor.step.executor.IStepExecutor;
+import ru.bsc.test.at.executor.step.executor.ParsedMockResponseBody;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -43,6 +45,8 @@ import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVaria
  */
 @Slf4j
 public class AtStepExecutor implements Executor<StepExecutorRequest> {
+
+    private static final long MAX_DELAY = 60000L;
 
     private final ServiceRequestsComparatorHelper serviceRequestsComparatorHelper = new ServiceRequestsComparatorHelper();
     private final MqMockHelper mqMockHelper = new MqMockHelper();
@@ -76,14 +80,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
 
                     // COM-123 Timeout
                     if (step.getTimeoutMs() != null) {
-                        long timeout = parseLongOrVariable(stepExecutorRequest.getScenarioVariables(), step.getTimeoutMs(), 0);
-                        if (timeout > 0) {
-                            try {
-                                Thread.sleep(Math.min(timeout, 60000L));
-                            } catch (InterruptedException ex) {
-                                log.error("Can't interrupt thread for delay", ex);
-                            }
-                        }
+                        delay(parseLongOrVariable(stepExecutorRequest.getScenarioVariables(), step.getTimeoutMs(), 0));
                     }
 
                     if (stepParameterSet.getStepParameterList() != null) {
@@ -107,6 +104,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                             }
                         }
 
+                        waitWiremockDelayFromGroovyScripts(step);
                         // После выполнения шага необходимо проверить запросы к веб-сервисам
                         serviceRequestsComparatorHelper.assertTestCaseWSRequests(stepExecutorRequest.getProject(), stepExecutorRequest.getScenarioVariables(), wireMockAdmin, testId, step);
 
@@ -130,6 +128,30 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                         throw new ScenarioStopException("stop observer is null");
                     }
                 }
+            }
+        }
+    }
+
+    private void waitWiremockDelayFromGroovyScripts(Step step) {
+        if (step == null || step.getMockServiceResponseList() == null) {
+            return;
+        }
+        long summaryDelay = step.getMockServiceResponseList().stream()
+                .filter(Objects::nonNull)
+                .map(MockServiceResponse::getResponseBody)
+                .filter(Objects::nonNull)
+                .map(ParsedMockResponseBody::new)
+                .mapToLong(ParsedMockResponseBody::groovyDelay)
+                .sum();
+        delay(summaryDelay);
+    }
+
+    private void delay(long timeout) {
+        if (timeout > 0) {
+            try {
+                Thread.sleep(Math.min(timeout, MAX_DELAY));
+            } catch (InterruptedException ex) {
+                log.error("Can't interrupt thread for delay", ex);
             }
         }
     }

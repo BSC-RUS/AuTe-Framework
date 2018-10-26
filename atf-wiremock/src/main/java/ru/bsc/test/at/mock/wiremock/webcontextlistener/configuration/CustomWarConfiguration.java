@@ -65,8 +65,8 @@ public class CustomWarConfiguration extends WarConfiguration {
 
             try (final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(VELOCITY_PROPERTIES.getValue())) {
                 properties.load(stream);
-            } catch (IOException | NullPointerException e) {
-                log.error("Error while loading properties. Using default properties", e);
+            } catch (Exception e) {
+                log.warn("Error while loading properties: {}. Using default values", VELOCITY_PROPERTIES.getValue());
             }
             Velocity.init(properties);
 

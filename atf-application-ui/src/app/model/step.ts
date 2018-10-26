@@ -30,7 +30,7 @@ export class Step {
   code: string;
   expectedServiceRequestList: ExpectedServiceRequest[];
   relativeUrl: string;
-  requestMethod: string;
+  requestMethod: string = 'POST';
   request: string;
   requestHeaders: string;
   expectedResponse: string;
@@ -60,7 +60,7 @@ export class Step {
   expectedMqRequestList: ExpectedMqRequest[];
   sqlDataList: SqlData[];
   scenarioVariableFromMqRequestList: ScenarioVariableFromMqRequest[];
-  stepMode: string;
+  stepMode: string = 'REST';
 
   mqOutputQueueName: string;
   mqInputQueueName: string;

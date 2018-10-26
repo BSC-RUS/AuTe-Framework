@@ -42,9 +42,9 @@ export class WireMockService {
       .catch(reason => console.log(reason));
   }
 
-  deleteOne(mapping: Mapping) {
-    this.http
-      .delete(this.adminUrl + '/mappings/' + mapping.uuid);
+  deleteOne(mapping: Mapping): Promise<null> {
+    return this.http
+      .delete(this.adminUrl + '/mappings/' + mapping.uuid).toPromise();
   }
 
   apply(mapping: Mapping): Promise<Mapping> {

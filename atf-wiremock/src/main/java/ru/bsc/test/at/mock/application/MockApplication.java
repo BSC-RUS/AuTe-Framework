@@ -26,17 +26,13 @@ import com.github.tomakehurst.wiremock.http.AdminRequestHandler;
 import com.github.tomakehurst.wiremock.http.StubRequestHandler;
 import com.github.tomakehurst.wiremock.servlet.NotImplementedContainer;
 import com.github.tomakehurst.wiremock.servlet.WireMockHandlerDispatchingServlet;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.async.DeferredResult;
 import ru.bsc.test.at.mock.filter.CorsFilter;
@@ -57,12 +53,8 @@ import static com.google.common.collect.Lists.newArrayList;
 import static springfox.documentation.schema.AlternateTypeRules.newRule;
 
 
-@Controller
-@EnableAutoConfiguration
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "ru.bsc.test.at.mock")
 @EnableSwagger2
-@ComponentScan("ru.bsc.test.at.mock")
-@Slf4j
 public class MockApplication {
 
     private static final String APP_CONTEXT_KEY = "WireMockApp";
@@ -100,7 +92,7 @@ public class MockApplication {
 
     @Bean
     public ServletRegistrationBean wiremockAdminHandlerBean() {
-        ServletRegistrationBean bean = new ServletRegistrationBean(new WireMockHandlerDispatchingServlet(),"/__admin/*");
+        ServletRegistrationBean bean = new ServletRegistrationBean(new WireMockHandlerDispatchingServlet(), "/__admin/*");
         bean.addInitParameter("RequestHandlerClass", AdminRequestHandler.class.getName());
         bean.setLoadOnStartup(1);
         bean.setName("wiremockAdmin");
