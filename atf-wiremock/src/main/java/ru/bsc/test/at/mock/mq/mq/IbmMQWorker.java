@@ -19,6 +19,7 @@
 package ru.bsc.test.at.mock.mq.mq;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+import com.ibm.msg.client.wmq.WMQConstants;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,7 +57,7 @@ public class IbmMQWorker extends AbstractMqWorker {
             connectionFactory = new MQQueueConnectionFactory();
             connectionFactory.setHostName(brokerUrl);
             connectionFactory.setPort(port);
-            connectionFactory.setTransportType(1);
+            connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
         } catch (JMSException e) {
             logger.error("exception while create connection factory:", e);
             return;
