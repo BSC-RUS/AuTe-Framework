@@ -73,6 +73,7 @@
   "Step diff": "Шаг был изменен",
   "Up": "Вверх",
   "Down": "Вниз",
+  "Request type": "Тип запроса",
   "Request method": "Метод запроса",
   "Relative url. Example": "Относительный url. Пример",
   "Delete": "Удалить",
@@ -174,5 +175,6 @@
   "Readonly mode. Open scenario details to edit.": "Только чтение. Откройте детали сценария для редактирования.",
   "Header name": "Наименование заголовка",
   "Header value": "Значение заголовка",
-  "Wrong project code": "Неправильное название директории (код проекта)"
+  "Wrong project code": "Неправильное название директории (код проекта)",
+  "URL pattern": "Шаблон URL"
 }

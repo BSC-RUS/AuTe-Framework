@@ -34,6 +34,7 @@ import java.util.Map;
 public class MockRequest {
     private String method;
     private String url;
+    private String urlPattern;
     private BasicAuthCredentials basicAuthCredentials;
     private Map<String, Map<String, String>> headers = new HashMap<>();
     private List<MatchesXPath> bodyPatterns;

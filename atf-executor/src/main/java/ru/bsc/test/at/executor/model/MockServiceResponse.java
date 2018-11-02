@@ -39,6 +39,7 @@ public class MockServiceResponse implements AbstractModel {
 
     private String code;
     private String serviceUrl;
+    private Boolean UrlPattern;
     private HTTPMethod httpMethod;
     private String responseBody;
     private String responseBodyFile;
@@ -52,6 +53,7 @@ public class MockServiceResponse implements AbstractModel {
     protected MockServiceResponse copy() {
         MockServiceResponse response = new MockServiceResponse();
         response.setServiceUrl(getServiceUrl());
+        response.setUrlPattern(getUrlPattern());
         response.setHttpMethod(getHttpMethod());
         response.setResponseBody(getResponseBody());
         // TODO: cloned.setResponseBodyFile(getResponseBodyFile());

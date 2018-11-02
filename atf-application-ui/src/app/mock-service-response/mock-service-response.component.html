@@ -18,14 +18,6 @@
 
 <div>
   <div class="row">
-    <div class="col-sm-7">
-      <input class="form-control" placeholder="{{'Service URL' | translate}}" title=""
-             [(ngModel)]="mockServiceResponse.serviceUrl"/>
-    </div>
-    <div class="col-sm-1">
-      <input class="form-control" placeholder="{{'HTTP Status' | translate}}" title=""
-             [(ngModel)]="mockServiceResponse.httpStatus"/>
-    </div>
     <div class="col-sm-1">
       <select class="form-control" title="{{'HTTP Method' | translate}}" [(ngModel)]="mockServiceResponse.httpMethod">
         <option [ngValue]="'GET'">GET</option>
@@ -34,6 +26,19 @@
         <option [ngValue]="'PATCH'">PATCH</option>
         <option [ngValue]="'DELETE'">DELETE</option>
       </select>
+    </div>
+    <div class="col-sm-6">
+      <input class="form-control" placeholder="{{'Service URL' | translate}}" title=""
+             [(ngModel)]="mockServiceResponse.serviceUrl"/>
+    </div>
+    <div class="col-sm-1">
+      <label>
+        <input type="checkbox" [(ngModel)]="mockServiceResponse.urlPattern"> {{'URL pattern' | translate}}
+      </label>
+    </div>
+    <div class="col-sm-1">
+      <input class="form-control" placeholder="{{'HTTP Status' | translate}}" title=""
+             [(ngModel)]="mockServiceResponse.httpStatus"/>
     </div>
     <div class="col-sm-3">
       <div class="input-group">

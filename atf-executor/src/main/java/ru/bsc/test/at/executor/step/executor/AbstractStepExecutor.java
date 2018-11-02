@@ -21,6 +21,7 @@ package ru.bsc.test.at.executor.step.executor;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.PathNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -154,7 +155,11 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
         if (responseList != null && wireMockAdmin != null) {
             for (MockServiceResponse mockServiceResponse : responseList) {
                 MockDefinition mockDefinition = new MockDefinition(priority--, project.getTestIdHeaderName(), testId);
-                mockDefinition.getRequest().setUrl(mockServiceResponse.getServiceUrl());
+                if (BooleanUtils.isTrue(mockServiceResponse.getUrlPattern())) {
+                    mockDefinition.getRequest().setUrlPattern(mockServiceResponse.getServiceUrl());
+                } else {
+                    mockDefinition.getRequest().setUrl(mockServiceResponse.getServiceUrl());
+                }
                 mockDefinition.getRequest().setMethod(mockServiceResponse.getHttpMethodOrDefault());
                 if(isNotEmpty(mockServiceResponse.getPassword()) || isNotEmpty(mockServiceResponse.getUserName())){
                     BasicAuthCredentials credentials = new BasicAuthCredentials();

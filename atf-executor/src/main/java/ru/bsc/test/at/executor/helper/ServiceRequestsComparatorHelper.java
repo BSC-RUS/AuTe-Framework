@@ -20,6 +20,7 @@ package ru.bsc.test.at.executor.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.javacrumbs.jsonunit.JsonAssert;
+import org.apache.commons.lang3.BooleanUtils;
 import org.xml.sax.SAXParseException;
 import org.xmlunit.XMLUnitException;
 import org.xmlunit.builder.DiffBuilder;
@@ -160,7 +161,11 @@ public class ServiceRequestsComparatorHelper {
     ) throws Exception {
         MockRequest mockRequest = new MockRequest();
         mockRequest.getHeaders().put(project.getTestIdHeaderName(), createEqualToHeader(testId));
-        mockRequest.setUrl(request.getServiceName());
+        if (BooleanUtils.isTrue(request.getUrlPattern())) {
+            mockRequest.setUrlPattern(request.getServiceName());
+        } else {
+            mockRequest.setUrl(request.getServiceName());
+        }
         List<WireMockRequest> actualRequests = wireMockAdmin.findRestRequests(mockRequest).getRequests();
         if (actualRequests == null) {
             actualRequests = new ArrayList<>();

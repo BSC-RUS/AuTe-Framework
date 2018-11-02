@@ -33,6 +33,7 @@ public class MockServiceResponseRo implements AbstractRo {
 
     private String code;
     private String serviceUrl;
+    private Boolean urlPattern;
     private String httpMethod;
     private String responseBody;
     private String responseBodyFile;

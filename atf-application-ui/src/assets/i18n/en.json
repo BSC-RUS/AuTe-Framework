@@ -73,6 +73,7 @@
   "Step diff": "Step was changed",
   "Up": "Up",
   "Down": "Down",
+  "Request type": "Request type",
   "Request method": "Request method",
   "Relative url. Example": "Relative url. Example",
   "Delete": "Delete",
@@ -158,5 +159,6 @@
   "Old scenario directory not removed": "Old scenario directory not removed",
   "Step": "Step",
   "Header name": "Header name",
-  "Header value": "Header value"
+  "Header value": "Header value",
+  "URL pattern": "URL pattern"
 }

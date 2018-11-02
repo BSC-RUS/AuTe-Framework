@@ -35,6 +35,7 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
 
     private String code;
     private String serviceName;
+    private Boolean urlPattern;
     private String expectedServiceRequest;
     private String expectedServiceRequestFile;
     private String ignoredTags;
@@ -43,6 +44,7 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
     protected ExpectedServiceRequest copy() {
         ExpectedServiceRequest request = new ExpectedServiceRequest();
         request.setServiceName(getServiceName());
+        request.setUrlPattern(getUrlPattern());
         request.setExpectedServiceRequest(getExpectedServiceRequest());
         request.setIgnoredTags(getIgnoredTags());
         request.setCount(getCount());

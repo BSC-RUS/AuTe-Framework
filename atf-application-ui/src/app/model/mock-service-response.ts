@@ -19,6 +19,7 @@
 export class MockServiceResponse {
   code: string;
   serviceUrl: string;
+  urlPattern: boolean;
   httpMethod: string;
   responseBody: string;
   headers: HeaderItem[];
