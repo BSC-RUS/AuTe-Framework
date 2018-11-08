@@ -72,11 +72,14 @@ public class IbmMQWorker extends AbstractMqWorker {
 
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-
                     // Wait for a message
                     logger.info("Wait messages from {}", queueNameFrom);
+
                     Message receivedMessage = consumer.receive();
-                    logger.info("Received message, JMSMessageID: {}", receivedMessage.getJMSMessageID());
+                    String jmsMessageId = receivedMessage.getJMSMessageID();
+                    String jmsReplyTo = receivedMessage.getJMSReplyTo().toString();
+
+                    logger.info("Received message: JMSMessageID={}, JMSReplyTo={}", jmsMessageId, jmsReplyTo);
 
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
@@ -114,13 +117,16 @@ public class IbmMQWorker extends AbstractMqWorker {
                                 response = stringBody.getBytes();
                             }
 
-                            mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
+                            String destinationQueue = isNotEmpty(mockResponse.getDestinationQueueName())
+                                    ? mockResponse.getDestinationQueueName()
+                                    : jmsReplyTo;
 
-                            if (isNotEmpty(mockResponse.getDestinationQueueName())) {
+                            mockedRequest.setDestinationQueue(destinationQueue);
 
+                            if (isNotEmpty(destinationQueue)) {
                                 mockedRequest.setResponseBody(new String(response, StandardCharsets.UTF_8));
 
-                                Queue destination = session.createQueue(mockResponse.getDestinationQueueName());
+                                Queue destination = session.createQueue(destinationQueue);
                                 MessageProducer producer = session.createProducer(destination);
                                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
@@ -131,7 +137,7 @@ public class IbmMQWorker extends AbstractMqWorker {
                                 producer.send(newMessage);
 
                                 producer.close();
-                                logger.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), message.getText(), StandardCharsets.UTF_8);
+                                logger.info(" [x] Send >>> {} '{}'", destinationQueue, message.getText(), StandardCharsets.UTF_8);
                             }
                         }
                     } else {
