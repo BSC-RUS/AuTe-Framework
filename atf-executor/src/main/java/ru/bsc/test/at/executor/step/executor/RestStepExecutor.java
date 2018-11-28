@@ -18,25 +18,37 @@
 
 package ru.bsc.test.at.executor.step.executor;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
+
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.api.ClientCommonResponse;
 import ru.bsc.test.at.executor.helper.client.impl.http.ClientHttpRequest;
 import ru.bsc.test.at.executor.helper.client.impl.http.ClientHttpRequestWithVariables;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.*;
+import ru.bsc.test.at.executor.model.FieldType;
+import ru.bsc.test.at.executor.model.Project;
+import ru.bsc.test.at.executor.model.RequestBodyType;
+import ru.bsc.test.at.executor.model.RequestData;
+import ru.bsc.test.at.executor.model.Stand;
+import ru.bsc.test.at.executor.model.Step;
+import ru.bsc.test.at.executor.model.StepMode;
+import ru.bsc.test.at.executor.model.StepResult;
 import ru.bsc.test.at.executor.step.executor.scriptengine.JSScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineProcedureResult;
-
-import java.sql.Connection;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
 
 @Slf4j
 public class RestStepExecutor extends AbstractStepExecutor {
@@ -129,7 +141,7 @@ public class RestStepExecutor extends AbstractStepExecutor {
                 // Выполнить скрипт
                 log.debug("Executing script {}", step.getScript());
                 if (isNotEmpty(step.getScript())) {
-                    ScriptEngine scriptEngine = new JSScriptEngine();
+                    ScriptEngine scriptEngine = new JSScriptEngine(responseData);
                     ScriptEngineProcedureResult scriptEngineExecutionResult = scriptEngine.executeProcedure(step.getScript(), scenarioVariables);
                     if (!scriptEngineExecutionResult.isOk()) {
                         throw new Exception(scriptEngineExecutionResult.getException());
@@ -179,7 +191,11 @@ public class RestStepExecutor extends AbstractStepExecutor {
             expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables, responseData);
             stepResult.setExpected(expectedResponse);
 
-            // 6. Проверить код статуса ответа
+            // 6.1. Сохранить statusCode в результат степа
+            int statusCode = responseData.getStatusCode();
+            stepResult.setStatus(String.valueOf(statusCode));
+
+            // 6.2. Проверить код статуса ответа
             Integer expectedStatusCode = step.getExpectedStatusCode();
             log.debug("Expected status is {} and actual status is {}", expectedStatusCode, responseData.getStatusCode());
             if ((expectedStatusCode != null) && (expectedStatusCode != responseData.getStatusCode())) {

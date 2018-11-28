@@ -32,6 +32,7 @@ export class StepResult {
   requestBody: string;
   pollingRetryCount: number;
   savedParameters: string;
+  status: string;
   description: string;
   editable: boolean;
   cookies: string;

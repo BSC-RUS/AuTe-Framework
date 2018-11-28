@@ -85,7 +85,8 @@
           </div>
           <div class="clearfix"></div>
             <div class="col-sm-6">
-              <label>Actual</label>
+              <label>Actual</label> <br/>
+              {{'Status of actual response' | translate}}: {{stepResult.status}} <br/>
               <div class="form-control"
                    #actualResult
                    style="overflow: scroll; height: 600px; background-color: #eee;"
@@ -93,7 +94,8 @@
             </div>
             </div>
             <div class="col-sm-6">
-              <label>Expected</label>
+              <label>Expected</label> <br/>
+              <br/>
               <div class="form-control"
                    #expectedResult
                    style="overflow: scroll; height: 600px; background-color: #eee;"

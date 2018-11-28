@@ -55,7 +55,9 @@ public class DiffAttachExtractor extends AbstractAttachExtractor<StepResult> {
     @Override
     public List<Attachment> extract(File resultDirectory, StepResult result) {
         List<Diff> diffs = diffCalculator.calculate(result.getActual(), result.getExpected());
-        JtwigModel model = JtwigModel.newModel().with("diffs", diffs);
+        String status = result.getStatus();
+        JtwigModel model = JtwigModel.newModel().with("diffs", diffs)
+                .with("status",status);
         String data = template.render(model);
         String relativePath = writeDataToFile(resultDirectory, data, FILE_NAME, EXTENSION);
         if (relativePath != null) {

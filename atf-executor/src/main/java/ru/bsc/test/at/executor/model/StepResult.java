@@ -40,6 +40,7 @@ public class StepResult {
     private String details;
     private String expected;
     private String actual;
+    private String status;
     private String requestUrl;
     private String requestBody;
     private Integer pollingRetryCount;

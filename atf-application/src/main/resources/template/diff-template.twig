@@ -28,6 +28,7 @@
 {% autoescape 'html' %}
 <div class="json-pane">
     <h2>Actual</h2>
+    <h3> Status of actual response: &nbsp; {{- status -}} </h3>
     <div id="actual-pane" class="json-result-pane">
     <pre>
         {%- for diff in diffs -%}
@@ -42,6 +43,7 @@
 </div>
 <div class="json-pane">
     <h2>Expected</h2>
+    <h3> <br/> </h3>
     <div id="expected-pane" class="json-result-pane">
     <pre>
         {%- for diff in diffs -%}

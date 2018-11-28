@@ -37,6 +37,7 @@ public class StepResultRo {
     private String expected;
     private List<Diff> diff;
     private String actual;
+    private String status;
     private String requestUrl;
     private String requestBody;
     private Integer pollingRetryCount;
