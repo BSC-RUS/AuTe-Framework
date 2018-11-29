@@ -23,4 +23,6 @@ export class ExpectedServiceRequest {
   expectedServiceRequest: string;
   ignoredTags: string;
   count: string;
+  typeMatching: string;
+  pathFilter: string;
 }

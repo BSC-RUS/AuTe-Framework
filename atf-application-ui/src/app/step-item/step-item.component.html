@@ -376,6 +376,21 @@
                   <input class="form-control" placeholder="{{'Repeat count' | translate}}" style="margin-bottom: 5px;" title="" [(ngModel)]="expectedServiceRequest.count"/>
                 </div>
               </div>
+              <div class="row">
+                <div class="col-sm-1">
+                  <select class="form-control" title="{{'Type Matching' | translate}}" [(ngModel)]="expectedServiceRequest.typeMatching">
+                    <option [ngValue]="'empty'"></option>
+                    <option [ngValue]="'equalToXml'">equalToXml</option>
+                    <option [ngValue]="'equalToJson'">equalToJson</option>
+                    <option [ngValue]="'contains'">contains</option>
+                    <option [ngValue]="'XPath'">XPath</option>
+                  </select>
+                </div>
+                <!--<div class="col-sm-2"> style="margin-top: 10px">-->
+                <div class="col-sm-2">
+                  <input class="form-control" placeholder="{{'Matching' | translate}}" title="" [(ngModel)]="expectedServiceRequest.pathFilter"/>
+                </div>
+              </div>
               <textarea class="form-control" placeholder="{{'Expected request' | translate}}" title="" rows="7" [(ngModel)]="expectedServiceRequest.expectedServiceRequest"></textarea>
             </div>
           </div>

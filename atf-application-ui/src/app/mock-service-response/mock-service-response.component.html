@@ -56,8 +56,17 @@
     <div class="col-sm-4" style="margin-top: 10px">
       <input class="form-control" placeholder='Basic Authentication(password), [empty]' title="" [(ngModel)]="mockServiceResponse.password"/>
     </div>
-    <div class="col-sm-4" style="margin-top: 10px">
-      <input class="form-control" placeholder="{{'XPath filter' | translate}}" title="" [(ngModel)]="mockServiceResponse.pathFilter"/>
+    <div class="col-sm-1" style="margin-top: 10px">
+      <select class="form-control" title="{{'Type Matching' | translate}}" [(ngModel)]="mockServiceResponse.typeMatching">
+        <option [ngValue]="'empty'"></option>
+        <option [ngValue]="'equalToXml'">equalToXml</option>
+        <option [ngValue]="'equalToJson'">equalToJson</option>
+        <option [ngValue]="'contains'">contains</option>
+        <option [ngValue]="'XPath'">XPath</option>
+      </select>
+    </div>
+    <div class="col-sm-3" style="margin-top: 10px">
+      <input class="form-control" placeholder="{{'Matching' | translate}}" title="" [(ngModel)]="mockServiceResponse.pathFilter"/>
     </div>
   </div>
   <div class="row">

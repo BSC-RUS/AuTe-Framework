@@ -37,5 +37,5 @@ public class MockRequest {
     private String urlPattern;
     private BasicAuthCredentials basicAuthCredentials;
     private Map<String, Map<String, String>> headers = new HashMap<>();
-    private List<MatchesXPath> bodyPatterns;
+    private List<RequestMatcher> bodyPatterns;
 }

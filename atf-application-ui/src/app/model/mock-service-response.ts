@@ -27,6 +27,7 @@ export class MockServiceResponse {
   contentType: number;
   userName: string;
   password: string;
+  typeMatching: string;
   pathFilter: string;
 }
 

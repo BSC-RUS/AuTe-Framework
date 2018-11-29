@@ -17,24 +17,24 @@
  */
 
 import { Injectable } from '@angular/core';
-import {Headers, Http} from '@angular/http';
-import {Step} from '../model/step';
+import { Headers, Http } from '@angular/http';
+import { Step } from '../model/step';
 import 'rxjs/add/operator/map';
-import {Observable} from 'rxjs/Observable';
-import {Globals} from '../globals';
+import { Observable } from 'rxjs/Observable';
+import { Globals } from '../globals';
 
 @Injectable()
 export class StepService {
 
   public serviceUrl = '/rest/projects';
-  private headers = new Headers({'Content-Type': 'application/json'});
+  private headers = new Headers({ 'Content-Type': 'application/json' });
 
   static isEquals(a, b): Boolean {
     if (a === b) {
       return true;
     }
-    let valA = a === undefined ? null : ( a === false ? null : a);
-    let valB = b === undefined ? null : ( b === false ? null : b);
+    let valA = a === undefined ? null : (a === false ? null : a);
+    let valB = b === undefined ? null : (b === false ? null : b);
 
     if (a instanceof Array && a.length === 0) {
       valA = null;
@@ -54,22 +54,22 @@ export class StepService {
     }
 
     if (!a || !b) {
-      return [{type: 'DELETED', id: namespace}];
+      return [{ type: 'DELETED', id: namespace }];
     }
 
     const keysInA = Object.keys(a),
       keysInB = Object.keys(b);
 
-    const diffA = keysInA.reduce(function(changes, key) {
+    const diffA = keysInA.reduce(function (changes, key) {
       const ns = namespace + key;
 
       if (typeof b[key] === 'undefined') {
-        return changes.concat([{type: 'DELETED', id: ns}]);
+        return changes.concat([{ type: 'DELETED', id: ns }]);
       }
 
       if (a[key] instanceof Array && b[key] instanceof Array) {
         if (a[key].length !== b[key].length) {
-          return changes.concat([{type: 'CHANGED', id: ns}]);
+          return changes.concat([{ type: 'CHANGED', id: ns }]);
         } else {
           for (let i = 0; i < a[key].length; i++) {
             const p = [];
@@ -86,13 +86,13 @@ export class StepService {
         }
       } else if (a[key] !== null && typeof b[key] && typeof a[key] === 'object' && typeof b[key] === 'object') {
         return changes.concat(StepService.differ(a[key], b[key], ns));
-      } else if (! StepService.isEquals(a[key], b[key])) {
-        return changes.concat([{type: 'CHANGED', id: ns}]);
+      } else if (!StepService.isEquals(a[key], b[key])) {
+        return changes.concat([{ type: 'CHANGED', id: ns }]);
       }
       return changes;
     }, []);
 
-    const diffB = keysInB.reduce(function(changes, key) {
+    const diffB = keysInB.reduce(function (changes, key) {
       const ns = namespace + key;
 
       if (typeof a[key] === 'undefined') {
@@ -115,7 +115,7 @@ export class StepService {
     return this.http.put(
       this.globals.serviceBaseUrl + this.serviceUrl + '/' + projectCode + '/scenarios/' + scenarioPath + '/steps/' + step.code,
       step,
-      {headers: this.headers}
+      { headers: this.headers }
     ).map(value => value.json() as Step);
   }
 
@@ -124,7 +124,7 @@ export class StepService {
     return this.http.post(
       this.globals.serviceBaseUrl + this.serviceUrl + '/' + projectCode + '/scenarios/' + scenarioPath + '/steps/' + step.code + '/clone',
       {},
-      {headers: this.headers}
+      { headers: this.headers }
     ).map(value => value.json() as Step);
   }
 
@@ -133,7 +133,7 @@ export class StepService {
   }
 
   equals(s1: Step, s2: Step): boolean {
-     return JSON.stringify(s1, this.replacer) === JSON.stringify(s2, this.replacer);
+    return JSON.stringify(s1, this.replacer) === JSON.stringify(s2, this.replacer);
   }
 
   replacer = function (name, val) {
