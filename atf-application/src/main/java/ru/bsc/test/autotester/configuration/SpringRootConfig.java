@@ -45,7 +45,6 @@ public class SpringRootConfig {
 
     @Bean
     public EnvironmentProperties environmentProperties() throws IOException {
-        EnvironmentProperties env = YamlUtils.loadAs(new File("env.yml"), EnvironmentProperties.class);
-        return env;
+        return YamlUtils.loadAs(new File("env.yml"), EnvironmentProperties.class);
     }
 }

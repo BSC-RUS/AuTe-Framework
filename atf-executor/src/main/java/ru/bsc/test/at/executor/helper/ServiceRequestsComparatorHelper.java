@@ -166,24 +166,9 @@ public class ServiceRequestsComparatorHelper {
             mockRequest.setUrl(request.getServiceName());
         }
 
-        if(isNotEmpty(request.getTypeMatching()) && isNotEmpty(request.getPathFilter())) {
-            if(EQUALTOXML.equalsIgnoreCase(request.getTypeMatching())) {
-                RequestMatcher equalToXml = new RequestMatcher();
-                equalToXml.setEqualToXml(request.getPathFilter());
-                mockRequest.setBodyPatterns(Collections.singletonList(equalToXml));
-            } else if(EQUALTOJSON.equalsIgnoreCase(request.getTypeMatching())) {
-                RequestMatcher equalToJson = new RequestMatcher();
-                equalToJson.setEqualToJson(request.getPathFilter());
-                mockRequest.setBodyPatterns(Collections.singletonList(equalToJson));
-            } else if(CONTAINS.equalsIgnoreCase(request.getTypeMatching())) {
-                RequestMatcher contains = new RequestMatcher();
-                contains.setContains(request.getPathFilter());
-                mockRequest.setBodyPatterns(Collections.singletonList(contains));
-            } else if(XPATH.equalsIgnoreCase(request.getTypeMatching())) {
-                RequestMatcher matchesXPath = new RequestMatcher();
-                matchesXPath.setMatchesXPath(request.getPathFilter());
-                mockRequest.setBodyPatterns(Collections.singletonList(matchesXPath));
-            }
+        RequestMatcher matcher = RequestMatcher.build(request.getTypeMatching(), request.getPathFilter());
+        if (matcher.isPresent()) {
+            mockRequest.setBodyPatterns(Collections.singletonList(matcher));
         }
 
         List<WireMockRequest> actualRequests = wireMockAdmin.findRestRequests(mockRequest).getRequests();

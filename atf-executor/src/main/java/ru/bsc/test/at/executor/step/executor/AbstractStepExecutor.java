@@ -68,11 +68,6 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
     private final static int POLLING_RETRY_TIMEOUT_MS = 1000;
     private static final String DEFAULT_CONTENT_TYPE = "text/xml";
 
-    public static final String EQUALTOXML = "equalToXml";
-    public static final String XPATH = "XPath";
-    public static final String EQUALTOJSON = "equalToJson";
-    public static final String CONTAINS = "contains";
-
     void sendMessagesToQuery(Project project, Step step, Map<String, Object> scenarioVariables, MqClient mqClient, String testIdHeaderName, String testId) throws Exception {
         log.debug("Send MQ messages to query {} {} {}", project, step, scenarioVariables);
         if (step.getMqMessages() == null) {
@@ -172,24 +167,9 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     credentials.setUsername(mockServiceResponse.getUserName());
                     mockDefinition.getRequest().setBasicAuthCredentials(credentials);
                 }
-                if(isNotEmpty(mockServiceResponse.getTypeMatching()) && isNotEmpty(mockServiceResponse.getPathFilter())) {
-                    if(EQUALTOXML.equalsIgnoreCase(mockServiceResponse.getTypeMatching())) {
-                        RequestMatcher equalToXml = new RequestMatcher();
-                        equalToXml.setEqualToXml(mockServiceResponse.getPathFilter());
-                        mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(equalToXml));
-                    } else if(EQUALTOJSON.equalsIgnoreCase(mockServiceResponse.getTypeMatching())) {
-                        RequestMatcher equalToJson = new RequestMatcher();
-                        equalToJson.setEqualToJson(mockServiceResponse.getPathFilter());
-                        mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(equalToJson));
-                    } else if(CONTAINS.equalsIgnoreCase(mockServiceResponse.getTypeMatching())) {
-                        RequestMatcher contains = new RequestMatcher();
-                        contains.setContains(mockServiceResponse.getPathFilter());
-                        mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(contains));
-                    } else if(XPATH.equalsIgnoreCase(mockServiceResponse.getTypeMatching())) {
-                        RequestMatcher matchesXPath = new RequestMatcher();
-                        matchesXPath.setMatchesXPath(mockServiceResponse.getPathFilter());
-                        mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matchesXPath));
-                    }
+                RequestMatcher matcher = RequestMatcher.build(mockServiceResponse.getTypeMatching(), mockServiceResponse.getPathFilter());
+                if (matcher.isPresent()) {
+                    mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matcher));
                 }
 
                 mockDefinition.getResponse().setBody(mockServiceResponse.getResponseBody());
