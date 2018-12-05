@@ -5,6 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 /**
  * Created by lenovo on 28.11.2018.
  */
@@ -41,6 +44,7 @@ public class RequestMatcher {
 
     @JsonIgnore
     public boolean isPresent() {
-        return !StringUtils.isNoneEmpty(contains, equalToJson, equalToXml, matchesXPath);
+        return !isEmpty(contains) || !isEmpty(equalToJson) ||
+                !isEmpty(equalToXml) || !isEmpty(matchesXPath);
     }
 }
