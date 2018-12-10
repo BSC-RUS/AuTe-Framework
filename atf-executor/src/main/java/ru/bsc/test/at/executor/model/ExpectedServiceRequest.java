@@ -21,6 +21,7 @@ package ru.bsc.test.at.executor.model;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
 
 import java.io.Serializable;
 
@@ -40,6 +41,8 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
     private String expectedServiceRequestFile;
     private String ignoredTags;
     private String count;
+    private String typeMatching;
+    private String pathFilter;
 
     protected ExpectedServiceRequest copy() {
         ExpectedServiceRequest request = new ExpectedServiceRequest();
@@ -48,6 +51,8 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
         request.setExpectedServiceRequest(getExpectedServiceRequest());
         request.setIgnoredTags(getIgnoredTags());
         request.setCount(getCount());
+        request.setTypeMatching(getTypeMatching());
+        request.setPathFilter(getPathFilter());
         return request;
     }
 }

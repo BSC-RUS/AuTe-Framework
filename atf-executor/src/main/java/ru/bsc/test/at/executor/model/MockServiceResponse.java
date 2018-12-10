@@ -47,6 +47,7 @@ public class MockServiceResponse implements AbstractModel {
     private String contentType;
     private String userName;
     private String password;
+    private String typeMatching;
     private String pathFilter;
     private List<HeaderItem> headers;
 
@@ -61,6 +62,7 @@ public class MockServiceResponse implements AbstractModel {
         response.setContentType(getContentType());
         response.setUserName(getUserName());
         response.setPassword(getPassword());
+        response.setTypeMatching(getTypeMatching());
         response.setPathFilter(getPathFilter());
         if (headers != null) {
             response.setHeaders(headers.stream().map(HeaderItem::copy).collect(Collectors.toList()));

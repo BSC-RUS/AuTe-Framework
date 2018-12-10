@@ -36,4 +36,6 @@ public class ExpectedServiceRequestRo implements AbstractRo {
     private String expectedServiceRequestFile;
     private String ignoredTags;
     private String count;
+    private String typeMatching;
+    private String pathFilter;
 }

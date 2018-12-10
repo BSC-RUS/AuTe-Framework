@@ -27,6 +27,7 @@ import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockRequest;
+import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
 import ru.bsc.test.at.executor.ei.wiremock.model.WireMockRequest;
 import ru.bsc.test.at.executor.exception.ComparisonException;
 import ru.bsc.test.at.executor.exception.JsonParsingException;
@@ -41,8 +42,7 @@ import java.util.stream.Collectors;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.evaluateExpressions;
-import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.insertSavedValues;
+import static ru.bsc.test.at.executor.step.executor.AbstractStepExecutor.*;
 
 /**
  * Created by sdoroshin on 30.05.2017.
@@ -146,7 +146,6 @@ public class ServiceRequestsComparatorHelper {
         if (step.getExpectedServiceRequests().isEmpty()) {
             return;
         }
-
         for (ExpectedServiceRequest request : step.getExpectedServiceRequests()) {
             checkExpectedServiceRequest(project, variables, wireMockAdmin, testId, request);
         }
@@ -166,6 +165,12 @@ public class ServiceRequestsComparatorHelper {
         } else {
             mockRequest.setUrl(request.getServiceName());
         }
+
+        RequestMatcher matcher = RequestMatcher.build(request.getTypeMatching(), request.getPathFilter());
+        if (matcher.isPresent()) {
+            mockRequest.setBodyPatterns(Collections.singletonList(matcher));
+        }
+
         List<WireMockRequest> actualRequests = wireMockAdmin.findRestRequests(mockRequest).getRequests();
         if (actualRequests == null) {
             actualRequests = new ArrayList<>();

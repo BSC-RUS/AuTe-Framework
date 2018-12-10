@@ -150,6 +150,7 @@
   "JSON compare mode": "JSON compare mode",
   "Empty scenario name": "Empty scenario name",
   "Directory already exists": "Directory already exists",
+  "Type Matching": "Type Matching",
   "XPath filter": "XPath filter",
   "Wait response timeout": "Wait response timeout",
   "Request JMS body": "Request JMS body",

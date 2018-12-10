@@ -41,6 +41,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private String contentType;
     private String userName;
     private String password;
+    private String typeMatching;
     private String pathFilter;
     private List<HeaderItemRo> headers;
 

@@ -721,6 +721,10 @@ definitions:
         type: string
       ignoredTags:
         type: string
+      pathFilter:
+        type: string
+      typeMatching:
+        type: string
   MultipleReportsRequest:
     type: object
     description: Request for get report by multiple executionUuid

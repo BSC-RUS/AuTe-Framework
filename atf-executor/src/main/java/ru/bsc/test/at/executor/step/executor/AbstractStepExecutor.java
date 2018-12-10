@@ -167,10 +167,9 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     credentials.setUsername(mockServiceResponse.getUserName());
                     mockDefinition.getRequest().setBasicAuthCredentials(credentials);
                 }
-                if(isNotEmpty(mockServiceResponse.getPathFilter())) {
-                    MatchesXPath matchesXPath = new MatchesXPath();
-                    matchesXPath.setMatchesXPath(mockServiceResponse.getPathFilter());
-                    mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matchesXPath));
+                RequestMatcher matcher = RequestMatcher.build(mockServiceResponse.getTypeMatching(), mockServiceResponse.getPathFilter());
+                if (matcher.isPresent()) {
+                    mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matcher));
                 }
 
                 mockDefinition.getResponse().setBody(mockServiceResponse.getResponseBody());
