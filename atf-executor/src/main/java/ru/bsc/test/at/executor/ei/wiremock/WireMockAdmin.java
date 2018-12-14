@@ -50,9 +50,11 @@ public class WireMockAdmin implements Closeable {
     private final WireMockUrlBuilder wireMockUrlBuilder;
     private final List<String> mockIdList = new LinkedList<>();
     private final List<String> mockGuidList = new LinkedList<>();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     public WireMockAdmin(String wireMockAdminUrl) {
         this.wireMockUrlBuilder = new WireMockUrlBuilder(wireMockAdminUrl);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     private void clearRestSavedMappings() {
@@ -60,16 +62,14 @@ public class WireMockAdmin implements Closeable {
     }
 
     public void addRestMapping(MockDefinition mockDefinition) throws IOException {
-        String result = sendPost(wireMockUrlBuilder.addRestMappingUrl(), new ObjectMapper().writeValueAsString(mockDefinition));
-        MockDefinition mockDefinitionResponse = new ObjectMapper().readValue(result, MockDefinition.class);
+        String result = sendPost(wireMockUrlBuilder.addRestMappingUrl(), mapper.writeValueAsString(mockDefinition));
+        MockDefinition mockDefinitionResponse = mapper.readValue(result, MockDefinition.class);
         mockIdList.add(mockDefinitionResponse.getUuid());
     }
 
     public RequestList findRestRequests(MockRequest mockRequest) throws IOException {
-        String result = sendPost(wireMockUrlBuilder.findRestRequestListUrl(), new ObjectMapper().writeValueAsString(mockRequest));
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return objectMapper.readValue(result, RequestList.class);
+        String result = sendPost(wireMockUrlBuilder.findRestRequestListUrl(), mapper.writeValueAsString(mockRequest));
+        return mapper.readValue(result, RequestList.class);
     }
 
     private String sendPost(String url, String jsonRequestBody) throws IOException {
@@ -102,10 +102,7 @@ public class WireMockAdmin implements Closeable {
     private List<MockedRequest> getMqRequestList() throws IOException {
         try (CloseableHttpResponse response = HttpClientBuilder.create().build().execute(new HttpGet(wireMockUrlBuilder.findMQRequestListUrl()))) {
             String responseBody = response.getEntity() == null || response.getEntity().getContent() == null ? "" : IOUtils.toString(response.getEntity().getContent(), "UTF-8");
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            return objectMapper.readValue(responseBody, new TypeReference<List<MockedRequest>>(){});
+            return mapper.readValue(responseBody, new TypeReference<List<MockedRequest>>(){});
         }
     }
 
@@ -118,7 +115,7 @@ public class WireMockAdmin implements Closeable {
 
     public void addMqMapping(MqMockDefinition mockMessageDefinition) throws IOException {
         HttpPost httpPostAddMapping = new HttpPost(wireMockUrlBuilder.addMQMappingUrl());
-        httpPostAddMapping.setEntity(new StringEntity(new ObjectMapper().writeValueAsString(mockMessageDefinition), ContentType.APPLICATION_JSON));
+        httpPostAddMapping.setEntity(new StringEntity(mapper.writeValueAsString(mockMessageDefinition), ContentType.APPLICATION_JSON));
         try (CloseableHttpResponse response = HttpClientBuilder.create().build().execute(httpPostAddMapping)) {
             String mockGuid = response.getEntity() == null || response.getEntity().getContent() == null ? "" : IOUtils.toString(response.getEntity().getContent(), "UTF-8");
             mockGuidList.add(mockGuid);

@@ -380,10 +380,11 @@
                 <div class="col-sm-1">
                   <select class="form-control" title="{{'Type Matching' | translate}}" [(ngModel)]="expectedServiceRequest.typeMatching">
                     <option [ngValue]="'empty'"></option>
-                    <option [ngValue]="'equalToXml'">equalToXml</option>
                     <option [ngValue]="'equalToJson'">equalToJson</option>
-                    <option [ngValue]="'contains'">contains</option>
+                    <option [ngValue]="'equalToXml'">equalToXml</option>
                     <option [ngValue]="'XPath'">XPath</option>
+                    <option [ngValue]="'contains'">contains</option>
+                    <option [ngValue]="'matches'">matches</option>
                   </select>
                 </div>
                 <!--<div class="col-sm-2"> style="margin-top: 10px">-->
