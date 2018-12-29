@@ -25,9 +25,12 @@ import org.mapstruct.Mappings;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.autotester.component.JsonDiffCalculator;
+import ru.bsc.test.autotester.component.RequestResponseFormatter;
 import ru.bsc.test.autotester.ro.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -41,6 +44,9 @@ public abstract class StepRoMapper {
 
     @Autowired
     private JsonDiffCalculator diffCalculator;
+
+    @Autowired
+    private RequestResponseFormatter requestResponseFormatter;
 
     @Mappings({
             @Mapping(target = "expectedServiceRequests", source = "expectedServiceRequestList"),
@@ -64,6 +70,8 @@ public abstract class StepRoMapper {
             @Mapping(target = "expectedServiceRequestList", source = "expectedServiceRequests"),
     })
     public abstract StepRo stepToStepRo(Step step);
+
+    protected abstract LinkedHashMap<String, String> savedValuesCheckToSavedValuesCheckRo(Map<String, String> savedValuesCheck);
 
     public abstract List<StepRo> convertStepListToStepRoList(List<Step> stepList);
 
@@ -106,6 +114,18 @@ public abstract class StepRoMapper {
             @Mapping(target = "result", source = "result.text")
     })
     abstract StepResultRo stepResultToStepResultRo(StepResult stepResult);
+
+    RequestDataRo requestDataToRequestDataRo(RequestData requestData) {
+        if ( requestData == null ) {
+            return null;
+        }
+        RequestDataRo requestDataRo = new RequestDataRo();
+
+        requestDataRo.setRequestBody( requestResponseFormatter.format(requestData.getRequestBody()) );
+        requestDataRo.setResponseBody( requestResponseFormatter.format(requestData.getResponseBody()) );
+
+        return requestDataRo;
+    }
 
     abstract List<MockServiceResponseRo> convertMockServiceResponseListToMockServiceResponseRoList(List<MockServiceResponse> mockServiceResponseList);
 

@@ -186,7 +186,7 @@ public class ServiceRequestsComparatorHelper {
         }
 
         String requestExpression = insertSavedValues(request.getExpectedServiceRequest(), variables);
-        String requestText = evaluateExpressions(requestExpression, variables, null);
+        String requestText = evaluateExpressions(requestExpression, variables);
         Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
                 Arrays.stream(request.getIgnoredTags().split(","))
                         .map(String::trim)

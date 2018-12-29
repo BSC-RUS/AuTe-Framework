@@ -51,15 +51,13 @@
           <div class="col-sm-6">
             <label>{{i + 1}}. {{'Request' | translate}}</label>
             <div class="form-control"
-                 style="overflow: scroll; height: 180px; background-color: #eee;">
-              {{requestData.requestBody}}
+                 style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.requestBody}}</pre>">
             </div>
           </div>
           <div class="col-sm-6">
             <label>{{'Response' | translate}}</label>
             <div class="form-control"
-                 style="overflow: scroll; height: 180px; background-color: #eee;">
-              {{requestData.responseBody}}
+                 style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.responseBody}}</pre>">
             </div>
           </div>
         </div>

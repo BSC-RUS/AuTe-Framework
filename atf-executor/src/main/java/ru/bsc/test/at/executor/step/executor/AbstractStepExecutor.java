@@ -86,7 +86,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                 property.setName(p.getName());
                 try {
                     String template = insertSavedValues(p.getValue(), scenarioVariables);
-                    String value = evaluateExpressions(template, scenarioVariables, null);
+                    String value = evaluateExpressions(template, scenarioVariables);
                     generatedProperties.put(p.getName(), value);
                 } catch (ScriptException e) {
                     log.error("Error while evaluate expression", e);
@@ -149,7 +149,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
         }
     }
 
-    void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList) throws IOException {
+    void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList, Map<String, Object> scenarioVariables) throws IOException {
         log.debug("Setting REST-mock responses {} {} {} {}", wireMockAdmin, project, testId, responseList);
         Long priority = 0L;
         if (responseList != null && wireMockAdmin != null) {
@@ -172,14 +172,13 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matcher));
                 }
 
-                mockDefinition.getResponse().setBody(mockServiceResponse.getResponseBody());
+                String body = insertSavedValues(mockServiceResponse.getResponseBody(), scenarioVariables);
+                mockDefinition.getResponse().setBody(body);
                 mockDefinition.getResponse().setStatus(mockServiceResponse.getHttpStatus());
 
                 HashMap<String, String> headers = new HashMap<>();
                 if(mockServiceResponse.getHeaders() != null) {
-                    mockServiceResponse.getHeaders().forEach(header -> {
-                        headers.put(header.getHeaderName(), header.getHeaderValue());
-                    });
+                    mockServiceResponse.getHeaders().forEach(header -> headers.put(header.getHeaderName(), header.getHeaderValue()));
                 }
                 mockDefinition.getResponse().setHeaders(headers);
                 String contentType = StringUtils.isNoneBlank(mockServiceResponse.getContentType()) ?
@@ -223,7 +222,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
             stepResult.setSqlQueryList(queryList);
             for (SqlData sqlData : step.getSqlDataList()) {
                 if (StringUtils.isNotEmpty(sqlData.getSql()) && StringUtils.isNotEmpty(sqlData.getSqlSavedParameter())) {
-                    String query = evaluateExpressions(sqlData.getSql(), scenarioVariables, null);
+                    String query = evaluateExpressions(sqlData.getSql(), scenarioVariables);
                     queryList.add(query);
                     try (NamedParameterStatement statement = new NamedParameterStatement(connection, query)) {
                         SqlResultType sqlResultType = sqlData.getSqlReturnType();
@@ -307,8 +306,8 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
         return template;
     }
 
-    public static String evaluateExpressions(String template, Map<String, Object> scenarioVariables, ClientResponse responseData) throws ScriptException {
-        log.debug("evaluate expressions {}, {} {}", template, scenarioVariables, responseData);
+    public static String evaluateExpressions(String template, Map<String, Object> scenarioVariables) throws ScriptException {
+        log.debug("evaluate expressions {}, {}", template, scenarioVariables);
         String result = template;
         if (result != null) {
             Pattern p = Pattern.compile(".*?<f>(.+?)</f>.*?", Pattern.MULTILINE);
@@ -324,7 +323,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                 log.debug("evaluating result {}", result);
             }
         }
-        log.debug("evaluate expressions result {}", responseData);
+        log.debug("evaluate expressions result {}", result);
         return result;
     }
 
@@ -442,7 +441,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
 
                 for (MqMockResponse part : mqMock.getResponses()) {
                     MqMockDefinitionResponse definitionPart = new MqMockDefinitionResponse(
-                            evaluateExpressions(part.getResponseBody(), scenarioVariables, null),
+                            evaluateExpressions(part.getResponseBody(), scenarioVariables),
                             part.getDestinationQueueName()
                     );
                     mockMessage.getResponses().add(definitionPart);

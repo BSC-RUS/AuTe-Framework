@@ -38,7 +38,6 @@ import ru.bsc.test.autotester.model.ExecutionResult;
 import ru.bsc.test.autotester.properties.EnvironmentProperties;
 import ru.bsc.test.autotester.report.AbstractReportGenerator;
 import ru.bsc.test.autotester.repository.ScenarioRepository;
-import ru.bsc.test.autotester.service.ProjectService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +70,6 @@ public class ScenarioLauncherImpl implements ScenarioLauncher {
             EnvironmentProperties properties,
             ExecutionResult executionResult,
             Set<String> stopExecutingSet,
-            ProjectService projectService,
             String runningUuid
     ) {
         log.info("Launch scenario from UI {} {}", scenarioToExecute, project);

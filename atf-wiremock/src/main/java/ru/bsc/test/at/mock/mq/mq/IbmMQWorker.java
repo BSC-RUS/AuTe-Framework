@@ -20,10 +20,9 @@ package ru.bsc.test.at.mock.mq.mq;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -36,18 +35,19 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+@Slf4j
 @SuppressWarnings("Duplicates")
 public class IbmMQWorker extends AbstractMqWorker {
 
-    private static final Logger logger = LoggerFactory.getLogger(IbmMQWorker.class);
-
     private final Buffer fifo;
     private Integer port;
+    private String channel;
 
-    public IbmMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, Integer port, String testIdHeaderName) {
+    public IbmMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, Integer port, String testIdHeaderName, String channel) {
         super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
         this.fifo = fifo;
         this.port = port;
+        this.channel = channel;
     }
 
     @Override
@@ -58,8 +58,11 @@ public class IbmMQWorker extends AbstractMqWorker {
             connectionFactory.setHostName(brokerUrl);
             connectionFactory.setPort(port);
             connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+            if (StringUtils.isNotEmpty(channel)) {
+                connectionFactory.setChannel(channel);
+            }
         } catch (JMSException e) {
-            logger.error("exception while create connection factory:", e);
+            log.error("exception while create connection factory:", e);
             return;
         }
 
@@ -74,9 +77,9 @@ public class IbmMQWorker extends AbstractMqWorker {
                 while (!Thread.currentThread().isInterrupted()) {
 
                     // Wait for a message
-                    logger.info("Wait messages from {}", queueNameFrom);
+                    log.info("Wait messages from {}", queueNameFrom);
                     Message receivedMessage = consumer.receive();
-                    logger.info("Received message, JMSMessageID: {}", receivedMessage.getJMSMessageID());
+                    log.info("Received message, JMSMessageID: {}", receivedMessage.getJMSMessageID());
 
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
@@ -90,12 +93,13 @@ public class IbmMQWorker extends AbstractMqWorker {
                     TextMessage message = (TextMessage) receivedMessage;
                     String stringBody = message.getText();
                     mockedRequest.setRequestBody(stringBody);
-                    logger.info(" [x] Received <<< {} {}", queueNameFrom, stringBody);
+                    log.info(" [x] Received <<< {} {}", queueNameFrom, stringBody);
 
                     String testId = message.getStringProperty(testIdHeaderName);
                     mockedRequest.setTestId(testId);
 
                     MockMessage mockMessage = findMockMessage(testId, stringBody);
+                    log.debug("found mock message: {}", mockMessage);
                     if (mockMessage != null) {
                         mockedRequest.setMappingGuid(mockMessage.getGuid());
 
@@ -131,7 +135,7 @@ public class IbmMQWorker extends AbstractMqWorker {
                                 producer.send(newMessage);
 
                                 producer.close();
-                                logger.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), message.getText(), StandardCharsets.UTF_8);
+                                log.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), message.getText(), StandardCharsets.UTF_8);
                             }
                         }
                     } else {
@@ -149,21 +153,21 @@ public class IbmMQWorker extends AbstractMqWorker {
                             // Переслать сообщение в очередь-назначение
                             producer.send(newMessage);
                             producer.close();
-                            logger.info(" [x] Send >>> {} '{}'", queueNameTo, message.getText(), "UTF-8");
+                            log.info(" [x] Send >>> {} '{}'", queueNameTo, message.getText(), "UTF-8");
                         } else {
-                            logger.info(" [x] Send >>> ***black hole***");
+                            log.info(" [x] Send >>> ***black hole***");
                         }
                     }
                 }
             } catch (Exception e) {
-                logger.error("Caught: {}", e);
+                log.error("Caught:", e);
             }
 
             consumer.close();
             session.close();
             connection.close();
         } catch (Exception e) {
-            logger.error("Caught: {}", e);
+            log.error("Caught:", e);
         }
     }
 

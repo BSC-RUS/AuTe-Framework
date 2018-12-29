@@ -18,6 +18,7 @@
 
 package ru.bsc.velocity.transformer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.context.Context;
@@ -32,11 +33,14 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Map;
 
+@Slf4j
 public class VelocityTransformer {
 
     private Context context;
 
     public String transform(String requestBody, Map<String, String> requestHeaders, String stringTemplate) {
+        log.debug("transform (requestBody = {}, headers = {}, template = {})", requestBody, requestHeaders, stringTemplate);
+
         final VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         final ToolManager toolManager = new ToolManager();
@@ -45,13 +49,12 @@ public class VelocityTransformer {
         addBodyToContext(requestBody);
         addHeadersToContext(requestHeaders);
 
-        String render;
         try {
-            render = render(stringTemplate);
+            return render(stringTemplate);
         } catch (ParseException e) {
-            render = e.getMessage();
+            log.error("exception while parsing, return exception message", e);
+            return e.getMessage();
         }
-        return render;
     }
 
     private String render(final String stringTemplate) throws ParseException {

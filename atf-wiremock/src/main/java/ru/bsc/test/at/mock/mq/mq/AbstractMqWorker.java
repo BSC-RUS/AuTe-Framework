@@ -18,8 +18,7 @@
 
 package ru.bsc.test.at.mock.mq.mq;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -42,10 +41,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
+@Slf4j
 abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(AbstractMqWorker.class);
-
     final String queueNameFrom;
     final String queueNameTo;
     private final List<MockMessage> mockMappingList;
@@ -83,7 +80,7 @@ abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
     public abstract void stop() throws IOException, TimeoutException;
 
     public synchronized void onException(JMSException ex) {
-        logger.error("{}", ex);
+        log.error("{}", ex);
     }
 
     private Document parseXmlDocument(String stringBody) {
@@ -92,7 +89,7 @@ abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
             DocumentBuilder db = dbf.newDocumentBuilder();
             return db.parse(new InputSource(new StringReader(stringBody)));
         } catch (IOException | ParserConfigurationException | SAXException e) {
-            logger.info("Cannot parse XML document: {}", e.getMessage());
+            log.info("Cannot parse XML document: {}", e.getMessage());
             return null;
         }
     }

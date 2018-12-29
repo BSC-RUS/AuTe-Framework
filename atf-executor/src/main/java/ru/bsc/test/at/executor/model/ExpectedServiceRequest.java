@@ -21,7 +21,6 @@ package ru.bsc.test.at.executor.model;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
 
 import java.io.Serializable;
 

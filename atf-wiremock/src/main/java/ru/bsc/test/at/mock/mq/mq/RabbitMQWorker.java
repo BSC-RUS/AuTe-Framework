@@ -19,10 +19,9 @@
 package ru.bsc.test.at.mock.mq.mq;
 
 import com.rabbitmq.client.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -36,9 +35,8 @@ import java.util.concurrent.TimeoutException;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+@Slf4j
 public class RabbitMQWorker extends AbstractMqWorker {
-
-    private static final Logger logger = LoggerFactory.getLogger(RabbitMQWorker.class);
 
     private final Buffer fifo;
     private Channel channelFrom;
@@ -69,10 +67,10 @@ public class RabbitMQWorker extends AbstractMqWorker {
                 // Wait for a message
                 waitMessage();
             } catch (Exception e) {
-                logger.error("Caught: {}", e);
+                log.error("Caught:", e);
             }
         } catch (Exception e) {
-            logger.error("Caught: {}", e);
+            log.error("Caught:", e);
         }
     }
 
@@ -92,7 +90,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String stringBody = new String(body, StandardCharsets.UTF_8);
-                logger.info(" [x] Received '{}'", stringBody);
+                log.info(" [x] Received '{}'", stringBody);
 
                 MockedRequest mockedRequest = new MockedRequest();
                 //noinspection unchecked
@@ -105,20 +103,22 @@ public class RabbitMQWorker extends AbstractMqWorker {
                 mockedRequest.setTestId(testId);
 
                 MockMessage mockMessage = findMockMessage(testId, stringBody);
+                log.debug("found mock message: {}", mockMessage);
                 if (mockMessage != null) {
                     mockedRequest.setMappingGuid(mockMessage.getGuid());
                     for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
                         byte[] response;
 
-                    if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                        response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
-                    } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
-                        try (HttpClient httpClient = new HttpClient()) {
-                        response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes();}
-                        mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
-                    } else {
-                        response = body;
-                    }
+                        if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
+                            response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
+                        } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
+                            try (HttpClient httpClient = new HttpClient()) {
+                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes();
+                            }
+                            mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
+                        } else {
+                            response = body;
+                        }
 
                         mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
 
@@ -128,9 +128,9 @@ public class RabbitMQWorker extends AbstractMqWorker {
 
                             try (Channel channel = connection.createChannel()) {
                                 channel.basicPublish("", mockResponse.getDestinationQueueName(), properties, response);
-                                logger.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), new String(response, StandardCharsets.UTF_8));
+                                log.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), new String(response, StandardCharsets.UTF_8));
                             } catch (TimeoutException e) {
-                                logger.error("Caught: {}", e);
+                                log.error("Caught:", e);
                             }
                         }
                     }
@@ -140,9 +140,9 @@ public class RabbitMQWorker extends AbstractMqWorker {
                     if (isNotEmpty(queueNameTo)) {
                         mockedRequest.setResponseBody(stringBody);
                         channelTo.basicPublish("", queueNameTo, properties, body);
-                        logger.info(" [x] Send >>> {} '{}'", queueNameTo, new String(body, StandardCharsets.UTF_8));
+                        log.info(" [x] Send >>> {} '{}'", queueNameTo, new String(body, StandardCharsets.UTF_8));
                     } else {
-                        logger.info(" [x] Send >>> ***black hole***");
+                        log.info(" [x] Send >>> ***black hole***");
                     }
                 }
             }

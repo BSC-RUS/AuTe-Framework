@@ -176,7 +176,7 @@ public class AllureReportGenerator extends AbstractReportGenerator {
         if (Files.exists(pluginsPath) && Files.isDirectory(pluginsPath)) {
             final DefaultPluginLoader pluginLoader = new DefaultPluginLoader();
             final ClassLoader classLoader = getClass().getClassLoader();
-            try (Stream<Path> filesStream = Files.list(pluginsPath);) {
+            try (Stream<Path> filesStream = Files.list(pluginsPath)) {
                 List<Plugin> plugins = filesStream
                         .filter(Files::isDirectory)
                         .map(pluginDirectory -> pluginLoader.loadPlugin(classLoader, pluginDirectory))
@@ -292,7 +292,7 @@ public class AllureReportGenerator extends AbstractReportGenerator {
         for (int i = 0; i < requestDataList.size(); i++) {
             RequestData requestData = requestDataList.get(i);
             steps.add(new Step()
-                    .withName("Request " + Integer.toString(i + 1))
+                    .withName("Request " + (i + 1))
                     .withStatus(status)
                     .withAttachments(requestDataAttachBuilder.build(resultDirectory, requestData)));
         }

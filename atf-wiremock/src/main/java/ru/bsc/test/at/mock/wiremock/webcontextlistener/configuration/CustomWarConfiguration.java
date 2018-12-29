@@ -29,7 +29,6 @@ import ru.bsc.test.at.mock.wiremock.transformers.CustomVelocityResponseTransform
 
 import javax.servlet.ServletContext;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;

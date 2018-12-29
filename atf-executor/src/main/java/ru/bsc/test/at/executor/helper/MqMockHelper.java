@@ -58,7 +58,7 @@ public class MqMockHelper {
 
             long count = 0;
             try {
-                count = AtProjectExecutor.parseLongOrVariable(scenarioVariables, AbstractStepExecutor.evaluateExpressions(expectedMqRequest.getCount(), scenarioVariables, null), 1);
+                count = AtProjectExecutor.parseLongOrVariable(scenarioVariables, AbstractStepExecutor.evaluateExpressions(expectedMqRequest.getCount(), scenarioVariables), 1);
             } catch (ScriptException e) {
                 log.error("{}", e);
             }
@@ -111,7 +111,7 @@ public class MqMockHelper {
                 actualMqRequestList.remove(actualRequest);
 
                 compareRequest(
-                        AbstractStepExecutor.evaluateExpressions(AbstractStepExecutor.insertSavedValues(expectedMqRequest.getRequestBody(), scenarioVariables), scenarioVariables, null),
+                        AbstractStepExecutor.evaluateExpressions(AbstractStepExecutor.insertSavedValues(expectedMqRequest.getRequestBody(), scenarioVariables), scenarioVariables),
                         actualRequest.getRequestBody(),
                         expectedMqRequest.getIgnoredTags() != null ?
                                 new HashSet<>(Arrays.stream(expectedMqRequest.getIgnoredTags()

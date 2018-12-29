@@ -63,7 +63,7 @@ public class ScenarioServiceImpl implements ScenarioService {
     private static final TypeReference<List<StepResult>> RESULT_LIST_TYPE = new TypeReference<List<StepResult>>(){};
     //@formatter:on
     private final ConcurrentMap<String, ExecutionResult> runningScriptsMap = new ConcurrentHashMap<>();
-    private final Set<String> stopExecutingSet = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private final Set<String> stopExecutingSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final ObjectMapper objectMapper = new ObjectMapper().setVisibility(
             PropertyAccessor.FIELD,
             JsonAutoDetect.Visibility.ANY
@@ -110,7 +110,7 @@ public class ScenarioServiceImpl implements ScenarioService {
         startScenarioInfoRo.setRunningUuid(runningUuid);
         runningScriptsMap.put(runningUuid, executionResult);
 
-        scenarioLauncher.launchScenarioFromUI(scenarioList, project, environmentProperties, executionResult, stopExecutingSet, projectService, runningUuid );
+        scenarioLauncher.launchScenarioFromUI(scenarioList, project, environmentProperties, executionResult, stopExecutingSet, runningUuid );
         return startScenarioInfoRo;
     }
 

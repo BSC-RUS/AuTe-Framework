@@ -53,6 +53,9 @@ public class MqRunnerComponent {
     @Value("${mq.port}")
     private Integer mqPort;
 
+    @Value("${mq.channel:}")
+    private String mqChannel;
+
     @Value("${mq.username}")
     private String mqUsername;
 
@@ -183,7 +186,8 @@ public class MqRunnerComponent {
                         mqUsername,
                         mqPassword,
                         mqPort,
-                        testIdHeaderName
+                        testIdHeaderName,
+                        mqChannel
                 );
         }
     }

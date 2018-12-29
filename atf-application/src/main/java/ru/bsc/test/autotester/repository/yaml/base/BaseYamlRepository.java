@@ -182,23 +182,6 @@ public abstract class BaseYamlRepository {
         }
     }
 
-    protected String scenarioPath(Scenario scenario) {
-        String result = "";
-        if (scenario != null) {
-            if (scenario.getScenarioGroup() != null) {
-                result += scenario.getScenarioGroup() + "/";
-            }
-            if (scenario.getCode() == null) {
-                // TODO Проверять, существует ли такая директория
-                scenario.setCode(translator.translate(scenario.getName()));
-            }
-            result += scenario.getCode() + "/";
-        } else {
-            result = "0/";
-        }
-        return result;
-    }
-
     private void saveStepToFiles(int order, Step step, File scenarioRootDirectory) throws IOException {
         step.setCode(generateCodeForStep(order, step));
         if (step.getRequest() != null) {

@@ -62,7 +62,7 @@ public class RestStepExecutor extends AbstractStepExecutor {
         stepResult.setSavedParameters(scenarioVariables.toString());
 
         // 0. Установить ответы сервисов, которые будут использоваться в WireMock для определения ответа
-        setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList());
+        setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
 
         // 0.1 Установить ответы для имитации внешних сервисов, работающих через очереди сообщений
         setMqMockResponses(wireMockAdmin, testId, step.getMqMockResponseList(), scenarioVariables);
@@ -82,7 +82,7 @@ public class RestStepExecutor extends AbstractStepExecutor {
         String requestBody = insertSavedValues(step.getRequest(), scenarioVariables);
 
         // 2.2 Вычислить функции в теле запроса
-        requestBody = evaluateExpressions(requestBody, scenarioVariables, null);
+        requestBody = evaluateExpressions(requestBody, scenarioVariables);
         stepResult.setRequestBody(requestBody);
 
         // 2.3 Подстановка переменных сценария в заголовки запроса
@@ -188,7 +188,7 @@ public class RestStepExecutor extends AbstractStepExecutor {
             // 5. Подставить сохраненые значения в ожидаемый результат
             String expectedResponse = insertSavedValues(step.getExpectedResponse(), scenarioVariables);
             // 5.1. Расчитать выражения <f></f>
-            expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables, responseData);
+            expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables);
             stepResult.setExpected(expectedResponse);
 
             // 6.1. Сохранить statusCode в результат степа

@@ -46,7 +46,7 @@ public class MqStepExecutor extends AbstractStepExecutor {
         }
 
         // 0. Установить ответы сервисов, которые будут использоваться в SoapUI для определения ответа
-        setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList());
+        setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
 
         // 1. Выполнить запрос БД и сохранить полученные значения
         executeSql(connection, step, scenarioVariables, stepResult);
@@ -63,7 +63,7 @@ public class MqStepExecutor extends AbstractStepExecutor {
         String requestBody = insertSavedValues(step.getRequest(), scenarioVariables);
 
         // 2.2 Вычислить функции в теле запроса
-        requestBody = evaluateExpressions(requestBody, scenarioVariables, null);
+        requestBody = evaluateExpressions(requestBody, scenarioVariables);
         stepResult.setRequestBody(requestBody);
 
         // 2.4 Cyclic sending request, COM-84
@@ -83,7 +83,7 @@ public class MqStepExecutor extends AbstractStepExecutor {
                 mqClient.request(clientMQRequest);
 
                 if (StringUtils.isNotBlank(step.getMqInputQueueName())) {
-                    long calculatedSleep = parseLongOrVariable(scenarioVariables, evaluateExpressions(step.getMqTimeoutMs(), scenarioVariables, null), 1000);
+                    long calculatedSleep = parseLongOrVariable(scenarioVariables, evaluateExpressions(step.getMqTimeoutMs(), scenarioVariables), 1000);
                     response = mqClient.waitMessage(step.getMqInputQueueName(), Math.min(calculatedSleep, 60000L), project.getUseRandomTestId() ? project.getTestIdHeaderName() : null, testId);
                 }
 
@@ -93,8 +93,7 @@ public class MqStepExecutor extends AbstractStepExecutor {
                     ScriptEngine scriptEngine = new JSScriptEngine();
                     ScriptEngineProcedureResult scriptEngineExecutionResult = scriptEngine.executeProcedure(step.getScript(), scenarioVariables);
                     // Привести все переменные сценария к строковому типу
-                    //TODO разобраться, зачем этот код
-                    scenarioVariables.forEach((s, s2) -> scenarioVariables.replace(s , s2 != null ? String.valueOf((Object)s2) : null));
+                    scenarioVariables.replaceAll((k, v) -> v != null ? String.valueOf(v) : null);
 
                     if (!scriptEngineExecutionResult.isOk()) {
                         throw new Exception(scriptEngineExecutionResult.getException());
@@ -119,7 +118,7 @@ public class MqStepExecutor extends AbstractStepExecutor {
             // 5. Подставить сохраненые значения в ожидаемый результат
             String expectedResponse = insertSavedValues(step.getExpectedResponse(), scenarioVariables);
             // 5.1. Расчитать выражения <f></f>
-            expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables, null);
+            expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables);
             stepResult.setExpected(expectedResponse);
 
             checkResponseBody(step, expectedResponse, content);

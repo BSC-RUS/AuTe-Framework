@@ -22,10 +22,7 @@ import lombok.Data;
 import ru.bsc.test.at.executor.helper.client.impl.http.HTTPMethod;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by sdoroshin on 10.05.2017.
@@ -52,7 +49,7 @@ public class Step implements Serializable, AbstractModel {
     private List<MockServiceResponse> mockServiceResponseList = new LinkedList<>();
     private Boolean disabled;
     private String stepComment;
-    private Map<String, String> savedValuesCheck = new HashMap<>();
+    private Map<String, String> savedValuesCheck = new LinkedHashMap<>();
     private ResponseCompareMode responseCompareMode = ResponseCompareMode.JSON;
     private List<StepParameterSet> stepParameterSetList = new LinkedList<>();
     private List<MqMessage> mqMessages = new LinkedList<>();
