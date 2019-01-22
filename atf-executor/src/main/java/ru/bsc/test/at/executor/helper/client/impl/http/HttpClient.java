@@ -43,7 +43,7 @@ import ru.bsc.test.at.executor.helper.client.api.ClientCommonResponse;
 import ru.bsc.test.at.executor.model.FieldType;
 import ru.bsc.test.at.executor.model.FormData;
 import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.step.executor.AbstractStepExecutor;
+import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +108,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
             } else {
                 List<NameValuePair> params = step.getFormDataList()
                         .stream()
-                        .map(formData1 -> new BasicNameValuePair(formData1.getFieldName(), AbstractStepExecutor.insertSavedValues(formData1.getValue(), request.getScenarioVariables())))
+                        .map(formData1 -> new BasicNameValuePair(formData1.getFieldName(), ExecutorUtils.insertSavedValues(formData1.getValue(), request.getScenarioVariables())))
                         .collect(Collectors.toList());
                 httpEntity = new UrlEncodedFormEntity(params);
             }
@@ -121,7 +121,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
         MultipartEntityBuilder entity = MultipartEntityBuilder.create().setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         for (FormData formData : formDataList) {
             if (formData.getFieldType() == null || FieldType.TEXT.equals(formData.getFieldType())) {
-                entity.addTextBody(formData.getFieldName(), AbstractStepExecutor.insertSavedValues(formData.getValue(), scenarioVariables), ContentType.TEXT_PLAIN);
+                entity.addTextBody(formData.getFieldName(), ExecutorUtils.insertSavedValues(formData.getValue(), scenarioVariables), ContentType.TEXT_PLAIN);
             } else {
                 log.debug("Try to identify Mime type projectPath = {}, formData = {}, fromData.getFilePath = {}", projectPath, formData, formData.getFilePath());
                 File file = new File((projectPath == null ? "" : projectPath) + formData.getFilePath());

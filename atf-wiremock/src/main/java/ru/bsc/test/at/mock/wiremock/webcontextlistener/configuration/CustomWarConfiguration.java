@@ -23,6 +23,7 @@ import com.github.tomakehurst.wiremock.core.MappingsSaver;
 import com.github.tomakehurst.wiremock.extension.Extension;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
 import com.github.tomakehurst.wiremock.servlet.WarConfiguration;
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.app.Velocity;
 import ru.bsc.test.at.mock.wiremock.transformers.CustomVelocityResponseTransformer;
@@ -39,10 +40,11 @@ import static ru.bsc.test.at.mock.wiremock.Constants.VELOCITY_PROPERTIES;
 
 /**
  * Created by sdoroshin on 04.08.2017.
- *
  */
 @Slf4j
 public class CustomWarConfiguration extends WarConfiguration {
+    private static final Integer DEFAULT_MAX_REQUEST_JOURNAL_ENTRIES = 250;
+
     private final String fileSourceRoot;
 
     public CustomWarConfiguration(ServletContext servletContext, String fileSourceRoot) {
@@ -83,5 +85,11 @@ public class CustomWarConfiguration extends WarConfiguration {
     @Override
     public MappingsSaver mappingsSaver() {
         return new BscMappingSaver();
+    }
+
+    @Override
+    @SuppressWarnings("Guava")
+    public Optional<Integer> maxRequestJournalEntries() {
+        return Optional.of(DEFAULT_MAX_REQUEST_JOURNAL_ENTRIES);
     }
 }

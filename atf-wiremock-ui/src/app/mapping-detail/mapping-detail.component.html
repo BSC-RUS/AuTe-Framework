@@ -20,22 +20,36 @@
   <div class="col-sm-3">
     <app-mapping-list></app-mapping-list>
   </div>
-  <div class="col-sm-9">
 
+  <div class="col-sm-9">
     <div class="form-horizontal" *ngIf="mapping">
       <div class="form-group">
         <h4><small>{{baseUrl}}/bsc-wire-mock</small>{{mapping.request.url ? mapping.request.url : mapping.request.urlPattern}}</h4>
       </div>
 
-      <div style="float: right">
-        <ng-container *ngIf="mapping.uuid">
-          <button class="btn btn-danger" (click)="deleteMock();">Delete mock</button>
-        </ng-container>
+      <div class="form-group">
+        <div style="float: right">
+          <button class="btn btn-primary" (click)="applyMapping()">Apply</button>
+          <button class="btn btn-danger" *ngIf="mapping.uuid" (click)="deleteMock();">Delete</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Group / Name</label>
+        <div class="form-horizontal">
+          <div class="col-sm-6">
+            <input class="form-control" placeholder="Group name" title="" [(ngModel)]="mapping.scenarioName">
+          </div>
+          <div class="col-sm-6">
+            <input class="form-control" placeholder="Mock name" title="" [(ngModel)]="mapping.name">
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
         <label>Request mapping</label>
       </div>
+
       <div class="form-group">
         <div class="col-sm-2">
           <label>Method</label>
@@ -164,11 +178,7 @@
       </div>
 
       <div style="float: right">
-        <button class="btn btn-primary" (click)="applyMapping()">Применить маппинг</button>
-      </div>
-
-      <div class="form-group" style="display: none;">
-        {{mapping | json}}
+        <button class="btn btn-primary" (click)="applyMapping()">Apply</button>
       </div>
     </div>
   </div>

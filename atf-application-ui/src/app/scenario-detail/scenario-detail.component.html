@@ -1,20 +1,20 @@
 <!--
-  ~ Copyright 2018 BSC Msc, LLC
-  ~
-  ~ This file is part of the AuTe Framework project
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+     ~ Copyright 2018 BSC Msc, LLC
+     ~
+     ~ This file is part of the AuTe Framework project
+     ~
+     ~ Licensed under the Apache License, Version 2.0 (the "License");
+     ~ you may not use this file except in compliance with the License.
+     ~ You may obtain a copy of the License at
+     ~
+     ~ http://www.apache.org/licenses/LICENSE-2.0
+     ~
+     ~ Unless required by applicable law or agreed to in writing, software
+     ~ distributed under the License is distributed on an "AS IS" BASIS,
+     ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     ~ See the License for the specific language governing permissions and
+     ~ limitations under the License.
+-->
 
 <div>
   <div class="breadcrumb-search">
@@ -32,7 +32,10 @@
 
   <div *ngIf="scenario">
     <app-scenario-title-item [scenario]="scenario" [projectCode]="projectCode" (onSaveSteps)="saveSteps()" [stepList]="stepList"></app-scenario-title-item>
-    <a [routerLink]="['/project/' + projectCode + '/scenario/' + (scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code + '/settings']">{{'Settings' | translate}}</a>
+    <div class="container-fluid">
+      <a [routerLink]="['/project/' + projectCode + '/scenario/' + (scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code + '/settings']">{{'Settings' | translate}}</a>
+      <button class="btn btn-danger pull-right" (click)="deleteScenario()">{{'Delete scenario' | translate}}</button>
+    </div>
   </div>
   <hr/>
   <div class="help-block" *ngIf="!stepList">
@@ -40,26 +43,21 @@
     {{'Loading' | translate}}
   </div>
   <div *ngIf="scenario && stepList">
-    <div class="container-fluid" style="margin-bottom: 20px;">
-      <button class="btn btn-danger pull-right" (click)="deleteScenario()">{{'Delete' | translate}}</button>
-    </div>
 
-    <div *ngFor="let step of stepList">
-      <div style="margin-bottom: 15px;" class="col-sm-offset-11 col-sm-1 text-right">
-        <button style="white-space: normal;" class="btn btn-xs btn-block btn-default" (click)="addStepBefore(step)"><span class="glyphicon glyphicon-hand-left"></span> {{'Insert step' | translate}}</button>
-      </div>
+    <div [ngStyle]="i % 2 === 0 ? {} : {'background-color': '#f0f0f0'}" *ngFor="let step of stepList; let i = index">
       <app-step-item
         [step]="step"
+        [stepList]="stepList"
         [showUpDownDeleteCloneButtons]="true"
         (onDeleteClick)="onDeleteClick(step)"
         (onUpClick)="onUpClick(step)"
         (onDownClick)="onDownClick(step)"
         (onCloneClick)="onCloneClick(step)"
         (onChange)="onChangeItem(step)"
-      ></app-step-item>
+        ></app-step-item>
     </div>
 
-    <div class="container-fluid" style="margin-bottom: 20px;">
+    <div class="container-fluid" style="margin-bottom: 20px; margin-top: 20px;">
       <button class="btn btn-default" (click)="addStep()"><span class="glyphicon glyphicon-plus"></span> {{'Add step' | translate}}</button>
     </div>
   </div>

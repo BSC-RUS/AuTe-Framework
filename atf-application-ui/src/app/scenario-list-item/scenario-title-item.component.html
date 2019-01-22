@@ -1,31 +1,33 @@
 <!--
-  ~ Copyright 2018 BSC Msc, LLC
-  ~
-  ~ This file is part of the AuTe Framework project
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+     ~ Copyright 2018 BSC Msc, LLC
+     ~
+     ~ This file is part of the AuTe Framework project
+     ~
+     ~ Licensed under the Apache License, Version 2.0 (the "License");
+     ~ you may not use this file except in compliance with the License.
+     ~ You may obtain a copy of the License at
+     ~
+     ~ http://www.apache.org/licenses/LICENSE-2.0
+     ~
+     ~ Unless required by applicable law or agreed to in writing, software
+     ~ distributed under the License is distributed on an "AS IS" BASIS,
+     ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     ~ See the License for the specific language governing permissions and
+     ~ limitations under the License.
+-->
 
 <div id="scenarioHeader" #scenarioHeader style="padding-bottom: 10px;" class="container-fluid" *ngIf="scenario" [ngClass] = "getMapStyleForScenario()">
   <div class="row">
-    <div class="col-sm-6">
-      <label><span>{{scenario.name}}</span></label>
+    <div class="col-sm-5">
+      <label>
+        <span>{{scenario.name}}</span>
+      </label>
     </div>
     <div class="col-sm-1">
       <div *ngIf="state != 'executing' && scenario.failed" style="color: red">{{'Failed' | translate}}</div>
       <div *ngIf="state == 'executing'" style="color: gray">...</div>
     </div>
-    <div class="col-sm-5">
+    <div class="col-sm-6">
 
       <div class="input-group">
         <div class="input-group-btn">
@@ -46,7 +48,13 @@
           style="border-radius: 0 4px 4px 0; padding-bottom: 1px; padding-top: 1px;"
           class="btn"
           *ngIf="scenario.hasResults"
-          (click)="resultDetailsToggle()">{{'Results' | translate}} <ng-container *ngIf="executedSteps && totalSteps">({{executedSteps}}/{{totalSteps}})</ng-container></button>
+          (click)="resultDetailsToggle()"
+        >
+          {{'Results' | translate}}
+          <ng-container *ngIf="executedSteps && totalSteps">
+            ({{executedSteps}}/{{totalSteps}})
+          </ng-container>
+        </button>
 
         <div class="input-group-btn">
           <button style="border-radius: 4px; padding-bottom: 1px; padding-top: 1px;" class="btn btn-success" *ngIf="!showResultDetails" (click)="saveSteps()">{{'Save steps' | translate}}</button>
@@ -55,10 +63,14 @@
     </div>
   </div>
   <div class="row result title-result-container" *ngIf="showResultDetails && stepResultList">
-    <div class="row well" *ngIf="stepResultList?.length > 0">
-      <ng-container *ngFor="let stepResult of stepResultList">
-        <app-step-result-item [stepResult]="stepResult" [scenario]="scenario" [stepList]="stepList"></app-step-result-item>
-      </ng-container>
+    <div class="col-sm-12">
+      <div class="row well" *ngIf="stepResultList?.length > 0">
+        <div class="col-sm-12">
+          <ng-container *ngFor="let stepResult of stepResultList">
+            <app-step-result-item [stepResult]="stepResult" [scenario]="scenario" [stepList]="stepList"></app-step-result-item>
+          </ng-container>
+        </div>
+      </div>
     </div>
     <div style="color: red; padding: 10px" *ngIf="stepResultList?.length == 0">
       <p>{{'Results not found' | translate}}</p>

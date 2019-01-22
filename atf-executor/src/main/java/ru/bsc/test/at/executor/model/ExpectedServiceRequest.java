@@ -23,6 +23,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by sdoroshin on 10.05.2017.
@@ -43,6 +45,8 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
     private String typeMatching;
     private String pathFilter;
     private Boolean notEvalExprInBody = false;
+    private List<ScenarioVariableFromServiceRequest> scenarioVariablesFromServiceRequest = new ArrayList<>();
+    private String jsonCompareMode = "NON_EXTENSIBLE";
 
     protected ExpectedServiceRequest copy() {
         ExpectedServiceRequest request = new ExpectedServiceRequest();
@@ -54,6 +58,8 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
         request.setTypeMatching(getTypeMatching());
         request.setPathFilter(getPathFilter());
         request.setNotEvalExprInBody(getNotEvalExprInBody());
+        this.getScenarioVariablesFromServiceRequest().forEach(request.getScenarioVariablesFromServiceRequest()::add);
+        request.setJsonCompareMode(this.getJsonCompareMode());
         return request;
     }
 }

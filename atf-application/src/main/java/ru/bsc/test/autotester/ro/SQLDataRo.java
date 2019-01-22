@@ -18,17 +18,23 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import ru.bsc.test.at.executor.model.SqlResultType;
 
 @Getter
 @Setter
+@ApiModel(description = "SQL call to database")
 public class SQLDataRo implements AbstractRo {
     private static final long serialVersionUID = -4110884518055434593L;
 
+    @ApiModelProperty("SQL query. It`s possible to use scenario variables")
     private String sql;
+    @ApiModelProperty("Name of scenario variable in which need to save value")
     private String sqlSavedParameter;
+    @ApiModelProperty("Type of variable in which value is saved")
     private SqlResultType sqlReturnType;
 
 }

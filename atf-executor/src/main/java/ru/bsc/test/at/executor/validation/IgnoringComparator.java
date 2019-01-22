@@ -19,19 +19,26 @@
 package ru.bsc.test.at.executor.validation;
 
 import org.json.JSONException;
+import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.JSONCompareResult;
-import org.skyscreamer.jsonassert.comparator.DefaultComparator;
+import org.skyscreamer.jsonassert.comparator.CustomComparator;
+
+import java.util.List;
 
 /**
  * Created by rrudakov on 10/7/16.
  * Project name bcs-rest-at
  */
-public class IgnoringComparator extends DefaultComparator {
+public class IgnoringComparator extends CustomComparator {
     private static final String IGNORE = "*ignore*";
 
     public IgnoringComparator(JSONCompareMode mode) {
         super(mode);
+    }
+
+    public IgnoringComparator(JSONCompareMode mode, List<Customization> customizations) {
+        super(mode, customizations.toArray(new Customization[0]));
     }
 
     @Override
@@ -41,7 +48,7 @@ public class IgnoringComparator extends DefaultComparator {
         }
 
         if (expectedValue instanceof String && actualValue instanceof String && ((String) expectedValue).contains(IGNORE)) {
-            if (!MaskComparator.compare((String)expectedValue, (String)actualValue)) {
+            if (!MaskComparator.compare((String) expectedValue, (String) actualValue)) {
                 result.fail(prefix, expectedValue, actualValue);
             }
         } else {

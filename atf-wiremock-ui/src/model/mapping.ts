@@ -25,6 +25,8 @@ export class Mapping {
   response: ResponseMapping;
   uuid: string;
   priority: number;
+  scenarioName: string;
+  name: string;
 
   constructor() {
     this.request = new RequestMapping;

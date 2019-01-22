@@ -19,8 +19,6 @@
 package ru.bsc.test.at.executor.helper;
 
 import lombok.extern.slf4j.Slf4j;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
@@ -30,14 +28,8 @@ import ru.bsc.test.at.executor.model.ExpectedMqRequest;
 import ru.bsc.test.at.executor.model.ScenarioVariableFromMqRequest;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.service.AtProjectExecutor;
-import ru.bsc.test.at.executor.step.executor.AbstractStepExecutor;
+import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 
-import javax.script.ScriptException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import java.io.StringReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,13 +47,7 @@ public class MqMockHelper {
 
         List<ExpectedMqRequest> expectedMqRequestList = new LinkedList<>();
         step.getExpectedMqRequestList().forEach(expectedMqRequest -> {
-
-            long count = 0;
-            try {
-                count = AtProjectExecutor.parseLongOrVariable(scenarioVariables, AbstractStepExecutor.evaluateExpressions(expectedMqRequest.getCount(), scenarioVariables), 1);
-            } catch (ScriptException e) {
-                log.error("{}", e);
-            }
+            long count = AtProjectExecutor.parseLongOrVariable(scenarioVariables, ExecutorUtils.evaluateExpressions(expectedMqRequest.getCount(), scenarioVariables), 1);;
             for (int i = 0; i < count; i++) {
                 expectedMqRequestList.add(expectedMqRequest);
             }
@@ -69,18 +55,28 @@ public class MqMockHelper {
 
         List<MockedRequest> actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
 
-        for (int counter = 0; counter < Math.min(mqCheckCount != null ? mqCheckCount : 10, 30) && expectedMqRequestList.size() != actualMqRequestList.size(); counter++) {
+        for (int counter = 0; counter < Math.min(mqCheckCount != null ? mqCheckCount : 10, 30) && isMqRequestsCountIncorrect(step, expectedMqRequestList, actualMqRequestList); counter++) {
             Thread.sleep(Math.min(mqCheckInterval != null ? mqCheckInterval : 500L, 5000L));
             actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
         }
 
-        if (expectedMqRequestList.size() != actualMqRequestList.size()) {
+        if (isMqRequestsCountIncorrect(step, expectedMqRequestList, actualMqRequestList)) {
             // Вызвать ошибку: не совпадает количество вызовов сервисов
-            throw new Exception(String.format(
-                    "Invalid number of JMS requests: expected: %d, actual: %d",
+            StringBuilder message = new StringBuilder();
+            message.append(String.format(
+                    "Invalid number of JMS requests: expected: %d, actual: %d%nActual requests:%n",
                     expectedMqRequestList.size(),
                     actualMqRequestList.size()
             ));
+            for (int i = 0; i < actualMqRequestList.size(); i++) {
+                MockedRequest request = actualMqRequestList.get(i);
+                message.append(String.format(
+                        " %d: Source queue: %s; Destination queue: %s",
+                        i + 1,
+                        request.getSourceQueue(),
+                        request.getDestinationQueue()));
+            }
+            throw new Exception(message.toString());
         }
 
         if (step.getScenarioVariableFromMqRequestList() != null) {
@@ -90,15 +86,7 @@ public class MqMockHelper {
                         .findAny()
                         .orElse(null);
                 if (actual != null) {
-
-                    // TODO Вынести работу с xml-документом в отдельный класс
-                    DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder builder = builderFactory.newDocumentBuilder();
-                    Document xmlDocument = builder.parse(new InputSource(new StringReader(actual.getRequestBody())));
-                    XPath xPath = XPathFactory.newInstance().newXPath();
-                    String valueFromMock = xPath.compile(variable.getXpath()).evaluate(xmlDocument);
-
-                    scenarioVariables.put(variable.getVariableName().trim(), valueFromMock);
+                    scenarioVariables.put(variable.getVariableName().trim(), XMLUtils.getValueByXPath(actual.getRequestBody(), variable.getXpath()));
                 }
             }
         }
@@ -111,7 +99,7 @@ public class MqMockHelper {
                 actualMqRequestList.remove(actualRequest);
 
                 compareRequest(
-                        AbstractStepExecutor.evaluateExpressions(AbstractStepExecutor.insertSavedValues(expectedMqRequest.getRequestBody(), scenarioVariables), scenarioVariables),
+                        ExecutorUtils.evaluateExpressions(ExecutorUtils.insertSavedValues(expectedMqRequest.getRequestBody(), scenarioVariables), scenarioVariables),
                         actualRequest.getRequestBody(),
                         expectedMqRequest.getIgnoredTags() != null ?
                                 new HashSet<>(Arrays.stream(expectedMqRequest.getIgnoredTags()
@@ -137,5 +125,11 @@ public class MqMockHelper {
         if (diff.hasDifferences()) {
             throw new ComparisonException(diff, expectedRequest, actualRequest);
         }
+    }
+
+    private boolean isMqRequestsCountIncorrect(Step step, List expectedMqRequests, List actualMqRequests) {
+        return step.getIgnoreUndeclaredMqRequests() ?
+                expectedMqRequests.size() > actualMqRequests.size() :
+                expectedMqRequests.size() != actualMqRequests.size();
     }
 }

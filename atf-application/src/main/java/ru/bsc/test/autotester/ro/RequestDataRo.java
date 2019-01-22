@@ -18,12 +18,17 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "Actual request made while step executing")
 public class RequestDataRo {
+    @ApiModelProperty("Actual request body text")
     private String requestBody;
+    @ApiModelProperty("Actual response body text")
     private String responseBody;
 }

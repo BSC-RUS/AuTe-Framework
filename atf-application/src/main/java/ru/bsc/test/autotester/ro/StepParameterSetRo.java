@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,9 +30,12 @@ import java.util.List;
  */
 @Getter
 @Setter
+@ApiModel(description = "Data set for multiple step execution")
 public class StepParameterSetRo implements AbstractRo {
     private static final long serialVersionUID = -8505680675142636322L;
 
+    @ApiModelProperty("List of test case data")
     private List<StepParameterRo> stepParameterList;
+    @ApiModelProperty("Description of test case")
     private String description;
 }

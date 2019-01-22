@@ -80,6 +80,7 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>1.5.8.RELEASE</version>
                     <configuration>
+                        <finalName>${project.name}</finalName>
                         <mainClass>${start-class}</mainClass>
                         <layout>ZIP</layout>
                     </configuration>

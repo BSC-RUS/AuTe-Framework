@@ -56,14 +56,6 @@ public class YamlUtilsTest {
     }
 
     @Test
-    public void loadAsFromStringSuccess() {
-        TestObject testData = createTestData();
-        String value = yaml.dump(testData);
-        TestObject object = YamlUtils.loadAsFromString(value, TestObject.class);
-        Assert.assertEquals(testData, object);
-    }
-
-    @Test
     public void loadAsSuccess() throws IOException {
         TestObject testData = createTestData();
         if (Files.exists(Paths.get(TEST_DATA_FILE))) {

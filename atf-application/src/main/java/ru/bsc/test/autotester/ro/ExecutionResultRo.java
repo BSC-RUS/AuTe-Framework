@@ -18,14 +18,21 @@
 
 package ru.bsc.test.autotester.ro;
 
+import java.util.List;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
+@ApiModel(description = "Result of the execution")
 public class ExecutionResultRo implements AbstractRo {
+    private static final long serialVersionUID = 6938502485486237004L;
+
+    @ApiModelProperty("List of scenario execution results")
     private List<ScenarioResultRo> scenarioResultList;
+    @ApiModelProperty("Shows whether execution is finished")
     private boolean finished;
 }

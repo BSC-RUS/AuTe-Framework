@@ -18,12 +18,17 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "Property which is send with message body to queue")
 public class NameValuePropertyRo {
+    @ApiModelProperty("Name of property")
     private String name;
+    @ApiModelProperty("value of property")
     private String value;
 }

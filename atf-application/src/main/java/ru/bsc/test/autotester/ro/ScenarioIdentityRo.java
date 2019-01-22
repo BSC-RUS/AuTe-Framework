@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,8 +29,12 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ApiModel(description = "Identification of scenario")
 public class ScenarioIdentityRo {
+    @ApiModelProperty("Scenario project code")
     private String projectCode;
+    @ApiModelProperty("Scenario group")
     private String group;
+    @ApiModelProperty("Scenario code")
     private String code;
 }

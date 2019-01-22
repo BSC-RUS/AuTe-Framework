@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,9 +31,12 @@ import java.io.Serializable;
  */
 @Getter
 @Setter
+@ApiModel(description = "Test case data item")
 public class StepParameterRo implements Serializable{
     private static final long serialVersionUID = -2094782435995324148L;
 
+    @ApiModelProperty("Name of parameter")
     private String name;
+    @ApiModelProperty("Value of parameter")
     private String value;
 }

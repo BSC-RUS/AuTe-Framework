@@ -43,7 +43,11 @@ public class WireMockUrlBuilder {
   }
 
   String findRestRequestListUrl() {
-    return baseUrl + FIND_REST_REQUEST_URL;
+    return baseUrl + FIND_REST_REQUESTS_URL;
+  }
+
+  String countRequests() {
+    return baseUrl + COUNT_REST_REQUESTS_URL;
   }
 
   String findMQRequestListUrl() {

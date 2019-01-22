@@ -20,11 +20,12 @@ import {Component, OnInit} from '@angular/core';
 import {Mapping} from '../../model/mapping';
 import {BodyPattern} from '../../model/body-pattern';
 import {WireMockService} from '../../service/wire-mock.service';
+import { EventService } from '../../service/event-service';
 import {ActivatedRoute, ParamMap, Router} from '@angular/router';
 
 import 'rxjs/add/operator/switchMap';
 
-import {ToastyService, ToastOptions} from 'ng2-toasty';
+import {ToastOptions, ToastyService} from 'ng2-toasty';
 import {HeaderItem} from '../../model/request-mapping';
 import {BasicAuthCredentials} from '../../model/basic-auth-credentials';
 import {PlatformLocation} from '@angular/common';
@@ -43,6 +44,7 @@ export class MappingDetailComponent implements OnInit {
 
   constructor(
     public wireMockService: WireMockService,
+    private eventService: EventService,
     private route: ActivatedRoute,
     private toastyService: ToastyService,
     private router: Router,
@@ -81,7 +83,11 @@ export class MappingDetailComponent implements OnInit {
     if (confirm('Confirm: delete mock')) {
       this.wireMockService
         .deleteOne(this.mapping)
-        .then(() => this.router.navigate(['/mapping']));
+        .then(() => {
+          this.saveMappings('Маппинг удален');
+          // noinspection JSIgnoredPromiseFromCall
+          this.router.navigate(['/mapping']);
+        });
     }
   }
 
@@ -103,16 +109,23 @@ export class MappingDetailComponent implements OnInit {
       .apply(this.mapping)
       .then(value => {
         this.mapping = value;
+        this.saveMappings('Маппинг применен');
         // noinspection JSIgnoredPromiseFromCall
         this.router.navigate(['/mapping', this.mapping.uuid]);
-        const toastOptions: ToastOptions = {
-          title: 'Маппинг применен',
-          showClose: true,
-          timeout: 5000,
-          theme: 'bootstrap'
-        };
-        this.toastyService.success(toastOptions);
+        this.eventService.updateMappingList.next(true);
       });
+  }
+
+  private saveMappings(title: string) {
+    this.wireMockService.saveToBackStorage().then(() => {
+      const toastOptions: ToastOptions = {
+        title: title,
+        showClose: true,
+        timeout: 5000,
+        theme: 'bootstrap'
+      };
+      this.toastyService.success(toastOptions);
+    });
   }
 
   getRequestHeaders(): any {

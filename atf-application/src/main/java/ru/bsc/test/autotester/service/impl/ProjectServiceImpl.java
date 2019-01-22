@@ -36,11 +36,11 @@ import java.util.List;
 
 /**
  * Created by sdoroshin on 21.03.2017.
- *
  */
 @Service
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
+    private static final String DEFAULT_TEST_ID_HEADER_NAME = "testIdHeader";
 
     private final ProjectRepository projectRepository;
     private final ProjectRoMapper projectRoMapper;
@@ -102,7 +102,8 @@ public class ProjectServiceImpl implements ProjectService {
                 log.warn("Create project exception: {}", e.getMessage());
                 throw new IOException("Wrong project code");
             }
-
+            project.setUseRandomTestId(true);
+            project.setTestIdHeaderName(DEFAULT_TEST_ID_HEADER_NAME);
             projectRepository.saveProject(project);
             project = projectRepository.findProject(project.getCode());
             return projectRoMapper.projectToProjectRo(project);

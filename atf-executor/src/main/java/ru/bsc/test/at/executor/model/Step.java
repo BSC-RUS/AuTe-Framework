@@ -18,11 +18,16 @@
 
 package ru.bsc.test.at.executor.model;
 
-import lombok.Data;
-import ru.bsc.test.at.executor.helper.client.impl.http.HTTPMethod;
-
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.executor.helper.client.impl.http.HTTPMethod;
 
 /**
  * Created by sdoroshin on 10.05.2017.
@@ -45,6 +50,7 @@ public class Step implements Serializable, AbstractModel {
     private String jsonXPath;
     private RequestBodyType requestBodyType = RequestBodyType.JSON;
     private Boolean usePolling;
+    private String pollingRetryCount;
     private String pollingJsonXPath;
     private List<MockServiceResponse> mockServiceResponseList = new LinkedList<>();
     private Boolean disabled;
@@ -58,15 +64,16 @@ public class Step implements Serializable, AbstractModel {
     private String jsonCompareMode = "NON_EXTENSIBLE";
     private String script;
     private String numberRepetitions;
-    private String parseMockRequestUrl;
-    private String parseMockRequestXPath;
-    private String parseMockRequestScenarioVariable;
     private String timeoutMs;
+    private boolean timeoutEachRepetition;
     private List<MqMock> mqMockResponseList = new LinkedList<>();
     private List<ExpectedMqRequest> expectedMqRequestList;
+    private Boolean ignoreUndeclaredMqRequests = false;
     private List<SqlData> sqlDataList = new LinkedList<>();
     private List<ScenarioVariableFromMqRequest> scenarioVariableFromMqRequestList;
     private StepMode stepMode;
+    private String mockPollingTimeout;
+    private String mockRetryDelay;
 
     @Deprecated
     private String sql;
@@ -104,6 +111,7 @@ public class Step implements Serializable, AbstractModel {
         step.setScript(getScript());
         step.setSavedValuesCheck(new HashMap<>(getSavedValuesCheck()));
         step.setResponseCompareMode(getResponseCompareMode());
+        step.setTimeoutEachRepetition(isTimeoutEachRepetition());
         if (getExpectedServiceRequests() != null) {
             step.setExpectedServiceRequests(new LinkedList<>());
             for (ExpectedServiceRequest expectedServiceRequest : getExpectedServiceRequests()) {
@@ -151,9 +159,6 @@ public class Step implements Serializable, AbstractModel {
         step.setMultipartFormData(getMultipartFormData());
         step.setJsonCompareMode(getJsonCompareMode());
         step.setNumberRepetitions(getNumberRepetitions());
-        step.setParseMockRequestUrl(getParseMockRequestUrl());
-        step.setParseMockRequestXPath(getParseMockRequestXPath());
-        step.setParseMockRequestScenarioVariable(getParseMockRequestScenarioVariable());
         step.setTimeoutMs(getTimeoutMs());
         step.setStepMode(getStepMode());
 
@@ -174,6 +179,8 @@ public class Step implements Serializable, AbstractModel {
             }
         }
 
+        step.setIgnoreUndeclaredMqRequests(getIgnoreUndeclaredMqRequests());
+
         if (getSqlDataList() != null) {
             step.setSqlDataList(new LinkedList<>());
             for (SqlData sqlData : getSqlDataList()) {
@@ -191,6 +198,8 @@ public class Step implements Serializable, AbstractModel {
             }
         }
 
+        step.setMockPollingTimeout(getMockPollingTimeout());
+        step.setMockRetryDelay(getMockRetryDelay());
         return step;
     }
 
@@ -208,5 +217,9 @@ public class Step implements Serializable, AbstractModel {
 
     public Boolean getMultipartFormData() {
         return multipartFormData != null && multipartFormData;
+    }
+
+    public StepMode getStepMode() {
+        return stepMode == null ? StepMode.REST : stepMode;
     }
 }

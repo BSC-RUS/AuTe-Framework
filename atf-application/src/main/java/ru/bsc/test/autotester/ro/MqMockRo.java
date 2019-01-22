@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,15 +27,23 @@ import java.util.List;
 
 @Getter
 @Setter
+@ApiModel(description = "Responses which MQ stub returns")
 public class MqMockRo {
+    @ApiModelProperty("Unique response code")
     private String code;
+    @ApiModelProperty("Name of service being tested queue, which define in sourceQueueName param of the properties.yml")
     private String sourceQueueName;
+    @ApiModelProperty("Full path to service which must send message to queue")
     private String httpUrl;
+    @ApiModelProperty("Mask to filtering messages in queue")
     private String xpath;
+    @ApiModelProperty("List of responses")
     private List<MqMockResponseRo> responses;
 
+    @ApiModelProperty("Deprecated")
     @Deprecated
     private String responseBody;
+    @ApiModelProperty("Deprecated")
     @Deprecated
     private String destinationQueueName;
 }

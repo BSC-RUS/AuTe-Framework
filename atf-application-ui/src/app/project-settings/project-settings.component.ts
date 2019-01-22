@@ -23,6 +23,7 @@ import {ActivatedRoute, ParamMap} from '@angular/router';
 import {Scenario} from '../model/scenario';
 import {CustomToastyService} from '../service/custom-toasty.service';
 import {TranslateService} from '@ngx-translate/core';
+import {ToastyService} from "ng2-toasty";
 
 @Component({
   selector: 'app-project-settings',
@@ -37,6 +38,8 @@ export class ProjectSettingsComponent implements OnInit {
 
   project: Project;
 
+  Object = Object;
+
   tab = 'details';
   scenarioList: Scenario[];
 
@@ -44,6 +47,7 @@ export class ProjectSettingsComponent implements OnInit {
     private projectService: ProjectService,
     private route: ActivatedRoute,
     private customToastyService: CustomToastyService,
+    private toastyService: ToastyService,
     private translate: TranslateService
   ) { }
 
@@ -115,5 +119,51 @@ export class ProjectSettingsComponent implements OnInit {
           error => this.customToastyService.error('Ошибка', 'Возможно, директорая с таким названием уже существует <hr/>' + error),
           () => this.customToastyService.clear(toasty));
     }
+  }
+
+  addVariable() {
+    if (!this.project.environmentVariables) {
+      this.project.environmentVariables = {};
+    }
+    let newName: string;
+    if (newName = prompt('New variable name')) {
+      if (!this.project.environmentVariables[newName]) {
+        this.project.environmentVariables[newName] = '';
+      } else {
+        this.toastyService.warning({
+          title: 'Warning',
+          msg: 'Variable already exists',
+          showClose: true,
+          timeout: 5000,
+          theme: 'bootstrap'
+        });
+      }
+    }
+  }
+
+  updateVariableName(oldVariableName: string) : boolean {
+    let newName: string;
+    if (newName = prompt('New variable name', oldVariableName)) {
+      if (newName !== oldVariableName) {
+        if (!this.project.environmentVariables[newName]) {
+          Object.defineProperty(this.project.environmentVariables, newName,
+            Object.getOwnPropertyDescriptor(this.project.environmentVariables, oldVariableName));
+          delete this.project.environmentVariables[oldVariableName];
+        } else {
+          this.toastyService.warning({
+            title: 'Warning',
+            msg: 'Variable already exists',
+            showClose: true,
+            timeout: 5000,
+            theme: 'bootstrap'
+          });
+        }
+      }
+    }
+    return false;
+  }
+
+  removeVariable(variableName: string) {
+    delete this.project.environmentVariables[variableName];
   }
 }

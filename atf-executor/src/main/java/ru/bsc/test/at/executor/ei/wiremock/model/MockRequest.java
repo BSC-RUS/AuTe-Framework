@@ -19,6 +19,7 @@
 package ru.bsc.test.at.executor.ei.wiremock.model;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.Map;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 public class MockRequest {
     private String method;
     private String url;
@@ -38,4 +40,10 @@ public class MockRequest {
     private BasicAuthCredentials basicAuthCredentials;
     private Map<String, Map<String, String>> headers = new HashMap<>();
     private List<RequestMatcher> bodyPatterns;
+
+    public MockRequest(String testIdHeaderName, String testId) {
+        Map<String, String> header = new HashMap<>();
+        header.put("equalTo", testId);
+        headers.put(testIdHeaderName, header);
+    }
 }

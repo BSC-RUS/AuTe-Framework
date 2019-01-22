@@ -23,11 +23,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashMap;
-
 /**
  * Created by sdoroshin on 27.07.2017.
- *
  */
 @NoArgsConstructor
 @Getter
@@ -42,10 +39,7 @@ public class MockDefinition {
 
     public MockDefinition(Long priority, String testIdHeaderName, String testId) {
         this.priority = priority;
-        request = new MockRequest();
-        HashMap<String, String> equalTo = new HashMap<>();
-        equalTo.put("equalTo", testId);
-        request.getHeaders().put(testIdHeaderName, equalTo);
-        response = new MockResponse();
+        this.request = new MockRequest(testIdHeaderName, testId);
+        this.response = new MockResponse();
     }
 }

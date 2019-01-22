@@ -18,9 +18,15 @@
 
 package ru.bsc.test.autotester.controller.rest;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import ru.bsc.test.autotester.configuration.SpringfoxConfig;
 import ru.bsc.test.autotester.exception.ResourceNotFoundException;
 import ru.bsc.test.autotester.mapper.StepRoMapper;
 import ru.bsc.test.autotester.ro.StepRo;
@@ -28,6 +34,7 @@ import ru.bsc.test.autotester.service.ScenarioService;
 
 import java.io.IOException;
 
+@Api(tags = SpringfoxConfig.TAG_STEP)
 @RestController
 @RequestMapping("/rest/projects/{projectCode}/scenarios")
 public class RestStepController {
@@ -41,6 +48,17 @@ public class RestStepController {
         this.stepRoMapper = stepRoMapper;
     }
 
+    @ApiOperation(
+            value = "Updates step for given code",
+            nickname = "updateOne",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Updated step"),
+            @ApiResponse(code = 404, message = "Step wasn`t found in given scenario"),
+            @ApiResponse(code = 500, message = "Server error. Cannot read step`s scenario from file, empty scenario name or troubles while saving")
+    })
     @RequestMapping(value = { "{scenarioGroup:.+}/{scenarioCode:.+}/steps/{stepCode:.+}", "{scenarioCode:.+}/steps/{stepCode:.+}" }, method = RequestMethod.PUT)
     public StepRo updateOne(
             @PathVariable String projectCode,
@@ -56,6 +74,15 @@ public class RestStepController {
         return updatedStep;
     }
 
+    @ApiOperation(
+            value = "Clones step with given code",
+            nickname = "cloneStep",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Updated step"),
+            @ApiResponse(code = 500, message = "Server error. Cannot read step`s scenario from file")
+    })
     @RequestMapping(value = { "{scenarioGroup:.+}/{scenarioCode:.+}/steps/{stepCode:.+}/clone", "{scenarioCode:.+}/steps/{stepCode:.+}/clone" }, method = RequestMethod.POST)
     public StepRo cloneStep(
             @PathVariable String projectCode,

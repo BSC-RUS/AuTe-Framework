@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+import { ScenarioVariableFromServiceRequest } from './scenario-variable-from-service-request';
+
 export class ExpectedServiceRequest {
   code: string;
   serviceName: string;
@@ -26,4 +28,6 @@ export class ExpectedServiceRequest {
   typeMatching: string;
   pathFilter: string;
   notEvalExprInBody: boolean;
+  scenarioVariablesFromServiceRequest: ScenarioVariableFromServiceRequest[];
+  jsonCompareMode: 'NON_EXTENSIBLE';
 }

@@ -18,17 +18,25 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "MQ connection parameters")
 public class AmqpBrokerRo implements AbstractRo {
     private static final long serialVersionUID = -6295730897412089910L;
 
+    @ApiModelProperty(value = "MQ broker type", allowableValues = "IBM_MQ, RABBIT_MQ, ACTIVE_MQ")
     private String mqService;
+    @ApiModelProperty("MQ server address")
     private String host;
+    @ApiModelProperty("MQ server port")
     private Integer port;
+    @ApiModelProperty("MQ server username")
     private String username;
+    @ApiModelProperty("MQ server password")
     private String password;
 }

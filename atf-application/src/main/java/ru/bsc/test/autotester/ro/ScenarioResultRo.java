@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,10 +33,14 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@ApiModel(description = "Scenario execution result")
 public class ScenarioResultRo implements AbstractRo {
     private static final long serialVersionUID = 3389416118467296472L;
 
+    @ApiModelProperty("Scenario which have been executed")
     private ScenarioRo scenario;
+    @ApiModelProperty("List of scenario steps execution results")
     private List<StepResultRo> stepResultList;
+    @ApiModelProperty("Count of executed steps")
     private Integer totalSteps;
 }

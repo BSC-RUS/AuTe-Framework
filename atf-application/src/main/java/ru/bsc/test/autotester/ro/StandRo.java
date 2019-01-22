@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,12 +28,18 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ApiModel(description = "Properties of test stand")
 public class StandRo implements AbstractRo {
     private static final long serialVersionUID = 4390819697062478918L;
 
+    @ApiModelProperty("URL of service being tested")
     private String serviceUrl;
+    @ApiModelProperty("Connection URL of database")
     private String dbUrl;
+    @ApiModelProperty("Username for connection to database")
     private String dbUser;
+    @ApiModelProperty("Password for connection to database")
     private String dbPassword;
+    @ApiModelProperty("Url to BSC WireMock")
     private String wireMockUrl;
 }

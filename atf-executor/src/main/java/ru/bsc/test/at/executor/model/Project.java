@@ -22,8 +22,10 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by sdoroshin on 10.05.2017.
@@ -45,6 +47,7 @@ public class Project implements Serializable, AbstractModel {
     private List<String> groupList;
     private Long mqCheckInterval;
     private Integer mqCheckCount;
+    private Map<String, Object> environmentVariables = new LinkedHashMap<>();
 
     public Project copy() {
         Project project = new Project();
@@ -70,6 +73,7 @@ public class Project implements Serializable, AbstractModel {
         }
 
         project.setAmqpBroker(getAmqpBroker().copy());
+        project.setEnvironmentVariables(getEnvironmentVariables());
         return project;
     }
 

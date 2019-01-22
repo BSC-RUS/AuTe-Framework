@@ -35,6 +35,7 @@ import ru.bsc.test.at.executor.ei.wiremock.model.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +43,6 @@ import java.util.stream.Collectors;
 
 /**
  * Created by sdoroshin on 27.07.2017.
- *
  */
 @Slf4j
 public class WireMockAdmin implements Closeable {
@@ -67,9 +67,19 @@ public class WireMockAdmin implements Closeable {
         mockIdList.add(mockDefinitionResponse.getUuid());
     }
 
-    public RequestList findRestRequests(MockRequest mockRequest) throws IOException {
+    public List<WireMockRequest> findRestRequests(MockRequest mockRequest) throws IOException {
         String result = sendPost(wireMockUrlBuilder.findRestRequestListUrl(), mapper.writeValueAsString(mockRequest));
-        return mapper.readValue(result, RequestList.class);
+        try {
+            return mapper.readValue(result, RequestList.class).getRequests();
+        } catch (IOException e) {
+            log.error("error while getting requests to mocks", e);
+            return Collections.emptyList();
+        }
+    }
+
+    public long countRestRequests(MockRequest request) throws IOException {
+        String response = sendPost(wireMockUrlBuilder.countRequests(), mapper.writeValueAsString(request));
+        return mapper.readValue(response, RequestsCount.class).getCount();
     }
 
     private String sendPost(String url, String jsonRequestBody) throws IOException {

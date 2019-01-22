@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import ru.bsc.test.at.executor.model.NameValueProperty;
@@ -31,11 +33,16 @@ import java.util.List;
  */
 @Getter
 @Setter
+@ApiModel(description = "MQ message, which will be sent to queue")
 public class MqMessageRo implements AbstractRo {
     private static final long serialVersionUID = -1549749532101759753L;
 
+    @ApiModelProperty("Name of queue in which message will be sent")
     private String queueName;
+    @ApiModelProperty("Message text")
     private String message;
+    @ApiModelProperty("Relative path to file with message text which stored on disk")
     private String messageFile;
+    @ApiModelProperty("List of properties which will be sent to queue with message")
     private List<NameValueProperty> properties = new LinkedList<>();
 }

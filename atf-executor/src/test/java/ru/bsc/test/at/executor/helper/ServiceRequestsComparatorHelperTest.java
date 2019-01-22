@@ -18,17 +18,21 @@
 
 package ru.bsc.test.at.executor.helper;
 
-import org.junit.Test;
-import ru.bsc.test.at.executor.exception.ComparisonException;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.ThrowableAssert.catchThrowable;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Test;
+
+import ru.bsc.test.at.executor.ei.wiremock.model.WireMockRequest;
+import ru.bsc.test.at.executor.exception.ComparisonException;
 
 public class ServiceRequestsComparatorHelperTest {
 
@@ -36,28 +40,32 @@ public class ServiceRequestsComparatorHelperTest {
 
     @Test
     public void compareWSRequestStringTest() {
-        invokeCompareWSRequest("aaa*ignore*bbb","aaa3434534534534534553bbb", null);
-        invokeCompareWSRequest("aaa*ignore*bb","aaa3434534534534534553bbb", null);
+        WireMockRequest request = this.getWireMockRequest("aaa3434534534534534553bbb", "text/html");
+
+        invokeCompareWSRequest("aaa*ignore*bbb", request, null);
+        invokeCompareWSRequest("aaa*ignore*bb", request, null);
 
         Throwable thrown = catchThrowable(() -> {
-            invokeCompareWSRequest("aaa*ignore*b1b", "aaa3434534534534534553bbb", null);
+            invokeCompareWSRequest("aaa*ignore*b1b", request, null);
         });
         assertThat(thrown).isInstanceOf(ComparisonException.class);
 
 
 
         thrown = catchThrowable(() -> {
-            invokeCompareWSRequest("aaa", "aaa3434534534534534553bbb", null);
+            invokeCompareWSRequest("aaa", request, null);
         });
         assertThat(thrown).isInstanceOf(ComparisonException.class);
     }
 
     @Test
     public void compareWSRequestXMLTest(){
-        invokeCompareWSRequest("<a><b>3</b></a>","<a><b>3</b></a>", null);
+        WireMockRequest request = this.getWireMockRequest("<a><b>3</b></a>", "application/xml");
+
+        invokeCompareWSRequest("<a><b>3</b></a>", request, null);
 
         Throwable thrown = catchThrowable(() -> {
-            invokeCompareWSRequest("<a><b>3</b></a>", "<a><c>4</c></a>", null);
+            invokeCompareWSRequest("<a><b>4</b></a>", request, null);
         });
         assertThat(thrown).isInstanceOf(ComparisonException.class);
     }
@@ -172,7 +180,8 @@ public class ServiceRequestsComparatorHelperTest {
                 "%%EOF\n" +
                 "\n" +
                 "--f7281597-73a2-4273-8615-2e148385203e--\n";
-        invokeCompareWSRequest(s1,s2, null);
+        WireMockRequest request = this.getWireMockRequest(s2, "application/pdf");
+        invokeCompareWSRequest(s1, request, null);
 
     }
 
@@ -181,8 +190,11 @@ public class ServiceRequestsComparatorHelperTest {
         Set<String> ignoreSet = new HashSet<>();
         ignoreSet.add("sendDate");
         ignoreSet.add("text");
-        invokeCompareWSRequest("{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15*ignore*\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}",
-                               "{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15T10:17:03.813Z\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}",
+        WireMockRequest request = this.getWireMockRequest("{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15T10:17:03.813Z\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}", "application/json");
+
+        invokeCompareWSRequest(
+                "{\"phoneNumber\":\"8888888888\",\"text\":\"Код подтверждения: 1234 для подписания заявления на кредит и заявления на перевод страховой премии в размере 4 000,00 руб (при оформлении кредита) Хэш-код по документу: 454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"documentHash\":\"454bfa984d224a3b447c538957b42e7e8f36e8165d8d29aad2dcc8f2121d7333\",\"sendDate\":\"2018-05-15*ignore*\",\"signatureCode\":\"1234\",\"statusHistory\":[{\"actorLogin\":\"skryazhev\"}]}",
+                request,
                 ignoreSet);
     }
 
@@ -337,15 +349,16 @@ public class ServiceRequestsComparatorHelperTest {
                 "--42b53c87-5e93-40f5-a68f-1959fd6f6c7c--\n";
 
         boolean f = false;
+        WireMockRequest request = this.getWireMockRequest(s2, "application/pdf");
         try {
-            invokeCompareWSRequest(s1, s2, null);
-        }catch (ComparisonException ce){
+            invokeCompareWSRequest(s1, request, null);
+        } catch (ComparisonException ce){
             f = true;
         }
         assertTrue(f);
 
         Throwable thrown = catchThrowable(() -> {
-            invokeCompareWSRequest(s1, s2, null);
+            invokeCompareWSRequest(s1, request, null);
         });
         assertThat(thrown).isInstanceOf(ComparisonException.class);
     }
@@ -354,18 +367,19 @@ public class ServiceRequestsComparatorHelperTest {
     public void compareWSRequestTODOTest(){
         String s1 = "<a><b>3</b></a>";
         String s2 = "<a><c>3</c></a>";
+        WireMockRequest request = this.getWireMockRequest(s2, "application/xml");
 
         Throwable thrown = catchThrowable(() -> {
-            invokeCompareWSRequest(s1, s2, null);
+            invokeCompareWSRequest(s1, request, null);
         });
         assertThat(thrown).isInstanceOf(ComparisonException.class);
     }
 
-    private void invokeCompareWSRequest(String s1, String s2, Set s) throws ComparisonException{
+    private void invokeCompareWSRequest(String s1, WireMockRequest request, Set<String> s) throws ComparisonException{
         try {
-            Method compareWSRequest = serviceRequestsComparatorHelper.getClass().getDeclaredMethod("compareWSRequest", new Class[]{String.class, String.class, Set.class});
+            Method compareWSRequest = serviceRequestsComparatorHelper.getClass().getDeclaredMethod("compareWSRequest", new Class[]{String.class, WireMockRequest.class, Set.class, String.class});
             compareWSRequest.setAccessible(true);
-            compareWSRequest.invoke(serviceRequestsComparatorHelper, s1, s2, s);
+            compareWSRequest.invoke(serviceRequestsComparatorHelper, s1, request, s, ""); //4 параметр заполнится по default NON_EXTENSIBLE
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
@@ -378,5 +392,17 @@ public class ServiceRequestsComparatorHelperTest {
         }
     }
 
+    /** Get dummy wiremock request object with required body and content-type header. */
+    private WireMockRequest getWireMockRequest(String body, String contentType) {
+        WireMockRequest request = new WireMockRequest();
+        request.setUrl("dummy");
+        request.setMethod("dummy");
+        request.setBody(body);
 
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", contentType);
+        request.setHeaders(headers);
+
+        return request;
+    }
 }

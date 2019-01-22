@@ -25,7 +25,7 @@
     <app-search [projectCode]="project.code"></app-search>
   </div>
 
-  <h4>{{project.name}}</h4>
+  <h3>{{project.name}}</h3>
   <a [routerLink]="['/project/' + project.code + '/settings']">{{'Settings' | translate}}</a>
 
   <nav aria-label="Scenario groups">
@@ -72,7 +72,7 @@
     <app-scenario-list-item [scenario]="scenario" [projectCode]="project.code" (onStateChange)="onStateChange($event, scenario)" (cbStateChange)="onCbStateChange($event, scenario)"></app-scenario-list-item>
   </div>
 
-  <div class="container">
+  <div style="margin-top: 20px;">
     <div class="panel panel-default">
       <div class="panel-body">
         <label>{{'Create new scenario' | translate}}</label>

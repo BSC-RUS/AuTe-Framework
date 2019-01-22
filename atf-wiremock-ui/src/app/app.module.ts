@@ -32,6 +32,7 @@ import { MappingListComponent } from './mapping-list/mapping-list.component';
 import ObjNgFor from './pipe/obj-ng-for-pipe';
 import { MqLogComponent } from './mq-log/mq-log.component';
 import {MqMockerService} from '../service/mq-mocker-service';
+import {EventService} from "../service/event-service";
 
 const routes: Routes = [
   { path: 'requests', component: RequestListComponent },
@@ -57,7 +58,7 @@ const routes: Routes = [
     RouterModule.forRoot(routes, { useHash: true }),
     ToastyModule.forRoot()
   ],
-  providers: [WireMockService, MqMockerService],
+  providers: [WireMockService, MqMockerService, EventService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

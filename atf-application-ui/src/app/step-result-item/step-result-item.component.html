@@ -1,87 +1,110 @@
 <!--
-  ~ Copyright 2018 BSC Msc, LLC
-  ~
-  ~ This file is part of the AuTe Framework project
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+     ~ Copyright 2018 BSC Msc, LLC
+     ~
+     ~ This file is part of the AuTe Framework project
+     ~
+     ~ Licensed under the Apache License, Version 2.0 (the "License");
+     ~ you may not use this file except in compliance with the License.
+     ~ You may obtain a copy of the License at
+     ~
+     ~ http://www.apache.org/licenses/LICENSE-2.0
+     ~
+     ~ Unless required by applicable law or agreed to in writing, software
+     ~ distributed under the License is distributed on an "AS IS" BASIS,
+     ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     ~ See the License for the specific language governing permissions and
+     ~ limitations under the License.
+-->
 
 <div class="form-group" >
-  <div class="col-sm-1">
-    <span class="glyphicon glyphicon-ok-circle" style="color: green;" *ngIf="stepResult.result == 'OK'"></span>
-    <span class="glyphicon glyphicon-time" style="color: orange;" *ngIf="stepResult.result != 'OK' && stepResult.result != 'Fail'"></span>
-    <span class="glyphicon glyphicon-remove-circle" style="color: red;" *ngIf="stepResult.result == 'Fail'"></span>
-    {{stepResult.result}}
-  </div>
-  <div class="col-sm-11">{{stepResult.step.stepComment}} {{stepResult.description}}</div>
-  <div class="clearfix"></div>
-  <div style="color: gray;" class="col-sm-11 col-sm-offset-1">
-    {{stepResult.step.requestMethod}}
-    {{stepResult.requestUrl}}
-  </div>
-  <div class="col-sm-11 col-sm-offset-1">
-    <a href="#" style="text-decoration: none; border-bottom: 1px dashed;" (click)="displayDetails = !displayDetails; false;">{{'Details' | translate}} <span class="glyphicon" [class.glyphicon-chevron-right]="!displayDetails" [class.glyphicon-chevron-down]="displayDetails"></span></a>
-  </div>
-  <div class="clearfix"></div>
-  <div class="col-sm-11 col-sm-offset-1" *ngIf="displayDetails">
-    <ul class="nav nav-tabs">
-      <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
-      <li *ngIf="stepResult.editable" [class.active]="tab == 'stepEdit'"><a href="#" (click)="selectTab('stepEdit')">{{'Step' | translate}}</a></li>
-      <li [class.active]="tab == 'requests'"><a href="#" (click)="selectTab('requests')">{{'Requests' | translate}} ({{stepResult.requestDataList?.length}})</a></li>
-    </ul>
-    <div class="tab-content" style="padding: 10px;">
-      <div *ngIf="tab == 'requests' || tab == 'all'">
-        <div class="row">
-          <div class="col-sm-12" style="color: gray;">
-            {{'Total' | translate}}: {{stepResult.requestDataList?.length}}
+  <div class="row">
+    <div class="col-sm-1">
+      <span class="glyphicon glyphicon-ok-circle" style="color: green;" *ngIf="stepResult.result == 'OK'"></span>
+      <span class="glyphicon glyphicon-time" style="color: orange;" *ngIf="stepResult.result != 'OK' && stepResult.result != 'Fail'"></span>
+      <span class="glyphicon glyphicon-remove-circle" style="color: red;" *ngIf="stepResult.result == 'Fail'"></span>
+      {{stepResult.result}}
+    </div>
+    <div class="col-sm-11">{{stepResult.step.stepComment}} {{stepResult.description}}</div>
+    <div class="clearfix"></div>
+    <div style="color: gray;" class="col-sm-11 col-sm-offset-1">
+      {{stepResult.step.requestMethod}}
+      {{stepResult.requestUrl}}
+    </div>
+    <div class="col-sm-11 col-sm-offset-1">
+      <a href="#" style="text-decoration: none; border-bottom: 1px dashed;" (click)="displayDetails = !displayDetails; false;">{{'Details' | translate}} <span class="glyphicon" [class.glyphicon-chevron-right]="!displayDetails" [class.glyphicon-chevron-down]="displayDetails"></span></a>
+    </div>
+    <div class="clearfix"></div>
+    <div class="col-sm-11 col-sm-offset-1" *ngIf="displayDetails">
+      <ul class="nav nav-tabs">
+        <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
+        <li *ngIf="stepResult.editable" [class.active]="tab == 'stepEdit'"><a href="#" (click)="selectTab('stepEdit')">{{'Step' | translate}}</a></li>
+        <li [class.active]="tab == 'requests'"><a href="#" (click)="selectTab('requests')">{{'Requests' | translate}} ({{stepResult.requestDataList?.length}})</a></li>
+      </ul>
+      <div class="tab-content" style="padding: 10px;">
+        <div *ngIf="tab == 'requests' || tab == 'all'">
+          <div class="row">
+            <div class="col-sm-12" style="color: gray;">
+              {{'Total' | translate}}: {{stepResult.requestDataList?.length}}
+            </div>
+          </div>
+          <div class="row" *ngFor="let requestData of stepResult.requestDataList; let i = index;">
+            <div class="clearfix"></div>
+            <div class="col-sm-6">
+              <label>{{i + 1}}. {{'Request' | translate}}</label>
+              <div class="form-control"
+                   style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.requestBody}}</pre>">
+              </div>
+            </div>
+            <div class="col-sm-6">
+              <label>{{'Response' | translate}}</label>
+              <div class="form-control"
+                   style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.responseBody}}</pre>">
+              </div>
+            </div>
           </div>
         </div>
-        <div class="row" *ngFor="let requestData of stepResult.requestDataList; let i = index;">
-          <div class="clearfix"></div>
-          <div class="col-sm-6">
-            <label>{{i + 1}}. {{'Request' | translate}}</label>
-            <div class="form-control"
-                 style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.requestBody}}</pre>">
+        <div *ngIf="tab == 'details' || tab == 'all'">
+          <div class="row">
+            <div class="col-sm-12" style="color: gray;">
+              <div *ngIf="stepResult.pollingRetryCount > 1">
+                <b>{{'Polling retry count' | translate}}:</b> {{stepResult.pollingRetryCount}}
+              </div>
+              <div>
+                <b>{{'Scenario variables' | translate}}:</b>
+                <pre style="white-space: normal; border: none; color: gray;">
+                  {{stepResult.savedParameters}}
+                </pre>
+              </div>
+              
+              <div>
+                <b>{{'Cookies' | translate}}:</b>
+                <pre style="white-space: normal; border: none; color: gray;">
+                  {{stepResult.cookies}}
+                </pre>
+              </div>
+
+              <div>
+                <b>{{'Sql' | translate}}:</b>
+                <ng-container *ngFor="let query of stepResult.sqlQueryList">
+                  <pre style="white-space: normal; border: none; color: gray;">
+                    {{query}}
+                  </pre>
+                </ng-container>
+              </div>
+
+              <div>
+                <b>Test id:</b>
+                <pre style="white-space: normal; border: none; color: gray;">
+                  {{stepResult.testId}}
+                </pre>
+              </div>
             </div>
-          </div>
-          <div class="col-sm-6">
-            <label>{{'Response' | translate}}</label>
-            <div class="form-control"
-                 style="overflow: scroll; height: 180px; background-color: #eee;" innerHTML="<pre class='pretransparent'>{{requestData.responseBody}}</pre>">
+            <div class="clearfix"></div>
+            <div class="col-sm-12">
+              <label>{{'Request body' | translate}}</label>
+              <div class="form-control" style="overflow: scroll; height: 180px; white-space: pre; background-color: #eee;">{{stepResult.requestBody}}</div>
             </div>
-          </div>
-        </div>
-      </div>
-      <div *ngIf="tab == 'details' || tab == 'all'">
-        <div class="row">
-          <div class="col-sm-12" style="color: gray;">
-            <div *ngIf="stepResult.pollingRetryCount > 1">{{'Polling retry count' | translate}}: {{stepResult.pollingRetryCount}}</div>
-            {{'Scenario variables' | translate}}: {{stepResult.savedParameters}}<br/>
-            {{'Cookies' | translate}}: {{stepResult.cookies}}<br/>
-            <div>
-              {{'Sql' | translate}}:<br/>
-              <ng-container *ngFor="let query of stepResult.sqlQueryList">
-                {{query}}<br/>
-              </ng-container>
-            </div>
-            Test id: {{stepResult.testId}}
-          </div>
-          <div class="clearfix"></div>
-          <div class="col-sm-12">
-            <label>{{'Request body' | translate}}</label>
-            <div class="form-control" style="overflow: scroll; height: 180px; white-space: pre; background-color: #eee;">{{stepResult.requestBody}}</div>
-          </div>
-          <div class="clearfix"></div>
+            <div class="clearfix"></div>
             <div class="col-sm-6">
               <label>Actual</label> <br/>
               {{'Status of actual response' | translate}}: {{stepResult.status}} <br/>
@@ -89,7 +112,7 @@
                    #actualResult
                    style="overflow: scroll; height: 600px; background-color: #eee;"
                    [appSyncScroll]="expectedResult" innerHTML="<pre class='pretransparent'>{{actualDiff}}</pre>">
-            </div>
+              </div>
             </div>
             <div class="col-sm-6">
               <label>Expected</label> <br/>
@@ -98,29 +121,30 @@
                    #expectedResult
                    style="overflow: scroll; height: 600px; background-color: #eee;"
                    [appSyncScroll]="actualResult" innerHTML="<pre class='pretransparent'>{{expectedDiff}}</pre>">
+              </div>
+            </div>
+            <div class="col-sm-12" style="color: gray;">
+              <label>{{'Details' | translate}}</label>
+              <pre>{{stepResult.details}}</pre>
             </div>
           </div>
-          <div class="col-sm-12" style="color: gray;">
-            <label>{{'Details' | translate}}</label>
-            <pre>{{stepResult.details}}</pre>
-          </div>
         </div>
-      </div>
-      <div *ngIf="tab == 'json' || tab == 'all'">
-        <pre>{{stepResult | json}}</pre>
-      </div>
-      <div *ngIf="stepResult.editable && (tab == 'stepEdit' || tab == 'all')">
-        <app-step-item [step]="step"></app-step-item>
-        <div style="display: inline-flex" *ngIf="!readonly">
-          <button class="btn btn-xs btn-success" (click)="saveStep()">{{'Save step' | translate}}</button>
-          <div *ngIf="changed && false">
-            <span class="form-control"  style="font-weight: bold; border-width: 0; box-shadow: none; color: #ff7018">{{'Step diff' | translate}}</span>
-          </div>
+        <div *ngIf="tab == 'json' || tab == 'all'">
+          <pre>{{stepResult | json}}</pre>
         </div>
-        <div style="display: inline-flex; color: darkred; font-weight: bold;" *ngIf="readonly">
-          <button disabled class="btn btn-xs btn-success">{{'Save step' | translate}}</button>
-          <span style="margin-top: 2px; margin-left: 6px;" *ngIf="showRestartNotify">{{'Step was changed. Restart scenario.' | translate}}</span>
-          <span style="margin-top: 2px; margin-left: 6px;" *ngIf="!showRestartNotify">{{'Readonly mode. Open scenario details to edit.' | translate}}</span>
+        <div *ngIf="stepResult.editable && (tab == 'stepEdit' || tab == 'all')">
+          <app-step-item [step]="step"></app-step-item>
+          <div style="display: inline-flex" *ngIf="!readonly">
+            <button class="btn btn-xs btn-success" (click)="saveStep()">{{'Save step' | translate}}</button>
+            <div *ngIf="changed && false">
+              <span class="form-control"  style="font-weight: bold; border-width: 0; box-shadow: none; color: #ff7018">{{'Step diff' | translate}}</span>
+            </div>
+          </div>
+          <div style="display: inline-flex; color: darkred; font-weight: bold;" *ngIf="readonly">
+            <button disabled class="btn btn-xs btn-success">{{'Save step' | translate}}</button>
+            <span style="margin-top: 2px; margin-left: 6px;" *ngIf="showRestartNotify">{{'Step was changed. Restart scenario.' | translate}}</span>
+            <span style="margin-top: 2px; margin-left: 6px;" *ngIf="!showRestartNotify">{{'Readonly mode. Open scenario details to edit.' | translate}}</span>
+          </div>
         </div>
       </div>
     </div>

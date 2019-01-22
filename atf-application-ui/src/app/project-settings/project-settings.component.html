@@ -1,20 +1,20 @@
 <!--
-  ~ Copyright 2018 BSC Msc, LLC
-  ~
-  ~ This file is part of the AuTe Framework project
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
+     ~ Copyright 2018 BSC Msc, LLC
+     ~
+     ~ This file is part of the AuTe Framework project
+     ~
+     ~ Licensed under the Apache License, Version 2.0 (the "License");
+     ~ you may not use this file except in compliance with the License.
+     ~ You may obtain a copy of the License at
+     ~
+     ~ http://www.apache.org/licenses/LICENSE-2.0
+     ~
+     ~ Unless required by applicable law or agreed to in writing, software
+     ~ distributed under the License is distributed on an "AS IS" BASIS,
+     ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     ~ See the License for the specific language governing permissions and
+     ~ limitations under the License.
+-->
 
 <ol class="breadcrumb">
   <li class="breadcrumb-item"><a [routerLink]="'/'">{{'Projects' | translate}}</a></li>
@@ -22,7 +22,7 @@
   <li class="breadcrumb-item active">{{'Settings' | translate}}</li>
 </ol>
 
-<div class="container-fluid" *ngIf="project">
+<div *ngIf="project">
   <h3>{{project.name}}</h3>
   <button class="btn btn-success" style="margin-bottom: 15px;" (click)="save()">{{'Save project settings' | translate}}</button>
   <div>
@@ -30,37 +30,35 @@
       <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
       <li [class.active]="tab == 'stand'"><a href="#" (click)="selectTab('stand')">{{'Stand' | translate}}</a></li>
       <li [class.active]="tab == 'groupList'"><a href="#" (click)="selectTab('groupList')">{{'Groups' | translate}}</a></li>
+      <li [class.active]="tab == 'environmentVariables'"><a href="#" (click)="selectTab('environmentVariables')">{{'Variables' | translate}}</a></li>
       <li [class.active]="tab == 'json'"><a href="#" (click)="selectTab('json')">{{'json' | translate}}</a></li>
     </ul>
     <div class="tab-content" style="padding: 10px;">
       <div [style.display]="tab == 'details' ? '' : 'none'">
-        <label>{{'Project name' | translate}}</label>
-        <input class="form-control" title="" [(ngModel)]="project.name"/>
+        <label for="project-name">{{'Project name' | translate}}</label>
+        <input id="project-name" class="form-control" title="" [(ngModel)]="project.name"/>
 
-        <label>{{'Before scenario' | translate}}</label>
-        <select class="form-control" title="{{'Before scenario' | translate}}" [(ngModel)]="project.beforeScenarioPath">
+        <label for="before-scenario">{{'Before scenario' | translate}}</label>
+        <select id="before-scenario" class="form-control" title="{{'Before scenario' | translate}}" [(ngModel)]="project.beforeScenarioPath">
           <option [ngValue]="null">{{'disabled' | translate}}</option>
           <option *ngFor="let scenario of scenarioList" [ngValue]="(scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code">{{scenario.name}}</option>
         </select>
 
-        <label>{{'After scenario' | translate}}</label>
-        <select class="form-control" title="{{'After scenario' | translate}}" [(ngModel)]="project.afterScenarioPath">
+        <label for="after-scenario">{{'After scenario' | translate}}</label>
+        <select id="after-scenario" class="form-control" title="{{'After scenario' | translate}}" [(ngModel)]="project.afterScenarioPath">
           <option [ngValue]="null">{{'disabled' | translate}}</option>
           <option *ngFor="let scenario of scenarioList" [ngValue]="(scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code">{{scenario.name}}</option>
         </select>
 
-        <label>{{'Project code' | translate}}</label>
-        <input disabled class="form-control" title="" [ngModel]="project.code"/>
-
-        <hr/>
-        <label style="margin-top: 8px;">
-          <input type="checkbox" style="height: 25px;" title="" [(ngModel)]="project.useRandomTestId"/>
+        <label for="project-code">{{'Project code' | translate}}</label>
+        <input id="project-code" disabled class="form-control" title="" [ngModel]="project.code"/>
+        <label style="margin: 20px 0 15px;">
+          <input type="checkbox" style="height: 17px;" [(ngModel)]="project.useRandomTestId"/>
           {{'Use random testId' | translate}}
         </label>
         <div class="clearfix"></div>
-
-        <label>{{'TestId header name' | translate}}</label>
-        <input class="form-control" title="" [(ngModel)]="project.testIdHeaderName"/>
+        <label for="test-id-header-name">{{'TestId header name' | translate}}</label>
+        <input id="test-id-header-name" class="form-control" title="" [(ngModel)]="project.testIdHeaderName"/>
       </div>
       <div [style.display]="tab == 'groupList' ? '' : 'none'">
         <div *ngFor="let group of project.groupList; let i = index;">
@@ -129,6 +127,28 @@
 
               <label>{{'Password' | translate}}</label>
               <input disabled class="form-control" title="" [ngModel]="project.amqpBroker.password"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div [style.display]="tab == 'environmentVariables' ? '' : 'none'">
+        <div style="border: none;" class="list-group-item" *ngIf="project.stand">
+          <div class="row" *ngFor="let variableName of (project.environmentVariables ? Object.keys(project.environmentVariables) : [])">
+            <div class="col-sm-4">
+              <label>
+                <a href="#" (click)="updateVariableName(variableName)">{{variableName}} <small><span class="glyphicon glyphicon-edit"></span></small></a>
+              </label>
+            </div>
+            <div class="col-sm-6">
+              <input placeholder="{{'Variable value' | translate}}" title="" class="form-control" [(ngModel)]="project.environmentVariables[variableName]"/>
+            </div>
+            <div class="col-sm-2">
+              <button class="btn btn-default" (click)="removeVariable(variableName)"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-12">
+              <button class="btn btn-default" (click)="addVariable()"><span class="glyphicon glyphicon-plus"></span> {{'Add' | translate}}</button>
             </div>
           </div>
         </div>

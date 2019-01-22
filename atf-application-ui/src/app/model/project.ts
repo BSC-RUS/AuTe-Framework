@@ -29,4 +29,5 @@ export class Project {
   testIdHeaderName: string;
   amqpBroker: AmqpBroker;
   groupList: string[];
+  environmentVariables: any = {};
 }

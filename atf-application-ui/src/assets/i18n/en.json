@@ -75,7 +75,8 @@
   "Down": "Down",
   "Request type": "Request type",
   "Request method": "Request method",
-  "Relative url. Example": "Relative url. Example",
+  "Step URL. Example": "Absolute or relative URL. Example",
+  "Delete scenario": "Delete scenario",
   "Delete": "Delete",
   "Disable": "Disable",
   "Disabled": "Disabled",
@@ -113,6 +114,11 @@
   "Service name": "Service name",
   "Ignored tags": "Ignored tags",
   "Expected request": "Expected request",
+  "Add saved variable from mock request": "Add variable",
+  "Mock request var delete": "Delete variable",
+  "Mock request var name": "Variable name",
+  "Mock request var expression": "Expression",
+  "Mock request var matching type": "Matching type",
   "Add expected mock request": "Add expected mock request",
   "Queue name": "Queue name",
   "Queue message": "Queue message",
@@ -161,5 +167,9 @@
   "Step": "Step",
   "Header name": "Header name",
   "Header value": "Header value",
-  "URL pattern": "URL pattern"
+  "URL pattern": "URL pattern",
+  "Ignore undeclared requests": "Ignore undeclared requests",
+  "Repeat before each request": "Repeat before each request",
+  "Variables": "Variables",
+  "Variable value": "Variable value"
 }

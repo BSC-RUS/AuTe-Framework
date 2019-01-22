@@ -18,11 +18,17 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
+@ApiModel(description = "Scenario variable definition which need to save from request to MQ stub")
 public class ScenarioVariableFromMqRequestRo {
+    @ApiModelProperty("Name of service being tested queue, which define in sourceQueueName param of the properties.yml")
     private String sourceQueue;
+    @ApiModelProperty("XPath according to which needs to save variable value")
     private String xpath;
+    @ApiModelProperty("Name of variable which need to save")
     private String variableName;
 }

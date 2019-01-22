@@ -15,14 +15,32 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
 <div style="margin-bottom: 20px;">
   <button class="btn btn-default" (click)="detailsToggle()">Details</button>
   <button class="btn btn-default" [routerLink]="['/mapping/new']"><span class="glyphicon glyphicon-plus"></span> <i>Add mapping</i></button>
 </div>
-<div class="list-group" *ngIf="mappingList">
-  <a class="list-group-item" style="overflow: hidden;" *ngFor="let mapping of mappingList" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'">
-    {{mapping.request.url ? mapping.request.url : mapping.request.urlPattern}}
-    <div style="margin: 0; overflow: hidden; font-size: x-small; padding-left: 25px;" *ngIf="displayDetails && mapping.request.bodyPatterns != null && mapping.request.bodyPatterns.length > 0">{{mapping.request.bodyPatterns[0].matchesXPath}}</div>
-  </a>
+<div class="just-padding">
+  <div class="list-group list-group-root well" *ngIf="mappingList" data-toggle="collapse" >
+    <div *ngFor="let scenarioName of scenariosName; let i = index" style="overflow: hidden;">
+      <a href= "#item{{i}}" data-toggle="collapse" class="list-group-item">
+        <span class="glyphicon glyphicon-folder-open"></span> {{scenarioName}}
+      </a>
+      <div class="list-group collapse" id="item{{i}}">
+        <div *ngFor="let mapping of mappingList">
+          <div *ngIf="mapping.scenarioName == scenarioName">
+            <a class="list-group-item" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+              {{mapping.name ? mapping.name : (mapping.request.url ? mapping.request.url : (mapping.request.urlPattern ? mapping.request.urlPattern : 'no name'))}}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngFor="let mapping of mappingList">
+      <a class="list-group-item" *ngIf="!mapping.scenarioName" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+        {{mapping.name ? mapping.name : (mapping.request.url ? mapping.request.url : (mapping.request.urlPattern ? mapping.request.urlPattern : 'no name'))}}
+      </a>
+    </div>
+  </div>
 </div>
+
+

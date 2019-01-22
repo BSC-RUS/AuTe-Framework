@@ -46,6 +46,7 @@ public class AtScenarioExecutor implements Executor<ScenarioExecutorRequest> {
         Assert.notNull(scenarioExecutorRequest, "scenarioExecutorRequest must not be null");
         Map<String, Object> scenarioVariables = new HashMap<>();
         scenarioVariables.put("__random", RandomStringUtils.randomAlphabetic(40));
+        scenarioVariables.putAll(scenarioExecutorRequest.getProject().getEnvironmentVariables());
 
         AtStepExecutor atStepExecutor = new AtStepExecutor();
 

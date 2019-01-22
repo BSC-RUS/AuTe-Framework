@@ -18,15 +18,23 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "Request to MQ stub that need to check")
 public class ExpectedMqRequestRo {
+    @ApiModelProperty("Unique MQ request code")
     private String code;
+    @ApiModelProperty("Name of service being tested queue, which define in sourceQueueName param of the properties.yml")
     private String sourceQueue;
+    @ApiModelProperty("Text of request body")
     private String requestBody;
+    @ApiModelProperty("Comma separated list of tags which will be ignored while comparing request")
     private String ignoredTags;
+    @ApiModelProperty("Count of request repetitions")
     private String count;
 }

@@ -18,25 +18,20 @@
 
 package ru.bsc.test.at.executor.step.executor;
 
-import org.apache.commons.lang3.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
-import ru.bsc.test.at.executor.helper.client.api.ClientResponse;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
-import ru.bsc.test.at.executor.helper.client.impl.mq.ClientMQRequest;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
 import ru.bsc.test.at.executor.model.*;
-import ru.bsc.test.at.executor.step.executor.scriptengine.JSScriptEngine;
-import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
-import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineProcedureResult;
+import ru.bsc.test.at.executor.step.executor.requester.MqPollingStepRequester;
+import ru.bsc.test.at.executor.step.executor.requester.MqSimpleStepRequester;
+import ru.bsc.test.at.executor.step.executor.requester.StepRequester;
 
 import java.sql.Connection;
 import java.util.Map;
 
-import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
-
-public class MqStepExecutor extends AbstractStepExecutor {
-
-    private final static int POLLING_RETRY_COUNT = 50;
+@Slf4j
+public class MqStepExecutor implements IStepExecutor {
 
     @Override
     public void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Step step, StepResult stepResult, String projectPath) throws Exception {
@@ -46,86 +41,38 @@ public class MqStepExecutor extends AbstractStepExecutor {
         }
 
         // 0. Установить ответы сервисов, которые будут использоваться в SoapUI для определения ответа
-        setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
+        ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
 
         // 1. Выполнить запрос БД и сохранить полученные значения
-        executeSql(connection, step, scenarioVariables, stepResult);
+        ExecutorUtils.executeSql(connection, step, scenarioVariables, stepResult);
         stepResult.setSavedParameters(scenarioVariables.toString());
 
         // 1.1 Отправить сообщение в очередь
-        sendMessagesToQuery(project, step, scenarioVariables, mqClient, project.getTestIdHeaderName(), testId);
+        ExecutorUtils.sendMessagesToQuery(project, step, scenarioVariables, mqClient, project.getTestIdHeaderName(), testId);
 
         // 2. Подстановка сохраненных параметров в строку запроса
-        String requestUrl = stand.getServiceUrl() + insertSavedValuesToURL(step.getRelativeUrl(), scenarioVariables);
+        String requestUrl = stand.getServiceUrl() + ExecutorUtils.insertSavedValues(step.getRelativeUrl(), scenarioVariables);
         stepResult.setRequestUrl(requestUrl);
 
         // 2.1 Подстановка сохраненных параметров в тело запроса
-        String requestBody = insertSavedValues(step.getRequest(), scenarioVariables);
+        String requestBody = ExecutorUtils.insertSavedValues(step.getRequest(), scenarioVariables);
 
         // 2.2 Вычислить функции в теле запроса
-        requestBody = evaluateExpressions(requestBody, scenarioVariables);
+        requestBody = ExecutorUtils.evaluateExpressions(requestBody, scenarioVariables);
         stepResult.setRequestBody(requestBody);
 
         // 2.4 Cyclic sending request, COM-84
-        int numberRepetitions = calculateNumberRepetitions(step, scenarioVariables);
+        int numberRepetitions = ExecutorUtils.calculateNumberRepetitions(step, scenarioVariables);
 
         for (int repetitionCounter = 0; repetitionCounter < numberRepetitions; repetitionCounter++) {
-
-            // Polling
-            int retryCounter = 0;
-
-            ClientResponse response = null;
-            do {
-                retryCounter++;
-
-                // 3. Выполнить запрос (отправить сообщение в очередь)
-                ClientMQRequest clientMQRequest = new ClientMQRequest(step.getMqOutputQueueName(), requestBody, null, testId, project.getUseRandomTestId() ? project.getTestIdHeaderName() : null);
-                mqClient.request(clientMQRequest);
-
-                if (StringUtils.isNotBlank(step.getMqInputQueueName())) {
-                    long calculatedSleep = parseLongOrVariable(scenarioVariables, evaluateExpressions(step.getMqTimeoutMs(), scenarioVariables), 1000);
-                    response = mqClient.waitMessage(step.getMqInputQueueName(), Math.min(calculatedSleep, 60000L), project.getUseRandomTestId() ? project.getTestIdHeaderName() : null, testId);
-                }
-
-
-                // Выполнить скрипт
-                if (StringUtils.isNotEmpty(step.getScript())) {
-                    ScriptEngine scriptEngine = new JSScriptEngine();
-                    ScriptEngineProcedureResult scriptEngineExecutionResult = scriptEngine.executeProcedure(step.getScript(), scenarioVariables);
-                    // Привести все переменные сценария к строковому типу
-                    scenarioVariables.replaceAll((k, v) -> v != null ? String.valueOf(v) : null);
-
-                    if (!scriptEngineExecutionResult.isOk()) {
-                        throw new Exception(scriptEngineExecutionResult.getException());
-                    }
-                }
-
-            } while (tryUsePolling(step, response) && retryCounter <= POLLING_RETRY_COUNT);
-
-            String content = response != null ? response.getContent() : "";
-            stepResult.setPollingRetryCount(retryCounter);
-            stepResult.setActual(content);
-            stepResult.setExpected(step.getExpectedResponse());
-
-            // 4. Сохранить полученные значения
-            saveValuesByJsonXPath(step, content, scenarioVariables);
-
-            stepResult.setSavedParameters(scenarioVariables.toString());
-
-            // 4.1 Проверить сохраненные значения
-            checkScenarioVariables(step, scenarioVariables);
-
-            // 5. Подставить сохраненые значения в ожидаемый результат
-            String expectedResponse = insertSavedValues(step.getExpectedResponse(), scenarioVariables);
-            // 5.1. Расчитать выражения <f></f>
-            expectedResponse = evaluateExpressions(expectedResponse, scenarioVariables);
-            stepResult.setExpected(expectedResponse);
-
-            checkResponseBody(step, expectedResponse, content);
+            StepRequester stepRequester;
+            if (step.getUsePolling()) {
+                stepRequester = new MqPollingStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables, projectPath);
+            } else {
+                stepRequester = new MqSimpleStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables, projectPath);
+            }
+            stepRequester.request();
         }
-
-        // 7. Прочитать, что тестируемый сервис отправлял в заглушку.
-        parseMockRequests(project, step, wireMockAdmin, scenarioVariables, testId);
     }
 
     @Override

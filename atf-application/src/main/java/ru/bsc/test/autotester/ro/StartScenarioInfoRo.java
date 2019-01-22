@@ -18,13 +18,17 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "Information about starting scenario execution")
 public class StartScenarioInfoRo implements AbstractRo {
     private static final long serialVersionUID = -467650884622601476L;
 
+    @ApiModelProperty("UUID of execution")
     private String runningUuid;
 }

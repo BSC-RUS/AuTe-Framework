@@ -28,6 +28,7 @@
         <commons-lang.version>2.6</commons-lang.version>
         <mapstruct.version>1.2.0.Final</mapstruct.version>
         <lombok.version>1.16.20</lombok.version>
+        <springfox.version>2.6.1</springfox.version>
     </properties>
 
     <repositories>
@@ -58,6 +59,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -203,6 +210,12 @@
             <artifactId>jsoup</artifactId>
             <version>1.7.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>${springfox.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -258,26 +271,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-
-            <plugin>
-                <groupId>io.swagger</groupId>
-                <artifactId>swagger-codegen-maven-plugin</artifactId>
-                <version>2.2.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${basedir}/src/main/resources/api/api.yaml</inputSpec>
-                            <language>html</language>
-                            <configOptions>
-                                <sourceFolder>src/gen/java/main</sourceFolder>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>

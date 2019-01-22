@@ -18,11 +18,17 @@
 
 package ru.bsc.test.autotester.controller.rest;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ru.bsc.test.at.model.Version;
+import ru.bsc.test.autotester.configuration.SpringfoxConfig;
 import ru.bsc.test.autotester.service.VersionService;
 import ru.bsc.test.autotester.service.impl.WiremockVersion;
 
@@ -33,6 +39,7 @@ import java.util.List;
  *
  */
 
+@Api(tags = SpringfoxConfig.TAG_VERSION)
 @RestController
 @RequestMapping("/rest/version")
 public class RestVersionController {
@@ -44,11 +51,27 @@ public class RestVersionController {
         this.versionService = versionService;
     }
 
+    @ApiOperation(
+            value = "Gets application version",
+            nickname = "managerVersion",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "Version of the application"),
+    })
     @RequestMapping(value = "/application", method = RequestMethod.GET)
     public Version managerVersion() {
         return versionService.getApplicationVersion();
     }
 
+    @ApiOperation(
+            value = "Gets list of wiremock versions",
+            nickname = "getWiremockVersions",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "List of wiremock versions"),
+    })
     @RequestMapping(value = "/wiremock", method = RequestMethod.GET)
     public List<WiremockVersion> getWiremockVersions() {
         return versionService.getWiremockVersions();

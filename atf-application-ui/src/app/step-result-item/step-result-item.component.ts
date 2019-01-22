@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
-import {StepResult} from '../model/step-result';
-import {StepService} from '../service/step.service';
-import {CustomToastyService} from '../service/custom-toasty.service';
-import {ActivatedRoute, ParamMap} from '@angular/router';
-import {Scenario} from '../model/scenario';
-import {Step} from '../model/step';
-import {StepItemComponent} from '../step-item/step-item.component';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { StepResult } from '../model/step-result';
+import { StepService } from '../service/step.service';
+import { CustomToastyService } from '../service/custom-toasty.service';
+import { ActivatedRoute, ParamMap } from '@angular/router';
+import { Scenario } from '../model/scenario';
+import { Step } from '../model/step';
+import { StepItemComponent } from '../step-item/step-item.component';
 
 @Component({
   selector: 'app-step-result-item',
@@ -78,7 +78,7 @@ export class StepResultItemComponent implements OnInit {
     private route: ActivatedRoute,
     private stepService: StepService,
     private customToastyService: CustomToastyService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.route.params.subscribe((params: ParamMap) => {
@@ -128,41 +128,41 @@ export class StepResultItemComponent implements OnInit {
       text = text.replace(pattern_amp, '&amp;').replace(pattern_lt, '&lt;').replace(pattern_gt, '&gt;');
       switch (op) {
         case 'INSERT':
-        {
-          this.actualDiff = this.actualDiff.concat(StepResultItemComponent.wrapChanged(text, 'added'));
-          prevOps = prevOps + 'I';
-          insertText = text;
-          break;
-        }
-        case 'DELETE':
-        {
-          rowNum = rowNum + text.split('\n').length - 1;
-          this.expectedDiff = this.expectedDiff.concat(StepResultItemComponent.wrapChanged(text, 'removed'));
-          prevOps = '';
-          break;
-        }
-        case 'EQUAL':
-        {
-          const splitted = text.split('\n');
-          rowNum = rowNum + splitted.length - 1;
-          this.actualDiff = this.actualDiff.concat(text);
-          this.expectedDiff = this.expectedDiff.concat(text);
-          const iLength = insertText.split('\n').filter(v => v.trim() !== '').length;
-
-          // последняя строка предпоследнего изменения
-          const lastPrev = prevText.split('\n').pop().trim();
-          const firstCurrent = text.split('\n')[0];
-
-          // нам надо выделить строку
-          if (prevOps === 'EI' && iLength > 1 && !this.actualDiff.includes(lastPrev + firstCurrent)) {
-            expectedChanges.push(prevRowNum);
+          {
+            this.actualDiff = this.actualDiff.concat(StepResultItemComponent.wrapChanged(text, 'added'));
+            prevOps = prevOps + 'I';
+            insertText = text;
+            break;
           }
-          insertText = '';
-          prevOps = 'E';
-          prevText = text;
-          prevRowNum = rowNum;
-          break;
-        }
+        case 'DELETE':
+          {
+            rowNum = rowNum + text.split('\n').length - 1;
+            this.expectedDiff = this.expectedDiff.concat(StepResultItemComponent.wrapChanged(text, 'removed'));
+            prevOps = '';
+            break;
+          }
+        case 'EQUAL':
+          {
+            const splitted = text.split('\n');
+            rowNum = rowNum + splitted.length - 1;
+            this.actualDiff = this.actualDiff.concat(text);
+            this.expectedDiff = this.expectedDiff.concat(text);
+            const iLength = insertText.split('\n').filter(v => v.trim() !== '').length;
+
+            // последняя строка предпоследнего изменения
+            const lastPrev = prevText.split('\n').pop().trim();
+            const firstCurrent = text.split('\n')[0];
+
+            // нам надо выделить строку
+            if (prevOps === 'EI' && iLength > 1 && !this.actualDiff.includes(lastPrev + firstCurrent)) {
+              expectedChanges.push(prevRowNum);
+            }
+            insertText = '';
+            prevOps = 'E';
+            prevText = text;
+            prevRowNum = rowNum;
+            break;
+          }
       }
     }
 
@@ -180,11 +180,11 @@ export class StepResultItemComponent implements OnInit {
     const results = [];
     let resultsToDiv = [];
 
-    const hasChanges = function (line: string): boolean {
+    const hasChanges = function(line: string): boolean {
       return line.indexOf(beginPattern) !== -1 && line.indexOf(beginPattern) !== -1;
     };
 
-    const hasUnclosedStart = function (line: string): boolean {
+    const hasUnclosedStart = function(line: string): boolean {
       let index = 0;
       let closed = false;
       let beginPatternIndex = line.indexOf(beginPattern, index);
@@ -207,7 +207,7 @@ export class StepResultItemComponent implements OnInit {
     };
 
 
-    const hasClosedEnd = function (line: string): boolean {
+    const hasClosedEnd = function(line: string): boolean {
       let index = 0;
       let closed = false;
       let beginPatternIndex = line.indexOf(beginPattern, index);
@@ -304,7 +304,7 @@ export class StepResultItemComponent implements OnInit {
         setTimeout(() => {
           this.changed = false
         });
-         this.customToastyService.success('Сохранено', 'Шаг сохранен');
+        this.customToastyService.success('Сохранено', 'Шаг сохранен');
       }, error => this.customToastyService.error('Ошибка', error), () => this.customToastyService.clear(toasty));
   }
 

@@ -18,13 +18,17 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@ApiModel(description = "Search request by relative URL")
 public class ProjectSearchRo implements AbstractRo {
     private static final long serialVersionUID = 1322986388111392888L;
 
+    @ApiModelProperty("Search parameter - relative URL")
     private String relativeUrl;
 }

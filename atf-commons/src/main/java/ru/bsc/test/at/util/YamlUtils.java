@@ -50,12 +50,6 @@ public final class YamlUtils {
         }
     }
 
-    public static <T> T loadAsFromString(String yamlContent, Class<T> type) {
-        Representer representer = new Representer();
-        representer.getPropertyUtils().setSkipMissingProperties(true);
-        return new Yaml(representer).loadAs(yamlContent, type);
-    }
-
     public static <T> T loadAs(File fileName, Class<T> type) throws IOException {
         Representer representer = new Representer();
         representer.getPropertyUtils().setSkipMissingProperties(true);

@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.ro;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,8 +29,12 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ApiModel(description = "Response from MQ stub")
 public class MqMockResponseRo {
+    @ApiModelProperty("Response message text")
     private String responseBody;
+    @ApiModelProperty("Name of the destination queue")
     private String destinationQueueName;
+    @ApiModelProperty("Relative path to file with response text which stored on disk")
     private String responseFile;
 }
