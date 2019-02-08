@@ -42,6 +42,7 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
     private String count;
     private String typeMatching;
     private String pathFilter;
+    private Boolean notEvalExprInBody = false;
 
     protected ExpectedServiceRequest copy() {
         ExpectedServiceRequest request = new ExpectedServiceRequest();
@@ -52,6 +53,7 @@ public class ExpectedServiceRequest implements Serializable, AbstractModel {
         request.setCount(getCount());
         request.setTypeMatching(getTypeMatching());
         request.setPathFilter(getPathFilter());
+        request.setNotEvalExprInBody(getNotEvalExprInBody());
         return request;
     }
 }

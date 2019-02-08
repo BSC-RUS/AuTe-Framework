@@ -165,7 +165,6 @@ public class ServiceRequestsComparatorHelper {
         } else {
             mockRequest.setUrl(request.getServiceName());
         }
-
         RequestMatcher matcher = RequestMatcher.build(request.getTypeMatching(), request.getPathFilter());
         if (matcher.isPresent()) {
             mockRequest.setBodyPatterns(Collections.singletonList(matcher));
@@ -186,7 +185,10 @@ public class ServiceRequestsComparatorHelper {
         }
 
         String requestExpression = insertSavedValues(request.getExpectedServiceRequest(), variables);
-        String requestText = evaluateExpressions(requestExpression, variables);
+        String requestText = requestExpression;
+        if(!request.getNotEvalExprInBody()) {
+            requestText = evaluateExpressions(requestExpression, variables);
+        }
         Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
                 Arrays.stream(request.getIgnoredTags().split(","))
                         .map(String::trim)

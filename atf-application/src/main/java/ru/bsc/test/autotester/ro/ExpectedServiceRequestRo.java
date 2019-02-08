@@ -38,4 +38,5 @@ public class ExpectedServiceRequestRo implements AbstractRo {
     private String count;
     private String typeMatching;
     private String pathFilter;
+    private Boolean notEvalExprInBody;
 }

@@ -29,6 +29,7 @@ export class MockServiceResponse {
   password: string;
   typeMatching: string;
   pathFilter: string;
+  convertBase64InMultipart: boolean;
 }
 
 export class HeaderItem {

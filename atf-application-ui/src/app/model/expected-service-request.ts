@@ -25,4 +25,5 @@ export class ExpectedServiceRequest {
   count: string;
   typeMatching: string;
   pathFilter: string;
+  notEvalExprInBody: boolean;
 }

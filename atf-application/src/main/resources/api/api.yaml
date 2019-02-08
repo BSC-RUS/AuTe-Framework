@@ -725,6 +725,8 @@ definitions:
         type: string
       typeMatching:
         type: string
+      notEvalExprInBody:
+        type: boolean
   MultipleReportsRequest:
     type: object
     description: Request for get report by multiple executionUuid

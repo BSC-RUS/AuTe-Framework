@@ -61,6 +61,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static ru.bsc.test.at.util.Constants.CONVERT_BASE64_IN_MULTIPART;
 
 @Slf4j
 public abstract class AbstractStepExecutor implements IStepExecutor {
@@ -179,6 +180,9 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                 HashMap<String, String> headers = new HashMap<>();
                 if(mockServiceResponse.getHeaders() != null) {
                     mockServiceResponse.getHeaders().forEach(header -> headers.put(header.getHeaderName(), header.getHeaderValue()));
+                }
+                if(mockServiceResponse.getConvertBase64InMultipart()) {
+                    headers.put(CONVERT_BASE64_IN_MULTIPART, "true");
                 }
                 mockDefinition.getResponse().setHeaders(headers);
                 String contentType = StringUtils.isNoneBlank(mockServiceResponse.getContentType()) ?

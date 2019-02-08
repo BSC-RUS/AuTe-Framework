@@ -29,3 +29,4 @@ testem.log
 Thumbs.db
 package-lock.json
 *.log
+/repository/*
