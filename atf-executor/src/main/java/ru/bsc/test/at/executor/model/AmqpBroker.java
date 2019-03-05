@@ -34,6 +34,9 @@ public class AmqpBroker implements AbstractModel, Serializable {
     private Integer port;
     private String username;
     private String password;
+    private String channel;
+    private long maxTimeoutWait;
+    private Boolean useCamelNamingPolicyIbmMQ;
 
     public AmqpBroker copy() {
         AmqpBroker copy = new AmqpBroker();
@@ -42,6 +45,10 @@ public class AmqpBroker implements AbstractModel, Serializable {
         copy.setPort(getPort());
         copy.setUsername(getUsername());
         copy.setPassword(getPassword());
+        copy.setChannel(getChannel());
+        copy.setMaxTimeoutWait(getMaxTimeoutWait());
+        copy.setUseCamelNamingPolicyIbmMQ(getUseCamelNamingPolicyIbmMQ());
         return copy;
     }
+
 }

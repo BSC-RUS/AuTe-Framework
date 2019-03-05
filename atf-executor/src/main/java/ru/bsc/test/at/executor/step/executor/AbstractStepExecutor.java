@@ -31,6 +31,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.*;
+import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.NamedParameterStatement;
 import ru.bsc.test.at.executor.helper.client.api.ClientResponse;
 import ru.bsc.test.at.executor.helper.client.impl.mq.ClientMQRequest;
@@ -92,6 +93,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     log.error("Error while evaluate expression", e);
                 }
             });
+            testIdHeaderName = MqMockHelper.convertPropertyCamelPolicy(testIdHeaderName, mqClient.isUseCamelNamingPolicyIbmMQ());
             ClientMQRequest clientMQRequest = new ClientMQRequest(message.getQueueName(), messageText, generatedProperties, testId, testIdHeaderName);
             mqClient.request(clientMQRequest);
         }

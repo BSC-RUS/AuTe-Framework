@@ -43,6 +43,18 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MqMockHelper {
+    private static final String HYPHEN = "_HYPHEN_";
+    private static final String DOT = "_DOT_";
+
+
+
+    public static String convertPropertyCamelPolicy(String testIdHeaderNameProperty, boolean useCamelNamingPolicy) {
+        if(useCamelNamingPolicy && testIdHeaderNameProperty != null && !testIdHeaderNameProperty.isEmpty()) {
+            testIdHeaderNameProperty = testIdHeaderNameProperty.replace("-", HYPHEN)
+                    .replace(".", DOT);
+        }
+        return testIdHeaderNameProperty;
+    }
 
     public void assertMqRequests(WireMockAdmin mqMockerAdmin, String testId, Step step, Map<String, Object> scenarioVariables, Integer mqCheckCount, Long mqCheckInterval) throws Exception {
         if (mqMockerAdmin == null) {
@@ -138,4 +150,5 @@ public class MqMockHelper {
             throw new ComparisonException(diff, expectedRequest, actualRequest);
         }
     }
+
 }

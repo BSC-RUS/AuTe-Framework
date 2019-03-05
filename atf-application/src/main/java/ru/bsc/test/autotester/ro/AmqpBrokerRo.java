@@ -31,4 +31,7 @@ public class AmqpBrokerRo implements AbstractRo {
     private Integer port;
     private String username;
     private String password;
+    private String channel;
+    private long maxTimeoutWait;
+    private Boolean useCamelNamingPolicyIbmMQ;
 }

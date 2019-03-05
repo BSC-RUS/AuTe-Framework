@@ -227,6 +227,9 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
                 amqpBroker.setPort(standProperties.getAmqpBroker().getPort());
                 amqpBroker.setUsername(standProperties.getAmqpBroker().getUsername());
                 amqpBroker.setPassword(standProperties.getAmqpBroker().getPassword());
+                amqpBroker.setChannel(standProperties.getAmqpBroker().getChannel());
+                amqpBroker.setMaxTimeoutWait(standProperties.getAmqpBroker().getMaxTimeoutWait());
+                amqpBroker.setUseCamelNamingPolicyIbmMQ(standProperties.getAmqpBroker().getUseCamelNamingPolicyIbmMQ());
                 project.setAmqpBroker(amqpBroker);
             }
         }

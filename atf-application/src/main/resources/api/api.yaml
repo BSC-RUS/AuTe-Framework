@@ -535,6 +535,13 @@ definitions:
         type: string
       password:
         type: string
+      channel:
+        type: string
+      maxTimeoutWait:
+        type: integer
+        format: int64
+      useCamelNamingPolicyIbmMQ:
+        type: boolean
   Scenario:
     type: object
     properties:
