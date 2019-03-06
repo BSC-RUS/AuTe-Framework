@@ -41,6 +41,7 @@ import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineFunctionResult;
 import ru.bsc.test.at.executor.validation.IgnoringComparator;
 import ru.bsc.test.at.executor.validation.MaskComparator;
+import ru.bsc.test.at.util.MultipartConstant;
 
 import javax.script.ScriptException;
 import javax.xml.parsers.DocumentBuilder;
@@ -61,7 +62,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static ru.bsc.test.at.util.Constants.CONVERT_BASE64_IN_MULTIPART;
 
 @Slf4j
 public abstract class AbstractStepExecutor implements IStepExecutor {
@@ -182,7 +182,7 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                     mockServiceResponse.getHeaders().forEach(header -> headers.put(header.getHeaderName(), header.getHeaderValue()));
                 }
                 if(mockServiceResponse.getConvertBase64InMultipart()) {
-                    headers.put(CONVERT_BASE64_IN_MULTIPART, "true");
+                    headers.put(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue(), "true");
                 }
                 mockDefinition.getResponse().setHeaders(headers);
                 String contentType = StringUtils.isNoneBlank(mockServiceResponse.getContentType()) ?

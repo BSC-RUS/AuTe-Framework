@@ -9,29 +9,23 @@ import java.util.Map;
 /**
  * Map<String, List>
  */
-public class MultiMap {
+class MultiMap {
 
-    Map<String, List> map = new HashMap();
+    private Map<String, List> map = new HashMap<>();
 
-    public Map getMap(){
+    Map<String, List> getMap(){
         return map;
     }
 
-    public void add(String key, Object value) {
-
-        List list = map.get(key);
-        if (list == null) {
-            list = new ArrayList();
-            map.put(key, list);
-        }
-        list.add(value);
+    void add(String key, Object value) {
+        map.computeIfAbsent(key, k -> new ArrayList<>()).add(value);
     }
 
-    public List getValues(String key){
+    List getValues(String key){
         return map.get(key);
     }
 
-    public String getValue(String key){
+    String getValue(String key){
 
         List list = getValues(key);
         if (list != null && !list.isEmpty())

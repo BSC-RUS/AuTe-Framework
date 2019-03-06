@@ -6,6 +6,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,32 +16,33 @@ import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import org.eclipse.jetty.http.HttpHeader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ru.bsc.test.at.mock.filter.config.multipart.MultipartFilterConfigProperties;
 
 
 @Slf4j
 public class MultipartToBase64ConverterServletRequest extends HttpServletRequestWrapper {
 
-    public final static String NEW_LINE = "\r\n";
-    public final static String DOUBLE_DASH = "--";
-    public final static String EVAL_FIELD = "|eval_field|";
+    private static final int BUFFER_SIZE = 4096;
+    private static final String tmpDirPath;
+    private static final File tmpDir;
+    private final static String NEW_LINE = "\r\n";
+    private final static String EVAL_FIELD = "|eval_field|";
 
-    public final static String EQUAL_SIGN = "=";
-    public final static String BOUNDARY = "boundary";
-    public final static String SEMICOLON = ";";
-    public static final String MULTIPART_TYPE    = "multipart/";
-    public static final String DEFAULT_CHARACTER_ENCODING = "utf-8";
-    public static final String tmpDirPath;
-    public static final File tmpDir;
+    final static String EQUAL_SIGN = "=";
+    final static String BOUNDARY = "boundary";
+    final static String SEMICOLON = ";";
+
+    public final static String DOUBLE_DASH = "--";
 
     private byte[] rawData;
     private MultiMap params;
-    private ConfigProperties configProperties;
-    private Map<String, String> headerMap = new HashMap<String, String>();
+    private Map<String, String> headerMap = new HashMap<>();
 
-
+    private MultipartFilterConfigProperties configProperties;
 
     static {
-
         tmpDirPath = System.getProperty("java.io.tmpdir") + File.separator + "servlet-file-upload";
         tmpDir = new File(tmpDirPath);
         if (!tmpDir.exists() && !tmpDir.mkdirs()){
@@ -50,7 +52,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     }
 
 
-    public MultipartToBase64ConverterServletRequest(HttpServletRequest httpRequest, ConfigProperties configProperties) {
+    public MultipartToBase64ConverterServletRequest(HttpServletRequest httpRequest, MultipartFilterConfigProperties configProperties) {
         super(httpRequest);
         this.configProperties = configProperties;
     }
@@ -72,9 +74,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     @Override
     public Enumeration<String> getHeaderNames() {
         List<String> names = Collections.list(super.getHeaderNames());
-        for (String name : headerMap.keySet()) {
-            names.add(name);
-        }
+        names.addAll(headerMap.keySet());
         return Collections.enumeration(names);
     }
 
@@ -106,7 +106,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     public String[] getParameterValues(String name){
 
         List list = getParams().getValues(name);
-        List<String> listOfStrings = new ArrayList(list.size());
+        List<String> listOfStrings = new ArrayList<>(list.size());
         for (Object o : list)
             listOfStrings.add(o.toString());
 
@@ -124,7 +124,6 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
 
     @Override
     public BufferedReader getReader() throws IOException {
-
         if (rawData == null) {
             initialize();
         }
@@ -132,7 +131,6 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     }
 
     private MultiMap getParams(){
-
         if (rawData == null) {
             initialize();
         }
@@ -148,9 +146,23 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
 
         ServletFileUpload upload = new ServletFileUpload(factory);
         upload.setSizeMax(configProperties.getFilesThresholdSize());
-
         ServletRequestContext uploadContext = new ServletRequestContext(this);
         return upload.parseRequest(uploadContext);
+    }
+
+
+    private byte[] readBytes(InputStream is) throws Exception {
+        try(ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+            int bytesRead;
+            byte[] data = new byte[BUFFER_SIZE];
+            while ((bytesRead = is.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, bytesRead);
+            }
+            buffer.flush();
+            return buffer.toByteArray();
+        } catch (Exception ex) {
+            throw new Exception(ex);
+        }
     }
 
 
@@ -160,10 +172,10 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
         }
         ServletRequest request = super.getRequest();
         try {
-            rawData = ServletUtils.readBytes(request.getInputStream());
+            rawData = readBytes(request.getInputStream());
             String encoding = request.getCharacterEncoding();
             if (encoding == null) {
-                encoding = DEFAULT_CHARACTER_ENCODING;
+                encoding = StandardCharsets.UTF_8.name();
             }
             params = new MultiMap();
             List<FileItem> fileItems = settingsLoadAndParseRequest();
@@ -193,8 +205,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     private void processEvalField(List<FileItem> fileItems, ConvertedRequestBody convertedRequestBody, long seed) {
         if(fileItems.size() > 0 && convertedRequestBody.getAllDataBody().length() > 0) {
             convertedRequestBody.setStaticBoundarySeed(seed);
-            convertedRequestBody.getAllDataBody()
-                    .append(DOUBLE_DASH + convertedRequestBody.getStaticBoundary() + DOUBLE_DASH);
+            convertedRequestBody.getAllDataBody().append(DOUBLE_DASH).append(convertedRequestBody.getStaticBoundary()).append(DOUBLE_DASH);
 
             if(configProperties.isStaticBoundaryEnabled()) {
                 changeMultipartHeaderBoundary(convertedRequestBody.getStaticBoundary());
@@ -229,9 +240,9 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     }
 
     private String buildPartMultipartRequest(String staticBoundary, FileItem fileItem) {
-        StringBuffer multipart = new StringBuffer();
+        StringBuilder multipart = new StringBuilder();
         Iterator<String> headerIter = fileItem.getHeaders().getHeaderNames();
-        multipart.append(DOUBLE_DASH + staticBoundary)
+        multipart.append(DOUBLE_DASH).append(staticBoundary)
                 .append(NEW_LINE);
         int countHeaderIterm = 0;
         while (headerIter.hasNext()) {
@@ -261,7 +272,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
 
         private final ByteArrayInputStream inputStream;
 
-        public ByteArrayServletInputStream(byte[] data){
+        ByteArrayServletInputStream(byte[] data){
             inputStream = new ByteArrayInputStream(data);
         }
 
@@ -285,7 +296,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
             try {
                 readListener.onDataAvailable();
             } catch (IOException ex){
-
+                ex.printStackTrace();
             }
         }
     }

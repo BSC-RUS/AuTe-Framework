@@ -38,6 +38,7 @@ import org.apache.velocity.runtime.parser.ParseException;
 import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.velocity.tools.ToolManager;
 import org.bouncycastle.util.encoders.Base64;
+import ru.bsc.test.at.util.MultipartConstant;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -47,7 +48,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServletRequest.DOUBLE_DASH;
-import static ru.bsc.test.at.util.Constants.CONVERT_BASE64_IN_MULTIPART;
 
 /**
  * Created by sdoroshin on 26.07.2017.
@@ -93,7 +93,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         } else {
             return responseDefinition;
         }
-        if(isPresentConvertCommand(responseDefinition.getHeaders().getHeader(CONVERT_BASE64_IN_MULTIPART))) {
+        if(isPresentConvertCommand(responseDefinition.getHeaders().getHeader(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue()))) {
             log.info(" >>> ");
             log.info(body);
             binaryBody = parseConvertBody(body);
