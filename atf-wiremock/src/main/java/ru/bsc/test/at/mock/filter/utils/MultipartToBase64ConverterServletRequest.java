@@ -1,3 +1,19 @@
+/*
+ * AuTe Framework project
+ * Copyright 2018 BSC Msc, LLC
+ *
+ * ATF project is licensed under
+ *     The Apache 2.0 License
+ *     http://www.apache.org/licenses/LICENSE-2.0.html
+ *
+ * For more information visit http://www.bsc-ideas.com/ru/
+ *
+ * Files ru.bsc.test.autotester.diff.DiffMatchPatch.java, ru.bsc.test.autotester.diff.Diff.java,
+ * ru.bsc.test.autotester.diff.LinesToCharsResult, ru.bsc.test.autotester.diff.Operation,
+ * ru.bsc.test.autotester.diff.Patch
+ * are copied from https://github.com/google/diff-match-patch
+ */
+
 package ru.bsc.test.at.mock.filter.utils;
 
 import javax.servlet.ReadListener;
@@ -16,8 +32,6 @@ import org.apache.tomcat.util.http.fileupload.disk.DiskFileItemFactory;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletFileUpload;
 import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
 import org.eclipse.jetty.http.HttpHeader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import ru.bsc.test.at.mock.filter.config.multipart.MultipartFilterConfigProperties;
 
 
@@ -141,11 +155,11 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
     private List<FileItem> settingsLoadAndParseRequest() throws FileUploadException {
         DiskFileItemFactory factory = new DiskFileItemFactory();
         // files larger than Threshold will be saved to tmpDir on disk
-        factory.setSizeThreshold(configProperties.getTmpThresholdSize());
+        factory.setSizeThreshold(configProperties.getThresholdTmpFileSize());
         factory.setRepository(tmpDir);
 
         ServletFileUpload upload = new ServletFileUpload(factory);
-        upload.setSizeMax(configProperties.getFilesThresholdSize());
+        upload.setSizeMax(configProperties.getThresholdFilesSize());
         ServletRequestContext uploadContext = new ServletRequestContext(this);
         return upload.parseRequest(uploadContext);
     }
@@ -180,7 +194,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
             params = new MultiMap();
             List<FileItem> fileItems = settingsLoadAndParseRequest();
             long sum = 0;
-            ConvertedRequestBody convertedRequestBody = new ConvertedRequestBody(request, configProperties.isStaticBoundaryEnabled());
+            ConvertedRequestBody convertedRequestBody = new ConvertedRequestBody(request, configProperties.isBoundaryStaticEnabled());
             for (FileItem fileItem : fileItems){
                 if (fileItem.isFormField()){
                     this.params.add(fileItem.getFieldName(), fileItem.getString(encoding));
@@ -207,7 +221,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
             convertedRequestBody.setStaticBoundarySeed(seed);
             convertedRequestBody.getAllDataBody().append(DOUBLE_DASH).append(convertedRequestBody.getStaticBoundary()).append(DOUBLE_DASH);
 
-            if(configProperties.isStaticBoundaryEnabled()) {
+            if(configProperties.isBoundaryStaticEnabled()) {
                 changeMultipartHeaderBoundary(convertedRequestBody.getStaticBoundary());
             }
             rawData = convertedRequestBody.getAllDataBody().toString().replace(EVAL_FIELD, convertedRequestBody.getStaticBoundary()).getBytes();
