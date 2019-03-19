@@ -41,6 +41,7 @@ import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineFunctionResult;
 import ru.bsc.test.at.executor.validation.IgnoringComparator;
 import ru.bsc.test.at.executor.validation.MaskComparator;
+import ru.bsc.test.at.util.MultipartConstant;
 
 import javax.script.ScriptException;
 import javax.xml.parsers.DocumentBuilder;
@@ -179,6 +180,9 @@ public abstract class AbstractStepExecutor implements IStepExecutor {
                 HashMap<String, String> headers = new HashMap<>();
                 if(mockServiceResponse.getHeaders() != null) {
                     mockServiceResponse.getHeaders().forEach(header -> headers.put(header.getHeaderName(), header.getHeaderValue()));
+                }
+                if(mockServiceResponse.getConvertBase64InMultipart()) {
+                    headers.put(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue(), "true");
                 }
                 mockDefinition.getResponse().setHeaders(headers);
                 String contentType = StringUtils.isNoneBlank(mockServiceResponse.getContentType()) ?

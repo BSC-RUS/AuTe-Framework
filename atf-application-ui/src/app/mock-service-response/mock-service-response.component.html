@@ -71,6 +71,13 @@
     </div>
   </div>
   <div class="row">
+    <div class="col-sm-3">
+      <label>
+        <input type="checkbox" [(ngModel)]="mockServiceResponse.convertBase64InMultipart"> {{'Convert base64 in multipart' | translate}}
+      </label>
+    </div>
+  </div>
+  <div class="row">
     <div class="col-sm-12" style="margin-top: 10px">
       <ul class="nav nav-tabs">
         <li [class.active]="tab == 'responseBody'">

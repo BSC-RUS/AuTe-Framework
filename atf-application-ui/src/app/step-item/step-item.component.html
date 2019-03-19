@@ -391,6 +391,11 @@
                 <div class="col-sm-2">
                   <input class="form-control" placeholder="{{'Matching' | translate}}" title="" [(ngModel)]="expectedServiceRequest.pathFilter"/>
                 </div>
+                <div class="col-sm-3">
+                  <label>
+                    <input type="checkbox" [(ngModel)]="expectedServiceRequest.notEvalExprInBody"> {{'Do not evaluate expressions in body' | translate}}
+                  </label>
+                </div>
               </div>
               <textarea class="form-control" placeholder="{{'Expected request' | translate}}" title="" rows="7" [(ngModel)]="expectedServiceRequest.expectedServiceRequest"></textarea>
             </div>

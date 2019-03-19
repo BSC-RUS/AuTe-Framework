@@ -26,6 +26,8 @@ import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.app.VelocityEngine;
@@ -35,17 +37,27 @@ import org.apache.velocity.runtime.RuntimeSingleton;
 import org.apache.velocity.runtime.parser.ParseException;
 import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.velocity.tools.ToolManager;
+import org.bouncycastle.util.encoders.Base64;
+import ru.bsc.test.at.util.MultipartConstant;
 
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServletRequest.DOUBLE_DASH;
 
 /**
  * Created by sdoroshin on 26.07.2017.
  *
  */
+@Slf4j
 public class CustomVelocityResponseTransformer extends ResponseDefinitionTransformer {
+
+    private static final String NEW_LINE_VAR = "\r|\n|(\r\n)|(\n\n)|(\r\r)";
+
     /**
      * The Velocity context that will hold our request header
      * data.
@@ -67,6 +79,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         context.put("requestUrl", request.getUrl());
         context.put("requestMethod", request.getMethod());
         String body;
+        byte[] binaryBody = null;
 
         if (responseDefinition.specifiesBodyFile() && templateDeclared(responseDefinition)) {
             body = getRenderedBody(responseDefinition);
@@ -80,9 +93,61 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         } else {
             return responseDefinition;
         }
-        return ResponseDefinitionBuilder.like(responseDefinition).but()
-                .withBody(body)
-                .build();
+        if(isPresentConvertCommand(responseDefinition.getHeaders().getHeader(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue()))) {
+            log.info(" >>> ");
+            log.info(body);
+            binaryBody = parseConvertBody(body);
+            return buildResponse(binaryBody, body, responseDefinition, true);
+        }
+        return buildResponse(binaryBody, body, responseDefinition, false);
+    }
+
+    private ResponseDefinition buildResponse(byte[] binaryBody, String body, ResponseDefinition responseDefinition, boolean useBinaryIfNeedConvert) {
+        if (useBinaryIfNeedConvert && binaryBody != null) {
+            return ResponseDefinitionBuilder.like(responseDefinition).but()
+                    .withBody(binaryBody)
+                    .build();
+        } else {
+            return ResponseDefinitionBuilder.like(responseDefinition).but()
+                    .withBody(body)
+                    .build();
+        }
+    }
+
+    private boolean isPresentConvertCommand(HttpHeader header) {
+        return header != null && header.isPresent() && "true".equals(header.firstValue()) ;
+    }
+
+    private byte[] parseConvertBody(String body) {
+        byte[] result = null;
+        // если начинается с boundary
+        if(body.startsWith(DOUBLE_DASH)) {
+            // получаем части multipart'a
+            String[] partsMultipart = body.split(NEW_LINE_VAR);
+            List<Byte> buffer = new ArrayList<>();
+            // обрабатываем каждую часть multipart'a - ищем base64
+            for(String part : partsMultipart) {
+                if(isNotBoundaryAndInBase64(part)) {
+                    result = Base64.decode(part.getBytes());
+                } else {
+                    result = part.getBytes();
+                }
+                buffer.addAll(Arrays.asList(ArrayUtils.toObject(result)));
+            }
+            result = ArrayUtils.toPrimitive((Byte[]) buffer.toArray());
+        } else {
+            // если не начинается с boundary - проверяем, не base64 лежит в корне
+            if(org.apache.commons.codec.binary.Base64.isArrayByteBase64(body.getBytes())) {
+                result = Base64.decode(body.getBytes());
+            } else {
+                result = body.getBytes();
+            }
+        }
+        return result;
+    }
+
+    private boolean isNotBoundaryAndInBase64(String part) {
+        return !part.startsWith(DOUBLE_DASH) && org.apache.commons.codec.binary.Base64.isArrayByteBase64(part.getBytes());
     }
 
     private Boolean templateDeclared(final ResponseDefinition response) {

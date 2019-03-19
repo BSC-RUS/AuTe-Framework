@@ -43,6 +43,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private String password;
     private String typeMatching;
     private String pathFilter;
+    private Boolean convertBase64InMultipart;
     private List<HeaderItemRo> headers;
 
 }

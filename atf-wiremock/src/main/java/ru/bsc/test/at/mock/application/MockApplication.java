@@ -35,6 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.request.async.DeferredResult;
+import ru.bsc.test.at.mock.filter.BinaryBase64ConvertFilter;
 import ru.bsc.test.at.mock.filter.CorsFilter;
 import ru.bsc.test.at.mock.wiremock.webcontextlistener.configuration.CustomWarConfiguration;
 import springfox.documentation.builders.PathSelectors;
@@ -75,8 +76,19 @@ public class MockApplication {
     public FilterRegistrationBean corsFilter() {
         FilterRegistrationBean filter = new FilterRegistrationBean(new CorsFilter());
         filter.addUrlPatterns("/*");
+        filter.setOrder(1);
         return filter;
     }
+
+
+    @Bean
+    public FilterRegistrationBean convertFilter(BinaryBase64ConvertFilter convertFilter) {
+        FilterRegistrationBean filter = new FilterRegistrationBean(convertFilter);
+        filter.addUrlPatterns("/*");
+        filter.setOrder(2);
+        return filter;
+    }
+
 
     @Bean
     public WireMockApp wireMockApp() {
