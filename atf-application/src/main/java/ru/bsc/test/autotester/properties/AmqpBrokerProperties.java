@@ -31,4 +31,8 @@ public class AmqpBrokerProperties {
     private Integer port;
     private String password;
     private String username;
+    private String channel;
+    private long maxTimeoutWait;
+    private boolean useCamelNamingPolicyIbmMQ;
+
 }

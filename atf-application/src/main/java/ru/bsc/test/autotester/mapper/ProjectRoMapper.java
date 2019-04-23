@@ -112,7 +112,9 @@ public abstract class ProjectRoMapper {
             @Mapping(target = "port", source = "port"),
             @Mapping(target = "username", source = "username"),
             @Mapping(target = "password", source = "password"),
-
+            @Mapping(target = "channel", source = "channel"),
+            @Mapping(target = "maxTimeoutWait", source = "maxTimeoutWait"),
+            @Mapping(target = "useCamelNamingPolicyIbmMQ", source = "useCamelNamingPolicyIbmMQ")
     })
     public abstract AmqpBroker updateAmqpBrokerFromRo(AmqpBrokerRo amqpBrokerRo);
 

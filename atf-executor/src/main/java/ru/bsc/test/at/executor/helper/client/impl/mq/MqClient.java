@@ -26,6 +26,7 @@ import ru.bsc.test.at.executor.model.AmqpBroker;
 import ru.bsc.test.at.executor.mq.AbstractMqManager;
 import ru.bsc.test.at.executor.mq.MqManagerFactory;
 
+import javax.jms.BytesMessage;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 import java.io.IOException;
@@ -37,15 +38,41 @@ public class MqClient implements Client<ClientMQRequest, MqClient.ClientVoidResp
 
     private final AbstractMqManager mqManager;
 
+    private long maxTimeoutWait = 60000L;
+    private boolean useCamelNamingPolicyIbmMQ;
+
     public MqClient(AmqpBroker amqpBroker) throws Exception {
         mqManager = MqManagerFactory.getMqManager(
                 amqpBroker.getMqService(),
                 amqpBroker.getHost(),
                 amqpBroker.getPort(),
                 amqpBroker.getUsername(),
-                amqpBroker.getPassword()
+                amqpBroker.getPassword(),
+                amqpBroker.getChannel()
         );
+        setMaxTimeoutWait(amqpBroker.getMaxTimeoutWait());
+        setUseCamelNamingPolicyIbmMQ(amqpBroker.isUseCamelNamingPolicyIbmMQ());
     }
+
+
+    public long getMaxTimeoutWait() {
+        return maxTimeoutWait;
+    }
+
+    public void setMaxTimeoutWait(long maxTimeoutWait) {
+        if(maxTimeoutWait > 0) {
+            this.maxTimeoutWait = maxTimeoutWait;
+        }
+    }
+
+    public boolean isUseCamelNamingPolicyIbmMQ() {
+        return useCamelNamingPolicyIbmMQ;
+    }
+
+    public void setUseCamelNamingPolicyIbmMQ(boolean useCamelNamingPolicyIbmMQ) {
+        this.useCamelNamingPolicyIbmMQ = useCamelNamingPolicyIbmMQ;
+    }
+
 
     @Override
     public ClientVoidResponse request(ClientMQRequest request) throws Exception {
@@ -54,12 +81,19 @@ public class MqClient implements Client<ClientMQRequest, MqClient.ClientVoidResp
     }
 
     public ClientCommonResponse waitMessage(String queueName, Long timeout, String testIdHeaderName, String testId) throws Exception {
-        Message message = mqManager.waitMessage(queueName, timeout, testIdHeaderName, testId); if (message == null) {
+        Message message = mqManager.waitMessage(queueName, timeout, testIdHeaderName, testId);
+
+        if (message == null) {
             throw new Exception("No reply message");
         }
 
-        if (message instanceof TextMessage) {
-            return new ClientCommonResponse(0, ((TextMessage) message).getText(),null);
+        if (message instanceof BytesMessage) {
+            BytesMessage bytesMessage = (BytesMessage) message;
+            byte[] data = new byte[(int) bytesMessage.getBodyLength()];
+            bytesMessage.readBytes(data);
+            return new ClientCommonResponse(0, new String(data), null);
+        } else if (message instanceof TextMessage) {
+            return new ClientCommonResponse(0, ((TextMessage) message).getText(), null);
         } else {
             throw new Exception("Received message is not TextMessage instance");
         }

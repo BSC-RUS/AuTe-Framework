@@ -19,6 +19,7 @@
 package ru.bsc.test.at.executor.helper;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
@@ -35,6 +36,16 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MqMockHelper {
+
+    private static final String HYPHEN = "_HYPHEN_";
+    private static final String DOT = "_DOT_";
+
+
+    public static String convertPropertyCamelPolicy(String testIdHeaderNameProperty, boolean useCamelNaming) {
+        return useCamelNaming && !StringUtils.isEmpty(testIdHeaderNameProperty) ?
+                testIdHeaderNameProperty.replace("-", HYPHEN).replace(".", DOT) : testIdHeaderNameProperty;
+    }
+
 
     public void assertMqRequests(WireMockAdmin mqMockerAdmin, String testId, Step step, Map<String, Object> scenarioVariables, Integer mqCheckCount, Long mqCheckInterval) throws Exception {
         if (mqMockerAdmin == null) {
