@@ -392,6 +392,14 @@
           <!-- Mock services requests tab -->
           <div *ngIf="tab == 'mqRequests'">
             <h4>{{'Expected REST requests' | translate}}</h4>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" [(ngModel)]="step.checkRequestsOrder"><b>{{'Check Request Order' | translate}}</b>
+              </label>
+              <label>
+                <input type="checkbox" [(ngModel)]="step.ignoreRequestsInvocations"><b>{{'Ignore Expected Request Invocation' | translate}}</b>
+              </label>
+            </div>
             <div class="row" style="margin-bottom: 40px;" *ngFor="let expectedServiceRequest of step.expectedServiceRequestList; let i = index">
               <div class="col-sm-10">
 

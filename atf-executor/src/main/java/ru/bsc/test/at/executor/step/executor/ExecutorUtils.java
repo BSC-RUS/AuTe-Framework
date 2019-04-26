@@ -19,6 +19,7 @@
 package ru.bsc.test.at.executor.step.executor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
@@ -70,7 +71,7 @@ public class ExecutorUtils {
     public static String evaluateExpressions(String template, Map<String, Object> scenarioVariables) {
         log.debug("evaluate expressions {}, {}", template, scenarioVariables);
         String result = template;
-        if (result != null) {
+        if (result != null && !Base64.isBase64(result)) {
             Pattern p = Pattern.compile(".*?<f>(.+?)</f>.*?", Pattern.MULTILINE);
             Matcher m = p.matcher(result);
             while (m.find()) {

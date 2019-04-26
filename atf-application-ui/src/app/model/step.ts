@@ -28,6 +28,8 @@ import { MqMessage } from './mq-message';
 
 export class Step {
     code: string;
+    checkRequestsOrder: boolean;
+    ignoreRequestsInvocations: boolean;
     expectedServiceRequestList: ExpectedServiceRequest[];
     relativeUrl: string;
     requestMethod = 'POST';

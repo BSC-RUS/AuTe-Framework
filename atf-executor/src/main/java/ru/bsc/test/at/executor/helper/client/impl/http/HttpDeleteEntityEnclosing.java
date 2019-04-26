@@ -14,17 +14,26 @@
  * are copied from https://github.com/google/diff-match-patch
  */
 
-package ru.bsc.test.at.executor.exception;
+package ru.bsc.test.at.executor.helper.client.impl.http;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+
+import java.net.URI;
 
 /**
  * Created by smakarov
- * 27.03.2019 12:00
+ * 22.05.2019 12:01
  */
-public class InvalidNumberOfMockRequests extends RuntimeException {
-    public InvalidNumberOfMockRequests(long expected, long actual, String url) {
-        super(String.format("Invalid number of mock requests invocations %s: expected: %d, actual: %d", url ,expected, actual));
+public class HttpDeleteEntityEnclosing extends HttpEntityEnclosingRequestBase {
+
+    HttpDeleteEntityEnclosing(final URI uri) {
+        super();
+        setURI(uri);
+    }
+
+    @Override
+    public String getMethod() {
+        return HttpDelete.METHOD_NAME;
     }
 }

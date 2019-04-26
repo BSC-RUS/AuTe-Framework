@@ -35,7 +35,7 @@ class HttpRequestCreator {
         httpRequest = new HttpGet(uri);
         break;
       case DELETE:
-        httpRequest = new HttpDelete(uri);
+        httpRequest = new HttpDeleteEntityEnclosing(uri);
         break;
       case PUT:
         httpRequest = new HttpPut(uri);

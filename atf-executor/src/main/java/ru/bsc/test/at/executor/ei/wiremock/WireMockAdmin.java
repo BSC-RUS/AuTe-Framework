@@ -123,6 +123,13 @@ public class WireMockAdmin implements Closeable {
                 .collect(Collectors.toList());
     }
 
+    public List<MockedRequest>  getMqRequestListByTestIdAndQueue(String sourceQueue, String testId) throws IOException {
+        return getMqRequestList()
+            .stream()
+            .filter(mockedRequest -> Objects.equals(mockedRequest.getTestId(), testId) && Objects.equals(mockedRequest.getSourceQueue(), sourceQueue))
+            .collect(Collectors.toList());
+    }
+
     public void addMqMapping(MqMockDefinition mockMessageDefinition) throws IOException {
         HttpPost httpPostAddMapping = new HttpPost(wireMockUrlBuilder.addMQMappingUrl());
         httpPostAddMapping.setEntity(new StringEntity(mapper.writeValueAsString(mockMessageDefinition), ContentType.APPLICATION_JSON));

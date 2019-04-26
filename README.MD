@@ -28,7 +28,9 @@ Name | Description
 
 ### env.yml description ###    
  * projectsDirectoryPath - path to tests repository
- * historyLimit - 
+ * historyLimit - number of stored test runs in history
+ * mqCheckCount - check count of mqRequests
+ * mqCheckInterval - interval in milliseconds between checks 
  * projectStandMap:
     * PROJECT_CODE_1:
         * serviceUrl - URL of the application under test
@@ -87,3 +89,12 @@ For mocking IBM MQ you have to find and download
 and put it in `/lib` folder or another.
 You can find ibm libs in fix pack [Fix Pack 8.0.0.5 for WebSphere MQ v8](http://www-01.ibm.com/support/docview.wss?uid=swg21982686) or copy it from installed IBM product.
 You have to put these libs in application classpath for atf-application and for atf-wiremock.
+
+## PERFORMANCE ##
+
+Application may be slow if not set properties: 
+
+mqCheckCount: 3
+mqCheckInterval: 1000
+
+in file env.yml

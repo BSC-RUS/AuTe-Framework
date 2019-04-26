@@ -20,6 +20,8 @@ package ru.bsc.test.at.executor.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -34,9 +36,7 @@ import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockRequest;
 import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
 import ru.bsc.test.at.executor.ei.wiremock.model.WireMockRequest;
-import ru.bsc.test.at.executor.exception.ComparisonException;
-import ru.bsc.test.at.executor.exception.InvalidNumberOfMockRequests;
-import ru.bsc.test.at.executor.exception.JsonParsingException;
+import ru.bsc.test.at.executor.exception.*;
 import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import ru.bsc.test.at.executor.service.DelayUtilities;
@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.function.Function.identity;
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.commons.lang3.StringUtils.*;
 
@@ -56,22 +57,22 @@ import static org.apache.commons.lang3.StringUtils.*;
 @Slf4j
 public class ServiceRequestsComparatorHelper {
     private static final String IGNORE = "\\u002A" + "ignore" + "\\u002A";
+    private static final String PART = "\\u002A" + "part" + "\\u002A";
     private static final String STR_SPLIT = "(\r\n|\n\r|\r|\n|" + IGNORE + ")";
     private static final String CLEAR_STR_PATTERN = "(\r\n|\n\r|\r|\n)";
     private static final String NBS_PATTERN = "[\\s\\u00A0]";
 
-    public void assertTestCaseWSRequests(
-            Project project,
-            Map<String, Object> variables,
-            WireMockAdmin wireMockAdmin,
-            String testId,
-            Step step
-    ) throws Exception {
+    public void assertTestCaseWSRequests(Project project, Map<String, Object> variables, WireMockAdmin wireMockAdmin, String testId, Step step) throws Exception {
         if (wireMockAdmin == null) {
             return;
         }
 
         if (step.getExpectedServiceRequests().isEmpty()) {
+            List<WireMockRequest> actualRequestsByTestIds = wireMockAdmin.findRestRequests(getMockRequest(project, testId));
+            LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedServiceRequestListMap = getOrderedRequestsByExpectedMap(wireMockAdmin, project, step, testId);
+            List<WireMockRequest> actualRequests = getRequestsByExpected(expectedServiceRequestListMap);
+            checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests);
+            checkRequestsOrder(step, actualRequestsByTestIds, actualRequests);
             return;
         }
 
@@ -79,9 +80,7 @@ public class ServiceRequestsComparatorHelper {
             pollWiremockUntilRequested(wireMockAdmin, project, step, variables, testId);
         }
 
-        for (ExpectedServiceRequest request : step.getExpectedServiceRequests()) {
-            checkExpectedServiceRequest(project, variables, wireMockAdmin, testId, request);
-        }
+        checkExpectedServiceRequests(project, variables, wireMockAdmin, testId, step);
     }
 
     private void pollWiremockUntilRequested(WireMockAdmin wireMockAdmin, Project project, Step step, Map<String, Object> variables, String testId) throws IOException {
@@ -118,33 +117,109 @@ public class ServiceRequestsComparatorHelper {
         return true;
     }
 
-    private void checkExpectedServiceRequest(
+    private void checkExpectedServiceRequests(
             Project project,
             Map<String, Object> variables,
             WireMockAdmin wireMockAdmin,
             String testId,
-            ExpectedServiceRequest request)
+            Step step)
             throws Exception {
-        MockRequest mockRequest = createMockRequest(project, testId, request);
-        List<WireMockRequest> actualRequests = wireMockAdmin.findRestRequests(mockRequest);
-        long repeatCount = AtProjectExecutor.parseLongOrVariable(variables, request.getCount(), 1);
-        if (actualRequests.size() != repeatCount) {
-            throw new InvalidNumberOfMockRequests(repeatCount, actualRequests.size());
+
+        List<WireMockRequest> actualRequestsByTestIds = wireMockAdmin.findRestRequests(getMockRequest(project, testId));
+        LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedServiceRequestListMap = getOrderedRequestsByExpectedMap(wireMockAdmin, project, step, testId);
+        List<WireMockRequest> actualRequests = getRequestsByExpected(expectedServiceRequestListMap);
+        checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests);
+        checkRequestsOrder(step, actualRequestsByTestIds, actualRequests);
+
+        List<ExpectedServiceRequest> requestList = step.getExpectedServiceRequests();
+        requestList.forEach(request -> {
+            List<WireMockRequest> requests = expectedServiceRequestListMap.get(request);
+            long repeatCount = AtProjectExecutor.parseLongOrVariable(variables, request.getCount(), 1);
+            if (requests.size() != repeatCount) {
+                throw new InvalidNumberOfMockRequests(repeatCount, requests.size(), request.getServiceName());
+            }
+
+            String expression = ExecutorUtils.insertSavedValues(request.getExpectedServiceRequest(), variables);
+            String requestText =
+                    request.getNotEvalExprInBody() ? expression : ExecutorUtils.evaluateExpressions(expression, variables);
+            Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
+                    Arrays.stream(request.getIgnoredTags().split(","))
+                            .map(String::trim)
+                            .collect(Collectors.toSet()) :
+                    Collections.emptySet();
+            for (WireMockRequest actualRequest : requests) {
+                compareWSRequest(requestText, actualRequest, ignoredTags, request.getJsonCompareMode());
+
+                // save variables from service request body
+                this.saveVariablesFromServiceRequest(
+                        actualRequest.getBody(), request.getScenarioVariablesFromServiceRequest(), variables);
+            }
+        });
+
+    }
+
+    private MockRequest getMockRequest(Project project, String testId) {
+        MockRequest requestByTestId = new MockRequest(project.getTestIdHeaderName(), testId);
+        requestByTestId.setUrlPattern("^(?!\\/mq_).*");
+        return requestByTestId;
+    }
+
+    /**
+     * проверяем порядок запросов
+     *
+     * @param step
+     * @param actualRequestsByTestIds
+     * @param actualRequests
+     */
+    private void checkRequestsOrder(Step step, List<WireMockRequest> actualRequestsByTestIds, List<WireMockRequest> actualRequests) {
+        if (Boolean.TRUE.equals(step.getCheckRequestsOrder())) {
+            actualRequestsByTestIds.sort(Comparator.comparing(WireMockRequest::getLoggedDate));
+            if (!actualRequestsByTestIds.equals(actualRequests)) {
+                throw new IncorrectRequestsOrderException();
+            }
         }
+    }
 
-        String expression = ExecutorUtils.insertSavedValues(request.getExpectedServiceRequest(), variables);
-        String requestText = request.getNotEvalExprInBody() ? expression : ExecutorUtils.evaluateExpressions(expression, variables);
-        Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
-                Arrays.stream(request.getIgnoredTags().split(","))
-                        .map(String::trim)
-                        .collect(Collectors.toSet()) :
-                Collections.emptySet();
-        for (WireMockRequest actualRequest : actualRequests) {
-            compareWSRequest(requestText, actualRequest, ignoredTags, request.getJsonCompareMode());
 
-            // save variables from service request body
-            this.saveVariablesFromServiceRequest(
-                    actualRequest.getBody(), request.getScenarioVariablesFromServiceRequest(), variables);
+    private LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> getOrderedRequestsByExpectedMap(WireMockAdmin wireMockAdmin, Project project, Step step, String testId) {
+        return step.getExpectedServiceRequests().stream().collect(Collectors.toMap(identity(), request -> {
+            try {
+                return wireMockAdmin.findRestRequests(createMockRequest(project, testId, request));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }, (a, b) -> a, LinkedHashMap::new));
+    }
+
+    /**
+     * @param actualRequestsByExpected
+     * @return
+     */
+    private List<WireMockRequest> getRequestsByExpected(LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> actualRequestsByExpected) {
+
+        return actualRequestsByExpected.values().stream().map( l -> {
+                l.sort(Comparator.comparing(WireMockRequest::getLoggedDate));
+                return l;
+            }
+            ).flatMap(List::stream).collect(Collectors.toList());
+    }
+
+    /**
+     * получаем список запросов из wiremock для которых нет заглушек
+     *
+     * @param step
+     * @param actualRequestsByTestIds
+     * @param actualRequestsOrderedList
+     */
+    private void checkUnMockedRequest(Step step, List<WireMockRequest> actualRequestsByTestIds, List<WireMockRequest> actualRequestsOrderedList) {
+        List<WireMockRequest> unMockedRequests = actualRequestsByTestIds.stream().
+                filter(r -> !actualRequestsOrderedList.contains(r)).collect(Collectors.toList());
+
+        if (!Boolean.TRUE.equals(step.getIgnoreRequestsInvocations()) && !unMockedRequests.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Sent request without mock : \n");
+            unMockedRequests.forEach(r -> sb.append(r.getUrl() + " " + r.getBody() + "\n"));
+            throw new UnMockedRequestsException(sb.toString());
         }
     }
 
@@ -167,20 +242,62 @@ public class ServiceRequestsComparatorHelper {
      * Compare expected and actual requests.
      */
     private void compareWSRequest(String expectedRequest, WireMockRequest actualRequest, Set<String> ignoredTags, String jsonCompareMode) throws ComparisonException {
-        String contentType = actualRequest.getHeaders().get("Content-Type");
+        Map.Entry<String, String> any =
+                actualRequest.getHeaders().entrySet().stream().filter(e -> "Content-Type".equalsIgnoreCase(e.getKey()))
+                        .findAny().orElse(null);
+        String contentType = any != null ? any.getValue() : null;
+        boolean isMultipart = contentType != null && contentType.contains("multipart/form-data");
+        String actualRequestBody = actualRequest.getBody();
+
+        List<Request> requests;
+        if (isMultipart && expectedRequest.contains(PART)) { // если мы хотим сравнивать части отдельно
+            requests = splitMultipart(expectedRequest, contentType, actualRequestBody);
+        } else {
+            requests = Collections.singletonList(new Request(contentType, expectedRequest, actualRequestBody));
+        }
+
+        requests.forEach(request -> compareWSRequest(request, ignoredTags, jsonCompareMode));
+
+    }
+
+    private List<Request> splitMultipart(
+            String expectedRequest,
+            String contentType,
+            String actualRequestBody
+    ) {
+        List<Request> requests;
+        String[] expectedParts = expectedRequest.split(PART);
+        int indStart = contentType.indexOf("boundary") + "boundary".length() + 1;
+        int indEnd = contentType.indexOf(";", indStart);
+        String boundary = contentType.substring(indStart, indEnd);
+        String actualParts[] = actualRequestBody.split("--" + boundary);
+        requests = new ArrayList<>();
+        for (int i = 1; i < actualParts.length - 1; i++) {
+            String part = actualParts[i];
+            // TODO null указан специально, т.к. микросервис вызывает метод с неправильными хедерами, в этом слуае вызовется compareWSRequestFallback
+            requests.add(new Request(null, expectedParts[i], part));
+        }
+        return requests;
+    }
+
+    private void compareWSRequest(Request request, Set<String> ignoredTags, String jsonCompareMode) throws ComparisonException {
+
+        String contentType = request.getContentType();
+        String expectedRequest = request.getExpectedBody();
+        String actualRequestBody = request.getActualBody();
 
         if (contentType == null) {
             log.warn("No 'Content-Type' header use old method");
-            this.compareWSRequestFallback(expectedRequest, actualRequest.getBody(), ignoredTags, jsonCompareMode);
+            this.compareWSRequestFallback(expectedRequest, actualRequestBody, ignoredTags, jsonCompareMode);
         } else if (contentType.contains("application/xml") || contentType.contains("text/xml")) {
-            compareWSRequestAsXml(expectedRequest, actualRequest.getBody(), ignoredTags);
+            compareWSRequestAsXml(expectedRequest, actualRequestBody, ignoredTags);
         } else if (contentType.contains("application/json")) {
             if (expectedRequest == null) {
                 return;
             }
-            compareWSRequestAsJson(expectedRequest, actualRequest.getBody(), ignoredTags, jsonCompareMode);
+            compareWSRequestAsJson(expectedRequest, actualRequestBody, ignoredTags, jsonCompareMode);
         } else {
-            compareWSRequestAsString(defaultString(expectedRequest), actualRequest.getBody());
+            compareWSRequestAsString(defaultString(expectedRequest), actualRequestBody);
         }
     }
 
@@ -223,8 +340,8 @@ public class ServiceRequestsComparatorHelper {
         }
         ObjectMapper om = new ObjectMapper();
         try {
-            om.readValue(expected, Map.class);
-            om.readValue(actual, Map.class);
+            om.readValue(expected, Object.class);
+            om.readValue(actual, Object.class);
         } catch (Exception e) {
             throw new JsonParsingException(e);
         }
@@ -237,7 +354,7 @@ public class ServiceRequestsComparatorHelper {
                     expected == null ? "" : expected.replaceAll(" ", " "),
                     actual.replaceAll(" ", " "),
                     new IgnoringComparator(
-                            StringUtils.isEmpty(mode) ? JSONCompareMode.NON_EXTENSIBLE : JSONCompareMode.valueOf(mode),
+                            StringUtils.isEmpty(mode) ? JSONCompareMode.STRICT : JSONCompareMode.valueOf(mode),
                             customizations
                     )
             );
@@ -296,5 +413,13 @@ public class ServiceRequestsComparatorHelper {
             default:
                 return JsonPath.read(request, variable.getExpression());
         }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    private class Request {
+        private String contentType;
+        private String expectedBody;
+        private String actualBody;
     }
 }

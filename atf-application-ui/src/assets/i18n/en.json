@@ -168,6 +168,8 @@
   "Header name": "Header name",
   "Header value": "Header value",
   "URL pattern": "URL pattern",
+  "Check Request Order": "Check Request Order",
+  "Ignore Expected Request Invocation": "Ignore Expected Request Invocation",
   "Ignore undeclared requests": "Ignore undeclared requests",
   "Repeat before each request": "Repeat before each request",
   "Variables": "Variables",

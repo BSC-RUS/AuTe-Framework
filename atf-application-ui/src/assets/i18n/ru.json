@@ -185,6 +185,8 @@
   "Header value": "Значение заголовка",
   "Wrong project code": "Неправильное название директории (код проекта)",
   "URL pattern": "Шаблон URL",
+  "Check Request Order": "Проверять порядок запросов",
+  "Ignore Expected Request Invocation": "Игнорировать проверку ожидаемых запросов",
   "Ignore undeclared requests": "Игнорировать необъявленные запросы",
   "Repeat before each request": "Повторять перед каждым запросом",
   "Variables": "Переменные",

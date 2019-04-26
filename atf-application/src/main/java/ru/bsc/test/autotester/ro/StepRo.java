@@ -76,6 +76,10 @@ public class StepRo implements AbstractRo {
     private Map<String, String> savedValuesCheck;
     @ApiModelProperty("List of different data sets for multiple step execution")
     private List<StepParameterSetRo> stepParameterSetList = new ArrayList<>();
+    @ApiModelProperty("Check request order or not")
+    private Boolean checkRequestsOrder;
+    @ApiModelProperty("Ignore expected requests")
+    private Boolean ignoreRequestsInvocations;
     @ApiModelProperty("List of expected requests to REST stubs")
     private List<ExpectedServiceRequestRo> expectedServiceRequestList = new ArrayList<>();
     @ApiModelProperty("List of MQ messages, which will be sent to queue")

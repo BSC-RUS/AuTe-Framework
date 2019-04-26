@@ -53,6 +53,7 @@ public abstract class StepRoMapper {
             @Mapping(target = "requestFile", ignore = true),
             @Mapping(target = "expectedResponseFile", ignore = true),
             @Mapping(target = "mqMessageFile", ignore = true),
+            @Mapping(target = "ignoreMqRequestsInvocations", ignore = true)
     })
     public abstract Step updateStep(StepRo stepRo, @MappingTarget Step step);
 
@@ -67,7 +68,7 @@ public abstract class StepRoMapper {
     abstract List<FormData> formDataRoListToFormData(List<FormDataRo> formDataRoList);
 
     @Mappings({
-            @Mapping(target = "expectedServiceRequestList", source = "expectedServiceRequests"),
+            @Mapping(target = "expectedServiceRequestList", source = "expectedServiceRequests")
     })
     public abstract StepRo stepToStepRo(Step step);
 

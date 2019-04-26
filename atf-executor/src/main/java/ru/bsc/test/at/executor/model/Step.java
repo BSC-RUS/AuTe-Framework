@@ -19,14 +19,10 @@
 package ru.bsc.test.at.executor.model;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.helper.client.impl.http.HTTPMethod;
 
 /**
@@ -37,6 +33,9 @@ public class Step implements Serializable, AbstractModel {
     private static final long serialVersionUID = 1670286319126044952L;
 
     private String code;
+    private Boolean checkRequestsOrder;
+    private Boolean ignoreRequestsInvocations;
+    private Boolean ignoreMqRequestsInvocations; // используется для обратной совместимости
     private List<ExpectedServiceRequest> expectedServiceRequests = new LinkedList<>();
     private String relativeUrl;
     private HTTPMethod requestMethod;
@@ -112,12 +111,11 @@ public class Step implements Serializable, AbstractModel {
         step.setSavedValuesCheck(new HashMap<>(getSavedValuesCheck()));
         step.setResponseCompareMode(getResponseCompareMode());
         step.setTimeoutEachRepetition(isTimeoutEachRepetition());
-        if (getExpectedServiceRequests() != null) {
-            step.setExpectedServiceRequests(new LinkedList<>());
-            for (ExpectedServiceRequest expectedServiceRequest : getExpectedServiceRequests()) {
-                step.getExpectedServiceRequests().add(expectedServiceRequest.copy());
-            }
-        }
+
+        List<ExpectedServiceRequest> expectedServiceRequests = Optional.ofNullable(getExpectedServiceRequests()).orElse(new LinkedList<>());
+        step.setExpectedServiceRequests(expectedServiceRequests.stream().map(ExpectedServiceRequest::copy).collect(Collectors.toCollection(LinkedList::new)));
+
+
         if (getMockServiceResponseList() != null) {
             step.setMockServiceResponseList(new LinkedList<>());
             for (MockServiceResponse mockServiceResponse : getMockServiceResponseList()) {
@@ -200,6 +198,9 @@ public class Step implements Serializable, AbstractModel {
 
         step.setMockPollingTimeout(getMockPollingTimeout());
         step.setMockRetryDelay(getMockRetryDelay());
+        step.setCheckRequestsOrder(getCheckRequestsOrder());
+        step.setIgnoreRequestsInvocations(getIgnoreRequestsInvocations());
+        step.setIgnoreMqRequestsInvocations(getIgnoreMqRequestsInvocations());
         return step;
     }
 
@@ -221,5 +222,9 @@ public class Step implements Serializable, AbstractModel {
 
     public StepMode getStepMode() {
         return stepMode == null ? StepMode.REST : stepMode;
+    }
+
+    public Boolean getIgnoreUndeclaredMqRequests(){
+        return Boolean.TRUE.equals(ignoreUndeclaredMqRequests) || Boolean.TRUE.equals(ignoreMqRequestsInvocations);
     }
 }
