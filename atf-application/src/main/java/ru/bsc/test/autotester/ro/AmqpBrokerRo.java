@@ -39,4 +39,10 @@ public class AmqpBrokerRo implements AbstractRo {
     private String username;
     @ApiModelProperty("MQ server password")
     private String password;
+    @ApiModelProperty("MQ server channel")
+    private String channel;
+    @ApiModelProperty("The timeout value (in milliseconds), a time out of zero never expires.")
+    private long maxTimeoutWait;
+    @ApiModelProperty("Use camel naming policy for MQ properties.")
+    private boolean useCamelNamingPolicyIbmMQ;
 }

@@ -24,6 +24,8 @@ import com.github.tomakehurst.wiremock.common.Slf4jNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockApp;
 import com.github.tomakehurst.wiremock.http.AdminRequestHandler;
 import com.github.tomakehurst.wiremock.http.StubRequestHandler;
+import com.github.tomakehurst.wiremock.jetty9.DefaultMultipartRequestConfigurer;
+import com.github.tomakehurst.wiremock.servlet.MultipartRequestConfigurer;
 import com.github.tomakehurst.wiremock.servlet.NotImplementedContainer;
 import com.github.tomakehurst.wiremock.servlet.WireMockHandlerDispatchingServlet;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,8 +100,13 @@ public class MockApplication {
         context.setAttribute(StubRequestHandler.class.getName(), wireMockApp.buildStubRequestHandler());
         context.setAttribute(AdminRequestHandler.class.getName(), wireMockApp.buildAdminRequestHandler());
         context.setAttribute(Notifier.KEY, new Slf4jNotifier(false));
+        context.setAttribute(MultipartRequestConfigurer.KEY, buildMultipartRequestConfigurer());
 
         return wireMockApp;
+    }
+
+    protected MultipartRequestConfigurer buildMultipartRequestConfigurer() {
+        return new DefaultMultipartRequestConfigurer();
     }
 
     @Bean

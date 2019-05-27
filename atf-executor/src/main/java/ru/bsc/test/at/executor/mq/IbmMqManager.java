@@ -19,6 +19,7 @@
 package ru.bsc.test.at.executor.mq;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
+import com.ibm.msg.client.wmq.WMQConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.jms.Connection;
@@ -30,11 +31,16 @@ public class IbmMqManager extends AbstractMqManager {
 
     private QueueConnection connection;
 
-    IbmMqManager(String host, int port, String username, String password) throws JMSException {
+    IbmMqManager(String host, int port, String username, String password, String channel) throws JMSException {
         MQQueueConnectionFactory connectionFactory = new MQQueueConnectionFactory();
         connectionFactory.setHostName(host);
         connectionFactory.setPort(port);
-        connectionFactory.setTransportType(1);
+        connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
+
+        if(channel != null && !channel.isEmpty()) {
+            connectionFactory.setChannel(channel);
+        }
+
         connection = (QueueConnection) connectionFactory.createConnection(username, password);
         connection.start();
     }

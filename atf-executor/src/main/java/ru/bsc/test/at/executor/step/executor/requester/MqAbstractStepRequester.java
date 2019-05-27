@@ -20,6 +20,7 @@ package ru.bsc.test.at.executor.step.executor.requester;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.client.api.ClientResponse;
 import ru.bsc.test.at.executor.helper.client.impl.mq.ClientMQRequest;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
@@ -31,6 +32,7 @@ import ru.bsc.test.at.executor.step.executor.scriptengine.JSScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineProcedureResult;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
@@ -80,14 +82,15 @@ public abstract class MqAbstractStepRequester implements StepRequester {
 
     protected ClientResponse getClientResponse() throws Exception {
         ClientResponse response = null;
-
+        Map<String, Object> generatedProperties = getGeneratedProperties(step);
         // 3. Выполнить запрос (отправить сообщение в очередь)
-        ClientMQRequest clientMQRequest = new ClientMQRequest(step.getMqOutputQueueName(), requestBody, null, testId, project.getUseRandomTestId() ? project.getTestIdHeaderName() : null);
+        String testIdHeaderName = MqMockHelper.convertPropertyCamelPolicy(project.getTestIdHeaderName(), mqClient.isUseCamelNamingPolicyIbmMQ());
+        ClientMQRequest clientMQRequest = new ClientMQRequest(step.getMqOutputQueueName(), requestBody, generatedProperties, testId, project.getUseRandomTestId() ? testIdHeaderName: null);
         mqClient.request(clientMQRequest);
 
         if (StringUtils.isNotBlank(step.getMqInputQueueName())) {
             long calculatedSleep = parseLongOrVariable(scenarioVariables, ExecutorUtils.evaluateExpressions(step.getMqTimeoutMs(), scenarioVariables), 1000);
-            response = mqClient.waitMessage(step.getMqInputQueueName(), Math.min(calculatedSleep, 60000L), project.getUseRandomTestId() ? project.getTestIdHeaderName() : null, testId);
+            response = mqClient.waitMessage(step.getMqInputQueueName(), Math.min(calculatedSleep, mqClient.getMaxTimeoutWait()), project.getUseRandomTestId() ? testIdHeaderName : null, testId);
         }
 
         // Выполнить скрипт
@@ -103,4 +106,12 @@ public abstract class MqAbstractStepRequester implements StepRequester {
         }
         return response;
     }
+
+
+    private Map<String, Object> getGeneratedProperties(Step step) {
+        Map<String, Object> generatedProperties = new HashMap<>();
+        generatedProperties.put("replyTo", step.getMqInputQueueName());
+        return generatedProperties;
+    }
+
 }
