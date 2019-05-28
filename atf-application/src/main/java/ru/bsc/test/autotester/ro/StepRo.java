@@ -134,6 +134,8 @@ public class StepRo implements AbstractRo {
     @ApiModelProperty("Deprecated")
     @Deprecated
     private List<NameValuePropertyRo> mqPropertyList;
+    @ApiModelProperty("Use Response as base64")
+    private boolean useResponseAsBase64;
 
     @ApiModelProperty("The queue in which the message is sent")
     private String mqOutputQueueName;

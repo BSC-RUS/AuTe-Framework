@@ -3,7 +3,7 @@
  *
  * This file is part of the AuTe Framework project
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under tаhe Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -65,6 +65,7 @@ export class Step {
     stepMode = 'REST';
     mockPollingTimeout;
     mockRetryDelay;
+    useResponseAsBase64: boolean;
 
     mqOutputQueueName: string;
     mqInputQueueName: string;

@@ -196,6 +196,14 @@
                     <option [ngValue]="'STRICT_ORDER'">STRICT_ORDER (Extensible, strict array ordering)</option>
                   </select>
                 </div>
+                <div class="col-sm-4" style="text-align: center; padding-top: 10px;">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" [(ngModel)]="step.useResponseAsBase64">
+                      <b>{{'Response as base64' | translate}}</b>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="clearfix"></div>
