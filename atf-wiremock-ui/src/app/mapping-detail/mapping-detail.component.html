@@ -29,6 +29,7 @@
 
       <div class="form-group">
         <div style="float: right">
+          <button class="btn btn-primary" (click)="copyMapping()">Copy</button>
           <button class="btn btn-primary" (click)="applyMapping()">Apply</button>
           <button class="btn btn-danger" *ngIf="mapping.uuid" (click)="deleteMock();">Delete</button>
         </div>
