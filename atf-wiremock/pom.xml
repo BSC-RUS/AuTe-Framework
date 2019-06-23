@@ -187,6 +187,55 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.5</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <!-- Reports all bugs (other values are medium and max) -->
+                    <threshold>medium</threshold>
+                    <!-- Produces XML report -->
+                    <xmlOutput>true</xmlOutput>
+                    <omitVisitors>FindReturnRef,RuntimeExceptionCapture</omitVisitors>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>analyze-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--<plugin>-->
+                <!--<groupId>org.apache.maven.plugins</groupId>-->
+                <!--<artifactId>maven-pmd-plugin</artifactId>-->
+                <!--<version>3.12.0</version>-->
+                <!--<configuration>-->
+                    <!--&lt;!&ndash;<linkXRef>true</linkXRef>&ndash;&gt;-->
+                    <!--<sourceEncoding>UTF-8</sourceEncoding>-->
+                    <!--<verbose>true</verbose>-->
+                    <!--<minimumTokens>30</minimumTokens>-->
+                    <!--<targetJdk>1.8</targetJdk>-->
+                    <!--<xmlOutput>true</xmlOutput>-->
+                    <!--<verbose>true</verbose>-->
+                <!--</configuration>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>analyze-compile</id>-->
+                        <!--<phase>compile</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>pmd</goal>-->
+                            <!--&lt;!&ndash;<goal>cpd</goal>&ndash;&gt;-->
+                            <!--&lt;!&ndash;<goal>cpd-check</goal>&ndash;&gt;-->
+                            <!--<goal>check</goal>-->
+                        <!--</goals>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 </project>

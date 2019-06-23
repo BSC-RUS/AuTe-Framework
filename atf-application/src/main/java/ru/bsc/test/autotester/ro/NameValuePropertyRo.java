@@ -23,10 +23,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @ApiModel(description = "Property which is send with message body to queue")
-public class NameValuePropertyRo {
+public class NameValuePropertyRo implements Serializable {
     @ApiModelProperty("Name of property")
     private String name;
     @ApiModelProperty("value of property")

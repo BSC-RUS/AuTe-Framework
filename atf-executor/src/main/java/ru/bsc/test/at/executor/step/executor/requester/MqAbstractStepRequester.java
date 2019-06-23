@@ -48,9 +48,8 @@ public abstract class MqAbstractStepRequester implements StepRequester {
     protected String requestBody;
     protected String testId;
     protected Project project;
-    protected MqClient mqClient;
+    private MqClient mqClient;
     protected Map<String, Object> scenarioVariables;
-    protected String projectPath;
 
     protected abstract ClientResponse call() throws Exception;
 

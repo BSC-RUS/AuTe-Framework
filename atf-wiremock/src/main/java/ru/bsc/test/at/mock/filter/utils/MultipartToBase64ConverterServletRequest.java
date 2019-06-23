@@ -133,7 +133,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
         if (rawData == null) {
             initialize();
         }
-        return new ByteArrayServletInputStream((rawData));
+        return new ByteArrayServletInputStream(rawData);
     }
 
     @Override
@@ -141,7 +141,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
         if (rawData == null) {
             initialize();
         }
-        return new BufferedReader(new InputStreamReader(new ByteArrayServletInputStream((rawData))));
+        return new BufferedReader(new InputStreamReader(new ByteArrayServletInputStream(rawData), StandardCharsets.UTF_8));
     }
 
     private MultiMap getParams(){
@@ -224,7 +224,9 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
             if(configProperties.isBoundaryStaticEnabled()) {
                 changeMultipartHeaderBoundary(convertedRequestBody.getStaticBoundary());
             }
-            rawData = convertedRequestBody.getAllDataBody().toString().replace(EVAL_FIELD, convertedRequestBody.getStaticBoundary()).getBytes();
+            rawData = convertedRequestBody.getAllDataBody()
+                                          .toString()
+                                          .replace(EVAL_FIELD, convertedRequestBody.getStaticBoundary()).getBytes(StandardCharsets.UTF_8);
         }
     }
 
@@ -271,9 +273,9 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
         byte[] file = fileItem.get();
 
         if(!org.apache.commons.codec.binary.Base64.isArrayByteBase64(file)) {
-            multipart.append(new String(Base64.getEncoder().encode(file)));
+            multipart.append(new String(Base64.getEncoder().encode(file), StandardCharsets.UTF_8));
         } else {
-            multipart.append(new String(file));
+            multipart.append(new String(file, StandardCharsets.UTF_8));
         }
         multipart.append(NEW_LINE);
         if(file.length == 0 && countHeaderIterm == 0) {
@@ -282,7 +284,7 @@ public class MultipartToBase64ConverterServletRequest extends HttpServletRequest
         return multipart.toString();
     }
 
-    private class ByteArrayServletInputStream extends ServletInputStream {
+    private static class ByteArrayServletInputStream extends ServletInputStream {
 
         private final ByteArrayInputStream inputStream;
 

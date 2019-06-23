@@ -18,7 +18,6 @@
 
 package ru.bsc.test.autotester.launcher.impl;
 
-import lombok.ToString;
 import ru.bsc.test.at.executor.model.ScenarioResult;
 
 import java.util.List;
@@ -26,7 +25,6 @@ import java.util.List;
 /**
  * @author Pavel Golovkin
  */
-@ToString
 public class LaunchResult {
 
   private int failedTestsCount;
@@ -44,5 +42,10 @@ public class LaunchResult {
         passedTestsCount++;
       }
     }
+  }
+
+  @Override
+  public String toString() {
+    return "LaunchResult{" + "failedTestsCount=" + failedTestsCount + ", passedTestsCount=" + passedTestsCount + '}';
   }
 }

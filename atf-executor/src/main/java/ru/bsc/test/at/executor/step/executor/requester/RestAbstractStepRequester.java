@@ -86,7 +86,7 @@ public abstract class RestAbstractStepRequester implements StepRequester {
         // 6.2. Проверить код статуса ответа
         Integer expectedStatusCode = step.getExpectedStatusCode();
         log.debug("Expected status is {} and actual status is {}", expectedStatusCode, responseData.getStatusCode());
-        if ((expectedStatusCode != null) && (expectedStatusCode != responseData.getStatusCode())) {
+        if (expectedStatusCode != null && expectedStatusCode != responseData.getStatusCode()) {
             throw new Exception(String.format(
                     "Expected status code: %d. Actual status code: %d",
                     expectedStatusCode,

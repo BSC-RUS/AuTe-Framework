@@ -23,10 +23,8 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.representer.Representer;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by sdoroshin on 03.11.2017.
@@ -45,16 +43,18 @@ public final class YamlUtils {
         if (!file.exists() && !file.getParentFile().mkdirs()) {
             log.info("Directory {} not created", file.getParentFile());
         }
-        try (FileWriter fileWriter = new FileWriter(file)) {
-            new Yaml(new SkipEmptyRepresenter(), dumperOptions).dump(data, fileWriter);
+        try (FileOutputStream fileStream = new FileOutputStream(file);
+             OutputStreamWriter writer = new OutputStreamWriter(fileStream, StandardCharsets.UTF_8)) {
+            new Yaml(new SkipEmptyRepresenter(), dumperOptions).dump(data, writer);
         }
     }
 
     public static <T> T loadAs(File fileName, Class<T> type) throws IOException {
         Representer representer = new Representer();
         representer.getPropertyUtils().setSkipMissingProperties(true);
-        try (FileReader fileReader = new FileReader(fileName)) {
-            return new Yaml(representer).loadAs(fileReader, type);
+        try (FileInputStream fileStream = new FileInputStream(fileName);
+            InputStreamReader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)) {
+            return new Yaml(representer).loadAs(reader, type);
         }
     }
 }

@@ -23,12 +23,13 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Getter
 @Setter
 @ApiModel(description = "Responses which MQ stub returns")
-public class MqMockRo {
+public class MqMockRo implements Serializable {
     @ApiModelProperty("Unique response code")
     private String code;
     @ApiModelProperty("Name of service being tested queue, which define in sourceQueueName param of the properties.yml")

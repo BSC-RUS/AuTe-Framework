@@ -18,13 +18,14 @@
 
 package ru.bsc.test.at.executor.model;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * Created by smakarov
  * 20.03.2018 10:38
  */
-public interface CodeAccessible {
+public interface CodeAccessible extends Serializable {
     String getCode();
 
     void setCode(String code);

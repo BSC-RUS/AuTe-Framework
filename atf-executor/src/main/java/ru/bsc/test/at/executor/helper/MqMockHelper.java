@@ -82,6 +82,7 @@ public class MqMockHelper {
 
             }catch (JsonParseException ex) {
                 // DO NOTING (не во всех wiremock есть mq)
+                log.error("Error parsing: ", ex.getMessage());
             }
             return;
         }

@@ -63,7 +63,10 @@ class BscMappingSaver implements MappingsSaver {
                 // Replace to: "/mappings/"
                 File file = new File(mappingActual, fileName);
                 //noinspection ResultOfMethodCallIgnored
-                file.mkdirs();
+                boolean isCreated = file.mkdirs();
+                if (!isCreated) {
+                    throw new IOException("Error create folders!");
+                }
                 Files.write(stubMapping.toString(), new File(file, stubMapping.getUuid() + ".json"), StandardCharsets.UTF_8);
             }
             FileUtils.deleteDirectory(newName);

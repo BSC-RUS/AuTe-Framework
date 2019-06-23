@@ -21,7 +21,6 @@ package ru.bsc.test.at.mock.mq.mq;
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
-import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -41,7 +40,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
     private final Buffer fifo;
     private Channel channelFrom;
     private Channel channelTo;
-    private com.rabbitmq.client.Connection connection;
+    private Connection connection;
     private int port;
 
     public RabbitMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, int port, String testIdHeaderName) {
@@ -109,11 +108,12 @@ public class RabbitMQWorker extends AbstractMqWorker {
                     for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
                         byte[] response;
 
-                        if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                            response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
-                        } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
+                        if (isNotEmpty(mockResponse.getResponseBody())) {
+                            response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes(StandardCharsets.UTF_8);
+                        } else if (isNotEmpty(mockMessage.getHttpUrl())) {
                             try (HttpClient httpClient = new HttpClient()) {
-                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes();
+                                response = httpClient.sendPost(mockMessage.getHttpUrl(),
+                                        new String(body, StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes(StandardCharsets.UTF_8);
                             }
                             mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                         } else {

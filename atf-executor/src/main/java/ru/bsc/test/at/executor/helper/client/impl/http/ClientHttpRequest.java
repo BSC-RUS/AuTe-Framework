@@ -18,9 +18,7 @@
 
 package ru.bsc.test.at.executor.helper.client.impl.http;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
 import ru.bsc.test.at.executor.helper.client.api.ClientRequest;
 
 import java.util.Map;

@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.Setter;
 import ru.bsc.test.autotester.diff.Diff;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -32,7 +33,7 @@ import java.util.List;
 @Getter
 @Setter
 @ApiModel(description = "Result of step execution")
-public class StepResultRo {
+public class StepResultRo implements Serializable {
     @ApiModelProperty("Random testId")
     private String testId;
     @ApiModelProperty("Step which has been executed")

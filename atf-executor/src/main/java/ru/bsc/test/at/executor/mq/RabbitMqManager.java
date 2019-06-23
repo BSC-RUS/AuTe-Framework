@@ -29,6 +29,7 @@ import javax.jms.Connection;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -92,7 +93,7 @@ class RabbitMqManager extends AbstractMqManager {
             });
         }
 
-        channel.basicPublish("", queueName, propertiesBuilder.headers(headers).build(), message.getBytes());
+        channel.basicPublish("", queueName, propertiesBuilder.headers(headers).build(), message.getBytes(StandardCharsets.UTF_8));
         channel.close();
     }
 
@@ -117,7 +118,7 @@ class RabbitMqManager extends AbstractMqManager {
             if (delivery != null) {
                 channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 RMQTextMessage message = new RMQTextMessage();
-                message.setText(new String(delivery.getBody()));
+                message.setText(new String(delivery.getBody(), StandardCharsets.UTF_8));
                 return message;
             }
             return null;

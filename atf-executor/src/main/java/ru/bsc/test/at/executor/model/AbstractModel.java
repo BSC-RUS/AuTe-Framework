@@ -18,9 +18,11 @@
 
 package ru.bsc.test.at.executor.model;
 
+import java.io.Serializable;
+
 /**
  * Created by sdoroshin on 31.10.2017.
  *
  */
-public interface AbstractModel {
+public interface AbstractModel extends Serializable {
 }

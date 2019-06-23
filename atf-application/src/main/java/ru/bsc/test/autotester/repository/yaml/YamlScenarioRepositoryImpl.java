@@ -95,10 +95,9 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
             String groupPart = pathParts.length > 1 ? pathParts[0] : null;
             String oldScenarioPath = getScenarioPath(groupPart, codePart);
 
-            if (!Objects.equals(newScenarioPath, oldScenarioPath)) {
-                if (Paths.get(projectsPath, projectCode, "scenarios", newScenarioPath).toFile().exists()) {
+            if (!Objects.equals(newScenarioPath, oldScenarioPath) &&
+                    Paths.get(projectsPath, projectCode, "scenarios", newScenarioPath).toFile().exists()) {
                     throw new IOException("Directory already exists");
-                }
             }
 
             Path path = Paths.get(projectsPath, projectCode, "scenarios", scenarioPath);

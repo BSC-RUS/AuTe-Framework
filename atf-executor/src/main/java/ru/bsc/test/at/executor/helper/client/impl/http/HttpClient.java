@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -75,10 +76,10 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
     public ClientCommonResponse request(ClientHttpRequest request) throws Exception {
         if (request instanceof ClientHttpRequestWithVariables) {
             return executeWithScenarioVariables((ClientHttpRequestWithVariables) request);
-        } else if (request instanceof ClientHttpRequest) {
+        } else if (request != null) { // every request is ClientHttpRequest!
             return executeWithoutScenarioVariables(request);
         } else {
-            throw new Exception("Unsupported request " + request.getClass());
+            throw new Exception("Unsupported request");
         }
     }
 
@@ -170,12 +171,10 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
         if (headers == null || headers.isEmpty()) {
             return;
         }
-        for (Object key: headers.keySet()) {
-            if (key != null) {
-                String keyStr = (String) key;
-                if (StringUtils.isNotEmpty(keyStr)) {
-                    request.addHeader(keyStr, (String) headers.get(key));
-                }
+        for (Object entryObj : headers.entrySet()) {
+            Entry<String, String> entry = (Entry<String, String>)entryObj;
+            if (StringUtils.isNotEmpty(entry.getKey())) {
+                request.addHeader(entry.getKey(), entry.getValue());
             }
         }
     }

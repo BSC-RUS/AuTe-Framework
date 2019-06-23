@@ -172,7 +172,7 @@ public class ExecutorUtils {
             List<String> queryList = new LinkedList<>();
             stepResult.setSqlQueryList(queryList);
             for (SqlData sqlData : step.getSqlDataList()) {
-                if (StringUtils.isNotEmpty(sqlData.getSql()) && StringUtils.isNotEmpty(sqlData.getSqlSavedParameter())) {
+                if (isNotEmpty(sqlData.getSql()) && isNotEmpty(sqlData.getSqlSavedParameter())) {
                     String query = evaluateExpressions(sqlData.getSql(), scenarioVariables);
                     queryList.add(query);
                     try (NamedParameterStatement statement = new NamedParameterStatement(connection, query)) {

@@ -21,9 +21,11 @@ package ru.bsc.test.at.executor.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
-public class HeaderItem {
+public class HeaderItem implements Serializable {
     String headerName;
     String headerValue;
     String compareType;

@@ -62,9 +62,8 @@ import ru.yandex.qatools.allure.model.Step;
 import ru.yandex.qatools.allure.model.TestCaseResult;
 import ru.yandex.qatools.allure.model.TestSuiteResult;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -114,7 +113,8 @@ public class AllureReportGenerator extends AbstractReportGenerator {
         }
 
         for (AllurePreparedData data : buildReportData(resultDirectory, getScenarioStepResultMap())) {
-            try (FileWriter writer = new FileWriter(data.getDataFile())) {
+            try (FileOutputStream fileStream = new FileOutputStream(data.getDataFile());
+                 OutputStreamWriter writer = new OutputStreamWriter(fileStream, StandardCharsets.UTF_8)) {
                 gson.toJson(data.getSuiteResult(), writer);
             } catch (IOException e) {
                 log.error("Could not convert testSuiteResult {} to json", data, e);

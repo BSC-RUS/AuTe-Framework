@@ -23,10 +23,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @ApiModel(description = "Actual request made while step executing")
-public class RequestDataRo {
+public class RequestDataRo implements Serializable {
     @ApiModelProperty("Actual request body text")
     private String requestBody;
     @ApiModelProperty("Actual response body text")

@@ -24,7 +24,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -84,7 +83,7 @@ public class ServiceRequestsComparatorHelper {
     }
 
     private void pollWiremockUntilRequested(WireMockAdmin wireMockAdmin, Project project, Step step, Map<String, Object> variables, String testId) throws IOException {
-        if (StringUtils.isEmpty(step.getMockPollingTimeout())) {
+        if (isEmpty(step.getMockPollingTimeout())) {
             return;
         }
         long timeout = AtProjectExecutor.parseLongOrVariable(variables, step.getMockPollingTimeout(), 0);
@@ -100,7 +99,7 @@ public class ServiceRequestsComparatorHelper {
             }
         }
 
-        if (StringUtils.isEmpty(step.getMockRetryDelay())) {
+        if (isEmpty(step.getMockRetryDelay())) {
             return;
         }
         delayUtilities.delay(AtProjectExecutor.parseLongOrVariable(variables, step.getMockRetryDelay(), 0));
@@ -335,7 +334,7 @@ public class ServiceRequestsComparatorHelper {
     }
 
     private void compareWSRequestAsJson(String expected, String actual, Set<String> ignoringPaths, String mode) throws ComparisonException {
-        if (StringUtils.isEmpty(expected) && StringUtils.isEmpty(actual)) {
+        if (isEmpty(expected) && isEmpty(actual)) {
             return;
         }
         ObjectMapper om = new ObjectMapper();
@@ -354,7 +353,7 @@ public class ServiceRequestsComparatorHelper {
                     expected == null ? "" : expected.replaceAll(" ", " "),
                     actual.replaceAll(" ", " "),
                     new IgnoringComparator(
-                            StringUtils.isEmpty(mode) ? JSONCompareMode.STRICT : JSONCompareMode.valueOf(mode),
+                            isEmpty(mode) ? JSONCompareMode.STRICT : JSONCompareMode.valueOf(mode),
                             customizations
                     )
             );
@@ -417,7 +416,7 @@ public class ServiceRequestsComparatorHelper {
 
     @Getter
     @AllArgsConstructor
-    private class Request {
+    private static class Request {
         private String contentType;
         private String expectedBody;
         private String actualBody;
