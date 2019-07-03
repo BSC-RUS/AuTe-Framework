@@ -60,7 +60,7 @@ public class JmsMessagePredicate implements Predicate<MockMessage> {
     }
 
     private boolean testTestId(MockMessage message) {
-        return Objects.equals(testId, message.getTestId());
+        return Objects.equals(testId, message.getTestId()) || StringUtils.isEmpty(message.getTestId());
     }
 
     private boolean testXpath(MockMessage message) {

@@ -56,9 +56,9 @@ public class HistoryRestorePlugin implements Reader {
             try {
                 Files.createDirectory(targetDirectory);
             } catch (IOException e) {
-                log.error("Cannot create directory '{}'", HISTORY_DIRECTORY);
+                log.error("Cannot create directory '{}'", targetDirectory);
+                return;
             }
-            return;
         }
         SAVING_FILES.forEach(name -> {
             Path sourceFile = Paths.get(HISTORY_DIRECTORY, projectContext.getValue(), name);

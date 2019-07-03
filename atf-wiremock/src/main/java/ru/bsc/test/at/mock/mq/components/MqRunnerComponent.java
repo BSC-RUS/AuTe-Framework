@@ -67,9 +67,6 @@ public class MqRunnerComponent {
     @Value("${mq.default.destination.queue.name}")
     private String defaultDestinationQueueName;
 
-    @Value("${properties.yaml.file}")
-    private String propertiesYamlFile;
-
     @Value("${test.id.header.name:testIdHeader}")
     private String testIdHeaderName;
 
@@ -149,6 +146,7 @@ public class MqRunnerComponent {
                         mappings,
                         fifo,
                         mqHost,
+                        mqPort,
                         mqUsername,
                         mqPassword,
                         testIdHeaderName

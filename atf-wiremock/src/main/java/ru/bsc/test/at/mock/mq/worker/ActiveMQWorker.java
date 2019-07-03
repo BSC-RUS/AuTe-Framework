@@ -24,6 +24,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.mock.mq.JmsMessageHeadersExtractor;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -44,8 +45,8 @@ public class ActiveMQWorker extends AbstractMqWorker {
 
     private final Buffer fifo;
 
-    public ActiveMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, String testIdHeaderName) {
-        super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
+    public ActiveMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String host, int port, String username, String password, String testIdHeaderName) {
+        super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl(host, port), username, password, testIdHeaderName);
         this.fifo = fifo;
     }
 
@@ -59,6 +60,8 @@ public class ActiveMQWorker extends AbstractMqWorker {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
             MessageConsumer consumer = session.createConsumer(session.createQueue(getQueueNameFrom()));
+            JmsMessageHeadersExtractor extractor = new JmsMessageHeadersExtractor();
+            VelocityTransformer transformer = new VelocityTransformer();
 
             try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -74,6 +77,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                     //noinspection unchecked
                     fifo.add(mockedRequest);
                     mockedRequest.setSourceQueue(getQueueNameFrom());
+                    mockedRequest.setRequestBody(stringBody);
 
                     String testId = message.getStringProperty("testIdHeaderName");
                     mockedRequest.setTestId(testId);
@@ -88,7 +92,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                             byte[] response;
 
                             if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
+                                response = transformer.transform(stringBody, extractor.createContext(message), mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
                                     response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(message.getContent().getData(), StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
@@ -108,7 +112,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                                 MessageProducer producer = session.createProducer(destination);
                                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
                                 TextMessage newMessage = session.createTextMessage(new String(response, StandardCharsets.UTF_8));
-                                newMessage.getPropertyNames();
+                                extractor.setHeadersFromContext(newMessage, transformer.getVelocityContext());
                                 copyMessageProperties(message, newMessage, testId, destination);
                                 // Переслать сообщение в очередь-назначение
                                 producer.send(newMessage);
@@ -149,5 +153,9 @@ public class ActiveMQWorker extends AbstractMqWorker {
         } catch (Exception e) {
             log.error("Caught:", e);
         }
+    }
+
+    private static String brokerUrl(String host, int port) {
+        return String.format("tcp://%s:%d", host, port);
     }
 }

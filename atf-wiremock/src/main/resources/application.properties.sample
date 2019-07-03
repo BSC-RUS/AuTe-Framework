@@ -27,5 +27,4 @@ mq.channel=
 # mq.password=
 # mq.default.destination.queue.name=
 
-properties.yaml.file=mount/conf/properties.yml
 test.id.header.name=testIdHeader

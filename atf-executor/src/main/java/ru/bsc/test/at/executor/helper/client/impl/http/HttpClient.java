@@ -48,6 +48,7 @@ import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -121,7 +122,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
         MultipartEntityBuilder entity = MultipartEntityBuilder.create().setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
         for (FormData formData : formDataList) {
             if (formData.getFieldType() == null || FieldType.TEXT.equals(formData.getFieldType())) {
-                entity.addTextBody(formData.getFieldName(), ExecutorUtils.insertSavedValues(formData.getValue(), scenarioVariables), ContentType.TEXT_PLAIN);
+                entity.addTextBody(formData.getFieldName(), ExecutorUtils.insertSavedValues(formData.getValue(), scenarioVariables), ContentType.create("text/plain", StandardCharsets.UTF_8));
             } else {
                 log.debug("Try to identify Mime type projectPath = {}, formData = {}, fromData.getFilePath = {}", projectPath, formData, formData.getFilePath());
                 File file = new File((projectPath == null ? "" : projectPath) + formData.getFilePath());

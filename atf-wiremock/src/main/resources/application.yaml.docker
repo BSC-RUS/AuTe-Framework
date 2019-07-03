@@ -1,0 +1,22 @@
+server:
+  port: 1398
+
+logging:
+  level:
+    ru.bsc: debug
+
+mq:
+  manager: ACTIVE_MQ
+  host: activemq
+  port: 61616
+  username: admin
+  password: admin
+  default:
+    destination:
+      queue:
+        name:
+
+test:
+  id:
+    header:
+      name: testIdHeader
