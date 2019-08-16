@@ -41,10 +41,12 @@ public class RequestMatcher {
     public static final String XPATH = "XPath";
     public static final String CONTAINS = "contains";
     public static final String MATCHES = "matches";
+    public static final String ABSENT = "absent";
 
     private String equalToJson;
     private String equalToXml;
     private String matchesXPath;
+    private String absent;
     @JsonRawValue
     private String contains;
     @JsonRawValue
@@ -63,6 +65,8 @@ public class RequestMatcher {
             newRequestMatcher.setMatchesXPath(value);
         } else if (MATCHES.equalsIgnoreCase(type)) {
             newRequestMatcher.setMatches(StringUtils.wrap(value, "\""));
+        } else if (ABSENT.equalsIgnoreCase(type)){
+            newRequestMatcher.setAbsent("absent_pattern");
         }
         return newRequestMatcher;
     }
@@ -71,6 +75,6 @@ public class RequestMatcher {
     public boolean isPresent() {
         return isNotEmpty(equalToJson) || isNotEmpty(equalToXml) ||
                 isNotEmpty(matchesXPath) || isNotEmpty(contains) ||
-                isNotEmpty(matches);
+                isNotEmpty(matches) || isNotEmpty(absent);
     }
 }

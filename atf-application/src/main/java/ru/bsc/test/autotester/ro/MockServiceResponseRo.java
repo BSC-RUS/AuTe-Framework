@@ -54,7 +54,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private String userName;
     @ApiModelProperty("Password for using basic authentication")
     private String password;
-    @ApiModelProperty(value = "Type of matching response", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches")
+    @ApiModelProperty(value = "Type of matching response", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches, absent")
     private String typeMatching;
     @ApiModelProperty("Value which will be used to match response. Depends on typeMatching")
     private String pathFilter;

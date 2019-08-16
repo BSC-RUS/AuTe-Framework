@@ -48,7 +48,7 @@ public class ExpectedServiceRequestRo implements AbstractRo {
     private String ignoredTags;
     @ApiModelProperty("Count of request repetitions")
     private String count;
-    @ApiModelProperty(value = "Type of matching request", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches")
+    @ApiModelProperty(value = "Type of matching request", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches, absent")
     private String typeMatching;
     @ApiModelProperty("Value which will be used to match request. Depends on typeMatching")
     private String pathFilter;
