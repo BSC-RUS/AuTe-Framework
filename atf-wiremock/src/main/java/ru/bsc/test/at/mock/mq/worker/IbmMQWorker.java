@@ -80,25 +80,38 @@ public class IbmMQWorker extends AbstractMqWorker {
                     log.info("Wait messages from {}", getQueueNameFrom());
                     Message receivedMessage = consumer.receive();
                     String jmsMessageId = receivedMessage.getJMSMessageID();
-                    String jmsReplyTo = receivedMessage.getJMSReplyTo().toString();
+                    String jmsCorrelationId = receivedMessage.getJMSCorrelationID();
+                    String jmsReplyTo = receivedMessage.getJMSReplyTo() == null ? null : receivedMessage.getJMSReplyTo().toString();
 
-                    log.info("Received message: JMSMessageID={}, JMSReplyTo={}", jmsMessageId, jmsReplyTo);
+                    log.info("Received message: JMSMessageID={}, JMSReplyTo={}, JmsCorrelationID={}", jmsMessageId, jmsReplyTo, jmsCorrelationId);
+                    log.info("Received message: {}", receivedMessage);
 
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
                     fifo.add(mockedRequest);
                     mockedRequest.setSourceQueue(getQueueNameFrom());
 
-                    if (!(receivedMessage instanceof TextMessage)) {
-                        mockedRequest.setRequestBody("<not text message>");
+                    String stringBody;
+                    if (receivedMessage instanceof TextMessage) {
+                        TextMessage message = (TextMessage) receivedMessage;
+                        stringBody = message.getText();
+                    } else if (receivedMessage instanceof BytesMessage) {
+                        BytesMessage byteMessage = (BytesMessage) receivedMessage;
+                        byte[] byteData = new byte[(int) byteMessage.getBodyLength()];
+                        byteMessage.readBytes(byteData);
+                        stringBody = new String(byteData).replaceAll("<\\?xml(.+?)\\?>", "").trim();
+                    } else {
+                        mockedRequest.setRequestBody("<not text or byte message>");
                         continue;
                     }
-                    TextMessage message = (TextMessage) receivedMessage;
-                    String stringBody = message.getText();
                     mockedRequest.setRequestBody(stringBody);
                     log.info(" [x] Received <<< {} {}", getQueueNameFrom(), stringBody);
 
-                    String testId = message.getStringProperty(getTestIdHeaderName());
+                    String testId = receivedMessage.getStringProperty(testIdHeaderName);
+                    if (StringUtils.isEmpty(testId)) {
+                        testIdHeaderName = convertTestIdHeaderName();
+                        testId = receivedMessage.getStringProperty(testIdHeaderName);
+                    }
                     mockedRequest.setTestId(testId);
 
                     MockMessage mockMessage = findMockMessage(testId, stringBody);
@@ -114,7 +127,7 @@ public class IbmMQWorker extends AbstractMqWorker {
                                 response = transformer.transform(stringBody, extractor.createContext(message), mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
-                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), message.getText(), getTestIdHeaderName(), testId).getBytes();
+                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), stringBody, getTestIdHeaderName(), testId).getBytes();
                                 }
                                 mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                             } else {
@@ -124,42 +137,11 @@ public class IbmMQWorker extends AbstractMqWorker {
                             String destinationQueue = isNotEmpty(mockResponse.getDestinationQueueName())
                                                       ? mockResponse.getDestinationQueueName()
                                                       : jmsReplyTo;
-                            mockedRequest.setDestinationQueue(destinationQueue);
-
-                            if (isNotEmpty(destinationQueue)) {
-                                mockedRequest.setResponseBody(new String(response, StandardCharsets.UTF_8));
-                                Queue destination = session.createQueue(destinationQueue);
-                                MessageProducer producer = session.createProducer(destination);
-                                producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-
-                                TextMessage newMessage = session.createTextMessage(new String(response, StandardCharsets.UTF_8));
-                                copyMessageProperties(message, newMessage, testId, destination);
-                                extractor.setHeadersFromContext(newMessage, transformer.getVelocityContext());
-
-                                // Переслать сообщение в очередь-назначение
-                                producer.send(newMessage);
-                                producer.close();
-                                log.info(" [x] Send >>> {} '{}'", destinationQueue, message.getText(), StandardCharsets.UTF_8);
-                            }
+                            sendMessage(session, receivedMessage, mockedRequest, destinationQueue, new String(response, StandardCharsets.UTF_8), testId, DeliveryMode.NON_PERSISTENT);
                         }
                     } else {
                         // Переслать сообщение в очередь "по-умолчанию".
-                        if (isNotEmpty(getQueueNameTo())) {
-                            mockedRequest.setDestinationQueue(getQueueNameTo());
-                            mockedRequest.setResponseBody(stringBody);
-
-                            Queue destination = session.createQueue(getQueueNameTo());
-                            MessageProducer producer = session.createProducer(destination);
-                            TextMessage newMessage = session.createTextMessage(message.getText());
-                            copyMessageProperties(message, newMessage, testId, destination);
-
-                            // Переслать сообщение в очередь-назначение
-                            producer.send(newMessage);
-                            producer.close();
-                            log.info(" [x] Send >>> {} '{}'", getQueueNameTo(), message.getText(), "UTF-8");
-                        } else {
-                            log.info(" [x] Send >>> ***black hole***");
-                        }
+                        sendMessage(session, receivedMessage, mockedRequest, queueNameTo, stringBody, testId, null);
                     }
                 }
             } catch (Exception e) {
@@ -172,5 +154,35 @@ public class IbmMQWorker extends AbstractMqWorker {
         } catch (Exception e) {
             log.error("Caught:", e);
         }
+    }
+    private void sendMessage(Session session, Message receivedMessage, MockedRequest mockedRequest, String destinationQueue, String messageBody, String testId, Integer deliveryMode) throws JMSException {
+        if (isNotEmpty(destinationQueue)) {
+            mockedRequest.setDestinationQueue(destinationQueue);
+            mockedRequest.setResponseBody(messageBody);
+
+            Queue destination = session.createQueue(destinationQueue);
+            MessageProducer producer = session.createProducer(destination);
+            extractor.setHeadersFromContext(newMessage, transformer.getVelocityContext());
+
+            if (deliveryMode != null) {
+                producer.setDeliveryMode(deliveryMode);
+            }
+
+            Message newMessage = session.createTextMessage(messageBody);
+            copyMessageProperties(receivedMessage, newMessage, testId, destination);
+
+            // Переслать сообщение в очередь-назначение
+            producer.send(newMessage);
+            producer.close();
+            log.info(" [x] Send >>> {} '{}'", destinationQueue, messageBody, StandardCharsets.UTF_8);
+        } else {
+            log.info(" [x] Send >>> ***black hole***");
+        }
+    }
+
+    private String convertTestIdHeaderName(){
+        return testIdHeaderName.contains("-")
+               ? testIdHeaderName.toLowerCase().replace("-", "_HYPHEN_")
+               : testIdHeaderName.toLowerCase().replace("_HYPHEN_", "-") ;
     }
 }
