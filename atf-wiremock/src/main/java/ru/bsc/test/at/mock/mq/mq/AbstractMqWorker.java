@@ -19,15 +19,13 @@
 package ru.bsc.test.at.mock.mq.mq;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 
-import javax.jms.ExceptionListener;
-import javax.jms.JMSException;
-import javax.jms.Queue;
-import javax.jms.TextMessage;
+import javax.jms.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -132,12 +130,13 @@ abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
     }
 
     void copyMessageProperties(
-            TextMessage message,
-            TextMessage newMessage,
+            Message message,
+            Message newMessage,
             String testId,
             Queue destination
     ) throws JMSException {
-        newMessage.setJMSCorrelationID(message.getJMSMessageID());
+        String jmsCorrelationId = message.getJMSCorrelationID();
+        newMessage.setJMSCorrelationID(StringUtils.isNotEmpty(jmsCorrelationId) ? jmsCorrelationId : message.getJMSMessageID());
 
         newMessage.setStringProperty(testIdHeaderName, testId);
         newMessage.setJMSDestination(destination);
