@@ -31,6 +31,7 @@
       <li [class.active]="tab == 'stand'"><a href="#" (click)="selectTab('stand')">{{'Stand' | translate}}</a></li>
       <li [class.active]="tab == 'groupList'"><a href="#" (click)="selectTab('groupList')">{{'Groups' | translate}}</a></li>
       <li [class.active]="tab == 'environmentVariables'"><a href="#" (click)="selectTab('environmentVariables')">{{'Variables' | translate}}</a></li>
+      <li [class.active]="tab == 'globalRequestHeaders'"><a href="#" (click)="selectTab('globalRequestHeaders')">{{'Global headers' | translate}}</a></li>
       <li [class.active]="tab == 'json'"><a href="#" (click)="selectTab('json')">{{'json' | translate}}</a></li>
     </ul>
     <div class="tab-content" style="padding: 10px;">
@@ -152,6 +153,10 @@
             </div>
           </div>
         </div>
+      </div>
+      <div [style.display]="tab == 'globalRequestHeaders' ? '' : 'none'">
+        <label>{{'Global headers' | translate}}:</label>
+        <textarea placeholder="HeaderName: headerValue" rows="5" title="{{'Global request headers' | translate}}" class="form-control" [(ngModel)]="project.globalRequestHeaders"></textarea>
       </div>
       <div [style.display]="tab == 'json' ? '' : 'none'">
         <pre>{{project | json}}</pre>
