@@ -34,6 +34,9 @@ public class MockDefinition {
     private String id;
     private String uuid;
     private Long priority;
+    private String scenarioName;
+    private String requiredScenarioState;
+    private String newScenarioState;
     private MockRequest request;
     private MockResponse response;
 

@@ -62,5 +62,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private Boolean convertBase64InMultipart;
     @ApiModelProperty("List of response HTTP headers")
     private List<HeaderItemRo> headers;
+    @ApiModelProperty("Order of response for similar requests")
+    private Integer responseOrder;
 
 }

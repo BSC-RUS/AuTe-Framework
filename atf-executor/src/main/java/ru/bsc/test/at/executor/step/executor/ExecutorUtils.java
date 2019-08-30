@@ -114,13 +114,25 @@ public class ExecutorUtils {
         }
     }
 
-    static void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList, Map<String, Object> scenarioVariables) throws IOException {
+    static void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList, String stepCode, String scenarioName, Map<String, Object> scenarioVariables) throws IOException {
         log.debug("Setting REST-mock responses {} {} {} {}", wireMockAdmin, project, testId, responseList);
+
+        //for priority work it must be >= 1
+        //now it's off
         Long priority = 0L;
 
         if (responseList != null && wireMockAdmin != null) {
             for (MockServiceResponse mockServiceResponse : responseList) {
                 MockDefinition mockDefinition = new MockDefinition(priority--, project.getTestIdHeaderName(), testId);
+
+                String complexScenarioName = scenarioName + "_" + stepCode + "_"+ mockServiceResponse.getServiceUrl();
+                mockDefinition.setScenarioName(complexScenarioName);
+
+                Integer responseOrder = mockServiceResponse.getResponseOrder();
+                if (responseOrder != null && responseOrder > 0){
+                    mockDefinition.setRequiredScenarioState(responseOrder > 1 ? "response_order_" + (responseOrder - 1) : null);
+                    mockDefinition.setNewScenarioState("response_order_" + responseOrder);
+                }
 
                 if (BooleanUtils.isTrue(mockServiceResponse.getUrlPattern())) {
                     mockDefinition.getRequest().setUrlPattern(mockServiceResponse.getServiceUrl());

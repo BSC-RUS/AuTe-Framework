@@ -24,7 +24,8 @@ import {HeaderItem, MockServiceResponse} from '../model/mock-service-response';
   templateUrl: './mock-service-response.component.html',
   styles: [
     '.nav-tabs > li > a { padding: 3px 7px; }',
-    '.tab-content { border: 1px solid #ddd; border-top-width: 0;}'
+    '.tab-content { border: 1px solid #ddd; border-top-width: 0;}',
+    '.item-small-separator { border: 0;height: 1px;background: #333 linear-gradient(to right, #ccc, #333, #ccc) }'
   ]
 })
 export class MockServiceResponseComponent implements OnInit {

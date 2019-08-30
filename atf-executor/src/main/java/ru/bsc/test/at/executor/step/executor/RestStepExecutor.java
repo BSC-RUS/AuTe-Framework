@@ -23,10 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.Stand;
-import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.model.StepResult;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.executor.service.DelayUtilities;
 import ru.bsc.test.at.executor.step.executor.requester.RestPollingStepRequester;
 import ru.bsc.test.at.executor.step.executor.requester.RestSimpleStepRequester;
@@ -50,13 +47,13 @@ public class RestStepExecutor implements IStepExecutor {
     private final DelayUtilities delayUtilities = new DelayUtilities();
 
     @Override
-    public void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Step step, StepResult stepResult, String projectPath) throws Exception {
+    public void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Scenario scenario, Step step, StepResult stepResult, String projectPath) throws Exception {
 
         log.debug("Executing test step {} {} {} {}", stand, scenarioVariables, testId, project, step);
         stepResult.setSavedParameters(scenarioVariables.toString());
 
         // 0. Установить ответы сервисов, которые будут использоваться в WireMock для определения ответа
-        ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
+        ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), step.getCode(), scenario.getName(), scenarioVariables);
 
         // 0.1 Установить ответы для имитации внешних сервисов, работающих через очереди сообщений
         ExecutorUtils.setMqMockResponses(wireMockAdmin, testId, step.getMqMockResponseList(), scenarioVariables);

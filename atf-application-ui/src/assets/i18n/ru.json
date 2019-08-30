@@ -190,5 +190,9 @@
   "Ignore undeclared requests": "Игнорировать необъявленные запросы",
   "Repeat before each request": "Повторять перед каждым запросом",
   "Variables": "Переменные",
-  "Variable value": "Значение переменной"
+  "Variable value": "Значение переменной",
+  "Response order": "Порядок ответов",
+  "Used in case of several identical requests for one url.": "Используется в случае нескольких одинаковых запросов на один url.",
+  "The order is determined within a single url.": "Порядок определяется в пределах одного url.",
+  "0 - no identical requests.": "0 - нет одинаковых запросов."
 }

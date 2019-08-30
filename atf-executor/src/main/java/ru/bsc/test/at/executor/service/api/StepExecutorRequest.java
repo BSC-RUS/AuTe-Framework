@@ -22,10 +22,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.Stand;
-import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.model.StepResult;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.executor.service.IStopObserver;
 
 import java.sql.Connection;
@@ -41,6 +38,7 @@ public class StepExecutorRequest implements ExecutorRequest {
 
     private Connection connection;
     private Stand stand;
+    private Scenario scenario;
     private List<Step> stepList;
     private Project project;
     private List<StepResult>stepResultList;
