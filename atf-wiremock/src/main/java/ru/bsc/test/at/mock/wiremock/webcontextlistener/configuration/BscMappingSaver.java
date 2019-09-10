@@ -20,17 +20,16 @@ package ru.bsc.test.at.mock.wiremock.webcontextlistener.configuration;
 
 import com.github.tomakehurst.wiremock.core.MappingsSaver;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
-import com.google.common.io.Files;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by sdoroshin on 04.08.2017.
@@ -38,53 +37,62 @@ import java.util.Locale;
  */
 @Slf4j
 class BscMappingSaver implements MappingsSaver {
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS", Locale.ENGLISH);
+    private static final String SAFE_CHARACTERS_PATTERN = "[^А-Яа-яa-zA-Z0-9.+\\-() ]";
 
     @Override
-    public void save(List<StubMapping> stubMappings) {
-        String mappingPath = ".";
-        File mappingActual = new File(mappingPath + "/mappings/");
-        File newName = new File(mappingPath + "/mappings_" + dateFormat.format(Calendar.getInstance().getTime()) + "/");
-        boolean isRenamed = mappingActual.renameTo(newName);
-        if (isRenamed) {
-            log.info("File {} is renamed", mappingActual);
-        } else {
-            log.warn("File {} not renamed", mappingActual);
-        }
-
+    public void save(List<StubMapping> mappings) {
         try {
-            for (StubMapping stubMapping: stubMappings) {
-                String fileName = "";
-                if (stubMapping.getRequest().getUrl() != null) {
-                    fileName = stubMapping.getRequest().getUrl().replaceAll("[^\\\\/a-zA-Z0-9.-]", "_");
-                } else if (stubMapping.getRequest().getUrlPattern() != null) {
-                    fileName = stubMapping.getRequest().getUrlPattern().replaceAll("[^\\\\/a-zA-Z0-9.-]", "_");
-                }
-                // Replace to: "/mappings/"
-                File file = new File(mappingActual, fileName);
-                //noinspection ResultOfMethodCallIgnored
-                file.mkdirs();
-                Files.write(stubMapping.toString(), new File(file, stubMapping.getUuid() + ".json"), StandardCharsets.UTF_8);
+            final Path mappingsPath = Paths.get("mappings");
+            clearDirectory(mappingsPath);
+            for (StubMapping m : mappings) {
+                Files.write(resolveMappingPath(mappingsPath, m), getMappingContent(m));
             }
-            FileUtils.deleteDirectory(newName);
         } catch (IOException e) {
-            log.error("Error while save subMapping list", e);
+            log.error("Error while saving mappings",e);
+            throw new RuntimeException(e);
         }
-        log.info("Save list: {}", stubMappings.toString());
+        log.trace("Save list: {}", mappings.toString());
     }
 
     @Override
     public void save(StubMapping stubMapping) {
-        log.info("Save one: {}", stubMapping.toString());
+        log.trace("Save one: {}", stubMapping.toString());
     }
 
     @Override
     public void remove(StubMapping stubMapping) {
-        log.info("Remove: {}", stubMapping.toString());
+        log.trace("Remove: {}", stubMapping.toString());
     }
 
     @Override
     public void removeAll() {
-        log.info("Remove all");
+        log.trace("Remove all");
+    }
+
+    private void clearDirectory(Path mappingsPath) throws IOException {
+        boolean filesRemoved = Files.walk(mappingsPath)
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .allMatch(File::delete);
+        if (!filesRemoved) {
+            throw new IllegalStateException("Cannot clean mapping directory");
+        }
+    }
+
+    private Path resolveMappingPath(Path root, StubMapping mapping) throws IOException {
+        Path directory = mapping.getScenarioName() != null ? root.resolve(safeName(mapping.getScenarioName())) : root;
+        if (Files.notExists(directory)) {
+            Files.createDirectories(directory);
+        }
+        String name = mapping.getName() != null ? safeName(mapping.getName()) : mapping.getUuid().toString();
+        return directory.resolve(name + ".json").normalize();
+    }
+
+    private byte[] getMappingContent(StubMapping m) {
+        return m.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
+    private String safeName(String name) {
+        return name.replaceAll(SAFE_CHARACTERS_PATTERN, "_");
     }
 }

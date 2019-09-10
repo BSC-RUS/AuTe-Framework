@@ -19,31 +19,33 @@
 package ru.bsc.test.at.mock.mq.components;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.CircularFifoBuffer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import ru.bsc.test.at.mock.mq.models.JmsMappings;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
-import ru.bsc.test.at.mock.mq.models.PropertiesYaml;
 import ru.bsc.test.at.mock.mq.models.enums.MqBrokerType;
-import ru.bsc.test.at.mock.mq.mq.AbstractMqWorker;
-import ru.bsc.test.at.mock.mq.mq.ActiveMQWorker;
-import ru.bsc.test.at.mock.mq.mq.IbmMQWorker;
-import ru.bsc.test.at.mock.mq.mq.RabbitMQWorker;
-import ru.bsc.test.at.util.YamlUtils;
+import ru.bsc.test.at.mock.mq.worker.AbstractMqWorker;
+import ru.bsc.test.at.mock.mq.worker.ActiveMQWorker;
+import ru.bsc.test.at.mock.mq.worker.IbmMQWorker;
+import ru.bsc.test.at.mock.mq.worker.RabbitMQWorker;
+import ru.bsc.test.at.mock.wiremock.repository.JmsMappingsRepository;
 
 import javax.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class MqRunnerComponent {
-
     @Value("${mq.manager}")
     private String mqManager;
 
@@ -74,10 +76,13 @@ public class MqRunnerComponent {
     @Value("${mq.requestBufferSize:1000}")
     private int requestBufferSize;
 
-    private final List<MockMessage> mockMappingList = new LinkedList<>();
+    private final JmsMappingsRepository repository;
+
+    private final List<MockMessage> mappings = new LinkedList<>();
+    private final Map<String, AbstractMqWorker> queueListenerMap = new ConcurrentHashMap<>();
+
     @Getter
     private Buffer fifo;
-    private Map<String, AbstractMqWorker> queueListenerMap = new ConcurrentHashMap<>();
 
     private static void startListener(AbstractMqWorker mqWorker) {
         Thread brokerThread = new Thread(mqWorker);
@@ -85,38 +90,28 @@ public class MqRunnerComponent {
     }
 
     String addMapping(MockMessage mockMessage) {
-        synchronized (mockMappingList) {
-            String sourceQueueName = mockMessage.getSourceQueueName();
-            if (StringUtils.isEmpty(sourceQueueName)) {
-                return null;
-            }
+        synchronized (mappings) {
+            applyMapping(mockMessage);
             mockMessage.setGuid(UUID.randomUUID().toString());
-            mockMappingList.add(mockMessage);
-
-            if (!queueListenerMap.containsKey(sourceQueueName)) {
-                AbstractMqWorker newMqListener = createMqBroker(sourceQueueName);
-                queueListenerMap.put(sourceQueueName, newMqListener);
-                startListener(newMqListener);
-            }
-
+            repository.save(new JmsMappings(mappings));
             return mockMessage.getGuid();
         }
     }
 
     void deleteMapping(String mappingGuid) throws IOException, TimeoutException {
-        synchronized (mockMappingList) {
-            MockMessage mapping = mockMappingList
+        synchronized (mappings) {
+            MockMessage mapping = mappings
                     .stream()
-                    .filter(mockMessage -> Objects.equals(mockMessage.getGuid(), mappingGuid)).findAny()
+                    .filter(m -> Objects.equals(m.getGuid(), mappingGuid))
+                    .findAny()
                     .orElse(null);
-            mockMappingList.remove(mapping);
+            mappings.remove(mapping);
+            repository.save(new JmsMappings(mappings));
 
             if (mapping != null) {
-                long count = mockMappingList.stream()
-                        .filter(mockMessage -> Objects.equals(
-                                mockMessage.getSourceQueueName(),
-                                mapping.getSourceQueueName()
-                        ))
+                long count = mappings.stream()
+                        .map(MockMessage::getSourceQueueName)
+                        .filter(x -> Objects.equals(x, mapping.getSourceQueueName()))
                         .count();
                 if (count == 0) {
                     AbstractMqWorker mqWorker = queueListenerMap.get(mapping.getSourceQueueName());
@@ -129,21 +124,16 @@ public class MqRunnerComponent {
         }
     }
 
-    List<MockMessage> getMockMappingList() {
-        synchronized (mockMappingList) {
-            return mockMappingList;
+    List<MockMessage> getMappings() {
+        synchronized (mappings) {
+            return mappings;
         }
     }
 
     @PostConstruct
-    public void initMappings() throws IOException {
+    public void initMappings() {
         fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(requestBufferSize));
-        if (!StringUtils.isEmpty(propertiesYamlFile)) {
-            PropertiesYaml properties = YamlUtils.loadAs(new File(propertiesYamlFile), PropertiesYaml.class);
-            if (properties != null && properties.getMockMessageList() != null) {
-                properties.getMockMessageList().forEach(this::addMapping);
-            }
-        }
+        repository.load().getMappings().forEach(this::applyMapping);
     }
 
     private MqBrokerType getBrokerType() {
@@ -156,7 +146,7 @@ public class MqRunnerComponent {
                 return new ActiveMQWorker(
                         sourceQueueName,
                         defaultDestinationQueueName,
-                        mockMappingList,
+                        mappings,
                         fifo,
                         mqHost,
                         mqUsername,
@@ -167,7 +157,7 @@ public class MqRunnerComponent {
                 return new RabbitMQWorker(
                         sourceQueueName,
                         defaultDestinationQueueName,
-                        mockMappingList,
+                        mappings,
                         fifo,
                         mqHost,
                         mqUsername,
@@ -180,7 +170,7 @@ public class MqRunnerComponent {
                 return new IbmMQWorker(
                         sourceQueueName,
                         defaultDestinationQueueName,
-                        mockMappingList,
+                        mappings,
                         fifo,
                         mqHost,
                         mqUsername,
@@ -189,6 +179,33 @@ public class MqRunnerComponent {
                         testIdHeaderName,
                         mqChannel
                 );
+        }
+    }
+
+    private void applyMapping(MockMessage mockMessage) {
+        log.info("Applying JMS mapping: {}", mockMessage);
+        String sourceQueueName = mockMessage.getSourceQueueName();
+        if (StringUtils.isEmpty(sourceQueueName)) {
+            log.warn("Source queue name not defined, skip mapping: {}", mockMessage.getGuid());
+            throw new IllegalStateException("Source queue not defined");
+        }
+
+        mappings.add(mockMessage);
+        if (!queueListenerMap.containsKey(sourceQueueName)) {
+            AbstractMqWorker newMqListener = createMqBroker(sourceQueueName);
+            queueListenerMap.put(sourceQueueName, newMqListener);
+            startListener(newMqListener);
+        }
+    }
+
+    void updateMapping(String guid, MockMessage mapping) {
+        try {
+            mapping.setGuid(guid);
+            deleteMapping(guid);
+            applyMapping(mapping);
+            repository.save(new JmsMappings(mappings));
+        } catch (IOException | TimeoutException e) {
+            throw new RuntimeException(e);
         }
     }
 }

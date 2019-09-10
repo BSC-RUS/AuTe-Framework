@@ -21,14 +21,19 @@ package ru.bsc.test.at.mock.mq.models;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 @Data
 @ApiModel(description = "Mock MQ message.")
-public class MockMessage {
+public class MockMessage implements Comparable<MockMessage> {
     @ApiModelProperty("GUID of mock")
     private String guid;
+    @ApiModelProperty("JMS mapping name")
+    private String name;
+    @ApiModelProperty("JMS mapping group")
+    private String group;
     @ApiModelProperty("Name of mocked queue")
     private String sourceQueueName;
     @ApiModelProperty("Test identifier where mock is used")
@@ -39,4 +44,19 @@ public class MockMessage {
     private String httpUrl;
     @ApiModelProperty("XPath expression to evaluate with message")
     private String xpath;
+    @ApiModelProperty("Mock priority")
+    private Integer priority;
+
+    @Override
+    public int compareTo(MockMessage message) {
+        return Integer.compare(getPriorityOrDefault(), message.getPriorityOrDefault());
+    }
+
+    public boolean hasGroup() {
+        return StringUtils.isNotEmpty(group);
+    }
+
+    private Integer getPriorityOrDefault() {
+        return priority != null ? priority : Integer.MAX_VALUE;
+    }
 }

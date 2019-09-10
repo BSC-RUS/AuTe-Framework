@@ -18,6 +18,7 @@
 
 package ru.bsc.test.autotester.launcher.impl;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.bsc.test.at.executor.model.Project;
@@ -31,7 +32,9 @@ import ru.bsc.test.autotester.repository.ProjectRepository;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+@AllArgsConstructor
 @Component
 @Slf4j
 public class TestLauncherImpl implements TestLauncher {
@@ -40,30 +43,36 @@ public class TestLauncherImpl implements TestLauncher {
     private final AbstractReportGenerator reportGenerator;
     private final ScenarioLauncher scenarioLauncher;
 
-    public TestLauncherImpl(
-            EnvironmentProperties properties,
-            ProjectRepository projectRepository,
-            AbstractReportGenerator reportGenerator,
-            ScenarioLauncher scenarioLauncher
-    ) {
-        this.properties = properties;
-        this.projectRepository = projectRepository;
-        this.reportGenerator = reportGenerator;
-        this.scenarioLauncher = scenarioLauncher;
+    @Override
+    public void launch(Map<String, Map<String, String>> variables) throws Exception {
+        List<Project> projects = projectRepository.findAllProjectsWithScenarios();
+        for(Project project : projects) {
+            if(!variables.containsKey(project.getCode())) {
+                continue;
+            }
+            final Map<String, String> projectVariables = variables.get(project.getCode());
+            if (projectVariables == null) {
+                continue;
+            }
+            projectVariables.forEach((name, value) -> project.getEnvironmentVariables().put(name, value));
+        }
+        launch(projects);
     }
 
-    @Override
-    public void launch() throws Exception {
+    private void launch(List<Project> projects) throws Exception {
         log.info("Launch scenarios ...");
-        List<Project> projectList = projectRepository.findAllProjectsWithScenarios();
         List<ScenarioResult> allProjectsResult = new ArrayList<>();
-
-        for (Project project: projectList) {
+        for (Project project: projects) {
             if (properties.getProjectStandMap() == null || !properties.getProjectStandMap().containsKey(project.getCode())) {
                 continue;
             }
             log.info("Launch scenarios for project {}", project.getName());
-            List<ScenarioResult> projectResults = scenarioLauncher.launchScenarioFromCLI(project.getScenarioList(), project, properties, reportGenerator);
+            List<ScenarioResult> projectResults = scenarioLauncher.launchScenarioFromCLI(
+                project.getScenarioList(),
+                project,
+                properties,
+                reportGenerator
+            );
             log.debug("Project run results {}", projectResults);
             allProjectsResult.addAll(projectResults);
         }

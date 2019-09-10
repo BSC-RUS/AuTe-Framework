@@ -84,6 +84,7 @@
   "Disabled toggle": "Disabled toggle",
   "Headers": "Headers",
   "Mock responses": "Mock responses",
+  "Mock requests": "Mock requests",
   "Expected mock requests": "Expected mock requests",
   "Messages Queue": "Messages Queue",
   "Polling": "Polling",

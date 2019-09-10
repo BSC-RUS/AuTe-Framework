@@ -18,6 +18,7 @@
 
 package ru.bsc.velocity.transformer;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.VelocityEngine;
@@ -34,20 +35,23 @@ import java.io.StringWriter;
 import java.util.Map;
 
 @Slf4j
+@SuppressWarnings("Duplicates")
 public class VelocityTransformer {
 
-    private Context context;
+    @Getter
+    private Context velocityContext;
 
-    public String transform(String requestBody, Map<String, String> requestHeaders, String stringTemplate) {
-        log.debug("transform (requestBody = {}, headers = {}, template = {})", requestBody, requestHeaders, stringTemplate);
+    public String transform(String requestBody, Map<String, Object> context, String stringTemplate) {
+        log.debug("transform (requestBody = {}, context = {}, template = {})", requestBody, context, stringTemplate);
 
         final VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         final ToolManager toolManager = new ToolManager();
         toolManager.setVelocityEngine(velocityEngine);
-        context = toolManager.createContext();
-        addBodyToContext(requestBody);
-        addHeadersToContext(requestHeaders);
+        velocityContext = toolManager.createContext();
+        if (context != null) {
+            context.forEach((k, v) -> velocityContext.put(k, v));
+        }
 
         try {
             return render(stringTemplate);
@@ -69,19 +73,7 @@ public class VelocityTransformer {
         template.initDocument();
 
         StringWriter writer = new StringWriter();
-        template.merge(context, writer);
+        template.merge(velocityContext, writer);
         return String.valueOf(writer.getBuffer());
-    }
-
-    private void addBodyToContext(final String body) {
-        if (body != null && !body.isEmpty()) {
-            context.put("requestBody", body);
-        }
-    }
-
-    private void addHeadersToContext(final Map<String, String> headers) {
-        if (headers != null) {
-            headers.forEach((s, s2) -> context.put("requestHeader".concat(s), s2));
-        }
     }
 }

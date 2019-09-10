@@ -57,7 +57,8 @@ import static org.apache.commons.lang3.StringUtils.*;
 @Slf4j
 public class ServiceRequestsComparatorHelper {
     private static final String IGNORE = "\\u002A" + "ignore" + "\\u002A";
-    private static final String PART = "\\u002A" + "part" + "\\u002A";
+    private static final String REGEX_PART = "\\u002A" + "part" + "\\u002A";
+    private static final String STRING_PART = "*part*";
     private static final String STR_SPLIT = "(\r\n|\n\r|\r|\n|" + IGNORE + ")";
     private static final String CLEAR_STR_PATTERN = "(\r\n|\n\r|\r|\n)";
     private static final String NBS_PATTERN = "[\\s\\u00A0]";
@@ -250,7 +251,7 @@ public class ServiceRequestsComparatorHelper {
         String actualRequestBody = actualRequest.getBody();
 
         List<Request> requests;
-        if (isMultipart && expectedRequest.contains(PART)) { // если мы хотим сравнивать части отдельно
+        if (isMultipart && expectedRequest.contains(STRING_PART)) { // если мы хотим сравнивать части отдельно
             requests = splitMultipart(expectedRequest, contentType, actualRequestBody);
         } else {
             requests = Collections.singletonList(new Request(contentType, expectedRequest, actualRequestBody));
@@ -266,12 +267,16 @@ public class ServiceRequestsComparatorHelper {
             String actualRequestBody
     ) {
         List<Request> requests;
-        String[] expectedParts = expectedRequest.split(PART);
+        String[] expectedParts = expectedRequest.split(REGEX_PART);
         int indStart = contentType.indexOf("boundary") + "boundary".length() + 1;
         int indEnd = contentType.indexOf(";", indStart);
+        indEnd = indEnd == -1 ? contentType.length() : indEnd;
         String boundary = contentType.substring(indStart, indEnd);
         String actualParts[] = actualRequestBody.split("--" + boundary);
         requests = new ArrayList<>();
+        if (actualParts.length != expectedParts.length) {
+            throw new ComparisonException("Different number of part", expectedRequest, actualRequestBody);
+        }
         for (int i = 1; i < actualParts.length - 1; i++) {
             String part = actualParts[i];
             // TODO null указан специально, т.к. микросервис вызывает метод с неправильными хедерами, в этом слуае вызовется compareWSRequestFallback

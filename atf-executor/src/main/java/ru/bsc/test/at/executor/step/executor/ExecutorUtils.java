@@ -72,17 +72,17 @@ public class ExecutorUtils {
         log.debug("evaluate expressions {}, {}", template, scenarioVariables);
         String result = template;
         if (result != null && !Base64.isBase64(result)) {
-            Pattern p = Pattern.compile(".*?<f>(.+?)</f>.*?", Pattern.MULTILINE);
-            Matcher m = p.matcher(result);
-            while (m.find()) {
-                log.debug("regexp matches {}", p.pattern());
-                ScriptEngine engine = new JSScriptEngine();
-                ScriptEngineFunctionResult evalResult = engine.executeFunction(m.group(1), scenarioVariables);
-                result = result.replace(
-                        "<f>" + m.group(1) + "</f>",
-                        Matcher.quoteReplacement(evalResult.getResult())
-                );
-                log.debug("evaluating result {}", result);
+            String[] foundExpressions = StringUtils.substringsBetween(result,"<f>", "</f>");
+            if (foundExpressions != null) {
+                for (String expression : foundExpressions) {
+                    ScriptEngine engine = new JSScriptEngine();
+                    ScriptEngineFunctionResult evalResult = engine.executeFunction(expression, scenarioVariables);
+                    result = result.replace(
+                            "<f>" + expression + "</f>",
+                            Matcher.quoteReplacement(evalResult.getResult())
+                    );
+                    log.debug("evaluating result {}", result);
+                }
             }
         }
         log.debug("evaluate expressions result {}", result);

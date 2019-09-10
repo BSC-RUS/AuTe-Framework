@@ -14,11 +14,23 @@
  * are copied from https://github.com/google/diff-match-patch
  */
 
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+package ru.bsc.test.at.mock.mq.components;
 
-@Injectable()
-export class EventService {
-  public updateMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public updateJmsMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+import ru.bsc.test.at.mock.mq.models.JmsMappings;
+import ru.bsc.test.at.mock.wiremock.repository.JmsMappingsRepository;
+
+/**
+ * Created by smakarov
+ * 03.07.2019 13:06
+ */
+public class DummyJmsMappingsRepository implements JmsMappingsRepository {
+    @Override
+    public boolean save(JmsMappings mappings) {
+        return true;
+    }
+
+    @Override
+    public JmsMappings load() {
+        return new JmsMappings();
+    }
 }

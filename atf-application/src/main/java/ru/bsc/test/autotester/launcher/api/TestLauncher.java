@@ -18,9 +18,11 @@
 
 package ru.bsc.test.autotester.launcher.api;
 
+import java.util.Map;
+
 /**
  * @author Pavel Golovkin
  */
 public interface TestLauncher {
-  void launch() throws Exception;
+    void launch(Map<String, Map<String, String>> variables) throws Exception;
 }

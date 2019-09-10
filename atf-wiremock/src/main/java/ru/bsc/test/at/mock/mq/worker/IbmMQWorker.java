@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package ru.bsc.test.at.mock.mq.mq;
+package ru.bsc.test.at.mock.mq.worker;
 
 import com.ibm.mq.jms.MQQueueConnectionFactory;
 import com.ibm.msg.client.wmq.WMQConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.mock.mq.JmsMessageHeadersExtractor;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -51,11 +52,11 @@ public class IbmMQWorker extends AbstractMqWorker {
     }
 
     @Override
-    void runWorker() {
+    public void run() {
         MQQueueConnectionFactory connectionFactory;
         try {
             connectionFactory = new MQQueueConnectionFactory();
-            connectionFactory.setHostName(brokerUrl);
+            connectionFactory.setHostName(getBrokerUrl());
             connectionFactory.setPort(port);
             connectionFactory.setTransportType(WMQConstants.WMQ_CM_CLIENT);
             if (StringUtils.isNotEmpty(channel)) {
@@ -67,24 +68,23 @@ public class IbmMQWorker extends AbstractMqWorker {
         }
 
         try {
-            Connection connection = connectionFactory.createConnection(username, password);
+            Connection connection = connectionFactory.createConnection(getUsername(), getPassword());
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-            MessageConsumer consumer = session.createConsumer(session.createQueue(queueNameFrom));
+            MessageConsumer consumer = session.createConsumer(session.createQueue(getQueueNameFrom()));
+            JmsMessageHeadersExtractor extractor = new JmsMessageHeadersExtractor();
+            VelocityTransformer transformer = new VelocityTransformer();
 
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-
-                    // Wait for a message
-                    log.info("Wait messages from {}", queueNameFrom);
+                    log.info("Wait messages from {}", getQueueNameFrom());
                     Message receivedMessage = consumer.receive();
                     log.info("Received message, JMSMessageID: {}", receivedMessage.getJMSMessageID());
 
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
                     fifo.add(mockedRequest);
-                    mockedRequest.setSourceQueue(queueNameFrom);
+                    mockedRequest.setSourceQueue(getQueueNameFrom());
 
                     if (!(receivedMessage instanceof TextMessage)) {
                         mockedRequest.setRequestBody("<not text message>");
@@ -93,9 +93,9 @@ public class IbmMQWorker extends AbstractMqWorker {
                     TextMessage message = (TextMessage) receivedMessage;
                     String stringBody = message.getText();
                     mockedRequest.setRequestBody(stringBody);
-                    log.info(" [x] Received <<< {} {}", queueNameFrom, stringBody);
+                    log.info(" [x] Received <<< {} {}", getQueueNameFrom(), stringBody);
 
-                    String testId = message.getStringProperty(testIdHeaderName);
+                    String testId = message.getStringProperty(getTestIdHeaderName());
                     mockedRequest.setTestId(testId);
 
                     MockMessage mockMessage = findMockMessage(testId, stringBody);
@@ -108,10 +108,10 @@ public class IbmMQWorker extends AbstractMqWorker {
                             byte[] response;
 
                             if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
+                                response = transformer.transform(stringBody, extractor.createContext(message), mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
-                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), message.getText(), testIdHeaderName, testId).getBytes();
+                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), message.getText(), getTestIdHeaderName(), testId).getBytes();
                                 }
                                 mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                             } else {
@@ -119,41 +119,37 @@ public class IbmMQWorker extends AbstractMqWorker {
                             }
 
                             mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
-
                             if (isNotEmpty(mockResponse.getDestinationQueueName())) {
-
                                 mockedRequest.setResponseBody(new String(response, StandardCharsets.UTF_8));
-
                                 Queue destination = session.createQueue(mockResponse.getDestinationQueueName());
                                 MessageProducer producer = session.createProducer(destination);
                                 producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
                                 TextMessage newMessage = session.createTextMessage(new String(response, StandardCharsets.UTF_8));
                                 copyMessageProperties(message, newMessage, testId, destination);
+                                extractor.setHeadersFromContext(newMessage, transformer.getVelocityContext());
 
                                 // Переслать сообщение в очередь-назначение
                                 producer.send(newMessage);
-
                                 producer.close();
                                 log.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), message.getText(), StandardCharsets.UTF_8);
                             }
                         }
                     } else {
                         // Переслать сообщение в очередь "по-умолчанию".
-                        mockedRequest.setDestinationQueue(queueNameTo);
-                        if (isNotEmpty(queueNameTo)) {
+                        if (isNotEmpty(getQueueNameTo())) {
+                            mockedRequest.setDestinationQueue(getQueueNameTo());
                             mockedRequest.setResponseBody(stringBody);
 
-                            Queue destination = session.createQueue(queueNameTo);
+                            Queue destination = session.createQueue(getQueueNameTo());
                             MessageProducer producer = session.createProducer(destination);
                             TextMessage newMessage = session.createTextMessage(message.getText());
-
                             copyMessageProperties(message, newMessage, testId, destination);
 
                             // Переслать сообщение в очередь-назначение
                             producer.send(newMessage);
                             producer.close();
-                            log.info(" [x] Send >>> {} '{}'", queueNameTo, message.getText(), "UTF-8");
+                            log.info(" [x] Send >>> {} '{}'", getQueueNameTo(), message.getText(), "UTF-8");
                         } else {
                             log.info(" [x] Send >>> ***black hole***");
                         }
@@ -169,10 +165,5 @@ public class IbmMQWorker extends AbstractMqWorker {
         } catch (Exception e) {
             log.error("Caught:", e);
         }
-    }
-
-    @Override
-    public void stop() {
-        // Do nothing
     }
 }

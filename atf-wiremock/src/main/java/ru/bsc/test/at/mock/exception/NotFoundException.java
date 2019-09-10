@@ -14,11 +14,15 @@
  * are copied from https://github.com/google/diff-match-patch
  */
 
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+package ru.bsc.test.at.mock.exception;
 
-@Injectable()
-export class EventService {
-  public updateMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public updateJmsMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Created by sdoroshin on 05.10.2017.
+ *
+ */
+@ResponseStatus(value = HttpStatus.NOT_FOUND)
+public class NotFoundException extends RuntimeException {
 }

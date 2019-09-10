@@ -1,0 +1,105 @@
+<!--
+  ~ AuTe Framework project
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ ATF project is licensed under
+  ~     The Apache 2.0 License
+  ~     http://www.apache.org/licenses/LICENSE-2.0.html
+  ~
+  ~ For more information visit http://www.bsc-ideas.com/ru/
+  ~
+  ~ Files ru.bsc.test.autotester.diff.DiffMatchPatch.java, ru.bsc.test.autotester.diff.Diff.java,
+  ~ ru.bsc.test.autotester.diff.LinesToCharsResult, ru.bsc.test.autotester.diff.Operation,
+  ~ ru.bsc.test.autotester.diff.Patch
+  ~ are copied from https://github.com/google/diff-match-patch
+  -->
+
+<div>
+  <div class="col-sm-3">
+    <app-jms-mapping-list></app-jms-mapping-list>
+  </div>
+  <div class="col-sm-9">
+    <div class="form-horizontal" *ngIf="mapping">
+      <div class="form-group">
+        <div style="float: right">
+          <button class="btn btn-primary" (click)="applyMapping()">Apply</button>
+          <button class="btn btn-danger" *ngIf="mapping.guid" (click)="deleteMock();">Delete</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-horizontal">
+          <div class="col-sm-4">
+            <label>Group</label>
+            <input class="form-control" placeholder="Group" [(ngModel)]="mapping.group">
+          </div>
+          <div class="col-sm-4">
+            <label>Mapping name</label>
+            <input class="form-control" placeholder="Mapping name" [(ngModel)]="mapping.name">
+          </div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div class="form-group">
+        <div class="form-horizontal">
+          <div class="col-sm-4">
+            <label>Source queue</label>
+            <input class="form-control" placeholder="Source queue" [(ngModel)]="mapping.sourceQueueName">
+          </div>
+          <div class="col-sm-4">
+            <label>XPath filter</label>
+            <input class="form-control" placeholder="XPath" [(ngModel)]="mapping.xpath">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-horizontal">
+          <div class="col-sm-4">
+            <label>Priority</label>
+            <input class="form-control" type="number" placeholder="Priority" [(ngModel)]="mapping.priority">
+          </div>
+          <div class="col-sm-4">
+            <label>HTTP URL</label>
+            <input class="form-control" placeholder="HTTP URL" [(ngModel)]="mapping.httpUrl">
+          </div>
+        </div>
+      </div>
+
+      <hr/>
+
+      <div class="form-group">
+        <div class="col-sm-12">
+          <label>Responses</label>
+          <div class="form-horizontal">
+            <div *ngFor="let response of mapping.responses">
+              <div class="form-group">
+                <div class="col-sm-4">
+                  <input class="form-control" placeholder="Destination queue" [(ngModel)]="response.destinationQueueName">
+                </div>
+                <div class="col-sm-1">
+                  <button class="btn btn-default" (click)="deleteResponse(response)"><span class="glyphicon glyphicon-remove"></span></button>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-4">
+                  <textarea class="form-control" placeholder="Body" [(ngModel)]="response.responseBody"></textarea>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-default" (click)="addResponse()"><span class="glyphicon glyphicon-plus"></span> Add response</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="float: right">
+          <button class="btn btn-primary" (click)="applyMapping()">Apply</button>
+          <button class="btn btn-danger" *ngIf="mapping.guid" (click)="deleteMock();">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

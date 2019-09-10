@@ -126,7 +126,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         try {
             clearProjectBeforeSave(project);
             removeGroups(project);
-            YamlUtils.dumpToFile(project, path.toString());
+            YamlUtils.saveToFile(project, path);
         } catch (Exception e) {
             log.error("Save file {}", path, e);
         }

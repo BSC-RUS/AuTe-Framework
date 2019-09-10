@@ -18,35 +18,43 @@
 
 package ru.bsc.test.at.util;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.representer.Representer;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Created by sdoroshin on 03.11.2017.
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class YamlUtils {
-    private YamlUtils() {
-    }
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
-    public static void dumpToFile(Object data, String fileName) throws IOException {
-        DumperOptions dumperOptions = new DumperOptions();
-        dumperOptions.setAnchorGenerator(new AutotesterAnchorGenerator());
-        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-
-        File file = new File(fileName);
-        if (!file.exists() && !file.getParentFile().mkdirs()) {
-            log.info("Directory {} not created", file.getParentFile());
+    public static <T> boolean saveToFile(T data, Path path) {
+        try {
+            if (Files.notExists(path.getParent())) {
+                Files.createDirectory(path.getParent());
+            }
+        } catch (IOException e) {
+            log.error("Unable to create {} dir", path.getParent(), e);
+            return false;
         }
-        try (FileWriter fileWriter = new FileWriter(file)) {
-            new Yaml(new SkipEmptyRepresenter(), dumperOptions).dump(data, fileWriter);
+        try (BufferedWriter writer = Files.newBufferedWriter(path, CHARSET)) {
+            new Yaml(new SkipEmptyRepresenter(), getDumperOptions()).dump(data, writer);
+            return true;
+        } catch (IOException e) {
+            log.error("Error while saving JMS mappings to file", e);
+            return false;
         }
     }
 
@@ -56,5 +64,23 @@ public final class YamlUtils {
         try (FileReader fileReader = new FileReader(fileName)) {
             return new Yaml(representer).loadAs(fileReader, type);
         }
+    }
+
+    public static <T> Optional<T> loadAs(Path path, Class<T> type) throws IOException {
+        if (Files.notExists(path)) {
+            return Optional.empty();
+        }
+        Representer representer = new Representer();
+        representer.getPropertyUtils().setSkipMissingProperties(true);
+        try (BufferedReader reader = Files.newBufferedReader(path, CHARSET)) {
+            return Optional.ofNullable(new Yaml(representer).loadAs(reader, type));
+        }
+    }
+
+    private static DumperOptions getDumperOptions() {
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setAnchorGenerator(new AutotesterAnchorGenerator());
+        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        return dumperOptions;
     }
 }

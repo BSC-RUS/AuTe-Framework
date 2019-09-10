@@ -14,11 +14,25 @@
  * are copied from https://github.com/google/diff-match-patch
  */
 
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import {JmsResponse} from './jms-response'
 
-@Injectable()
-export class EventService {
-  public updateMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public updateJmsMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+export class JmsMappings {
+  groups: JmsMappingGroup[] = [];
+  messages: JmsMapping[] = [];
+}
+
+export class JmsMappingGroup {
+  name: string;
+  messages: JmsMapping[] = [];
+}
+
+export class JmsMapping {
+  guid: string;
+  name: string;
+  group: string;
+  sourceQueueName: string;
+  responses: JmsResponse[] = [];
+  httpUrl: string;
+  xpath: string;
+  priority: number;
 }

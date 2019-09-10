@@ -14,11 +14,22 @@
  * are copied from https://github.com/google/diff-match-patch
  */
 
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+package ru.bsc.test.at.mock.mq.models;
 
-@Injectable()
-export class EventService {
-  public updateMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  public updateJmsMappingList: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+/**
+ * Created by smakarov
+ * 17.07.2019 12:40
+ */
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class MockMessagesGroup {
+    private String name;
+    private List<MockMessage> messages;
 }
