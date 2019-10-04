@@ -43,6 +43,7 @@ public class Project implements Serializable, AbstractModel {
     private Stand stand;
     private Boolean useRandomTestId;
     private String testIdHeaderName;
+    private String globalRequestHeaders;
     private AmqpBroker amqpBroker;
     private List<String> groupList;
     private Long mqCheckInterval;
@@ -55,6 +56,7 @@ public class Project implements Serializable, AbstractModel {
         project.setCode(getCode() + "_COPY");
         project.setUseRandomTestId(getUseRandomTestId());
         project.setTestIdHeaderName(getTestIdHeaderName());
+        project.setGlobalRequestHeaders(getGlobalRequestHeaders());
         project.setStand(getStand().copy());
         if (getScenarioList() != null) {
             project.setScenarioList(new LinkedList<>());

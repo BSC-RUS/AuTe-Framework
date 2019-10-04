@@ -190,5 +190,7 @@
   "Ignore undeclared requests": "Игнорировать необъявленные запросы",
   "Repeat before each request": "Повторять перед каждым запросом",
   "Variables": "Переменные",
-  "Variable value": "Значение переменной"
+  "Variable value": "Значение переменной",
+  "Global request headers": "Глобальные заголовки запросов",
+  "Global headers": "Глобальные заголовки"
 }

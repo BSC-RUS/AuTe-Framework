@@ -27,6 +27,7 @@ export class Project {
   stand: Stand;
   useRandomTestId: boolean;
   testIdHeaderName: string;
+  globalRequestHeaders: string;
   amqpBroker: AmqpBroker;
   groupList: string[];
   environmentVariables: any = {};
