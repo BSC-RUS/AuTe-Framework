@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package ru.bsc.test.at.mock.mq.mq;
+package ru.bsc.test.at.mock.mq.worker;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -50,23 +50,20 @@ public class ActiveMQWorker extends AbstractMqWorker {
     }
 
     @Override
-    void runWorker() {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(username, password, brokerUrl);
+    public void run() {
+        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(getUsername(), getPassword(), getBrokerUrl());
 
         try {
             Connection connection = connectionFactory.createConnection();
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            MessageConsumer consumer = session.createConsumer(session.createQueue(queueNameFrom));
+            MessageConsumer consumer = session.createConsumer(session.createQueue(getQueueNameFrom()));
 
             try {
                 while (!Thread.currentThread().isInterrupted()) {
-
-                    // Wait for a message
                     Message receivedMessage = consumer.receive();
                     if (!(receivedMessage instanceof ActiveMQTextMessage)) {
-                        // Skip non text messages
                         continue;
                     }
                     ActiveMQTextMessage message = (ActiveMQTextMessage) receivedMessage;
@@ -76,7 +73,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
                     fifo.add(mockedRequest);
-                    mockedRequest.setSourceQueue(queueNameFrom);
+                    mockedRequest.setSourceQueue(getQueueNameFrom());
 
                     String testId = message.getStringProperty("testIdHeaderName");
                     mockedRequest.setTestId(testId);
@@ -94,7 +91,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                                 response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
-                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(message.getContent().getData(), StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes();
+                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(message.getContent().getData(), StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
                                 }
                                 mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                             } else {
@@ -121,22 +118,22 @@ public class ActiveMQWorker extends AbstractMqWorker {
                         }
                     } else {
                         // Переслать сообщение в очередь "по-умолчанию".
-                        mockedRequest.setDestinationQueue(queueNameTo);
-                        if (isNotEmpty(queueNameTo)) {
+                        mockedRequest.setDestinationQueue(getQueueNameTo());
+                        if (isNotEmpty(getQueueNameTo())) {
                             mockedRequest.setResponseBody(stringBody);
 
-                            Queue destination = session.createQueue(queueNameTo);
+                            Queue destination = session.createQueue(getQueueNameTo());
                             MessageProducer producer = session.createProducer(destination);
                             ActiveMQMessage newMessage = (ActiveMQMessage) session.createMessage();
                             newMessage.getPropertyNames();
-                            newMessage.setStringProperty(testIdHeaderName, testId);
+                            newMessage.setStringProperty(getTestIdHeaderName(), testId);
                             newMessage.setContent(message.getContent());
 
                             newMessage.setJMSDestination(destination);
                             // Переслать сообщение в очередь-назначение
                             producer.send(newMessage);
                             producer.close();
-                            log.info(" [x] Send >>> {} '{}'", queueNameTo, new String(message.getContent().getData(), StandardCharsets.UTF_8));
+                            log.info(" [x] Send >>> {} '{}'", getQueueNameTo(), new String(message.getContent().getData(), StandardCharsets.UTF_8));
                         } else {
                             log.info(" [x] Send >>> ***black hole***");
                         }
@@ -152,10 +149,5 @@ public class ActiveMQWorker extends AbstractMqWorker {
         } catch (Exception e) {
             log.error("Caught:", e);
         }
-    }
-
-    @Override
-    public void stop() {
-        // Do nothing
     }
 }

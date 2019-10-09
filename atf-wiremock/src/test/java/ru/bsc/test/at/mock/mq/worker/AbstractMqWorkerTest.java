@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package ru.bsc.test.at.mock.mq.mq;
+package ru.bsc.test.at.mock.mq.worker;
 
 import com.anarsoft.vmlens.concurrent.junit.ConcurrentTestRunner;
 import com.anarsoft.vmlens.concurrent.junit.ThreadCount;
@@ -26,21 +26,16 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 @RunWith(ConcurrentTestRunner.class)
 public class AbstractMqWorkerTest {
-
-
     private AbstractMqWorker testWorker;
     private final List<MockMessage> list = new LinkedList<>();
 
     @Before
     public void init() {
-
         MockMessage mockMessage = new MockMessage();
         mockMessage.setSourceQueueName("queue4");
         mockMessage.setTestId("testId");
@@ -92,12 +87,12 @@ public class AbstractMqWorkerTest {
         }
 
         @Override
-        void runWorker() {
+        public void run() {
             throw new UnsupportedOperationException();
         }
 
         @Override
-        public void stop() throws IOException, TimeoutException {
+        public void stop() {
             throw new UnsupportedOperationException();
         }
     }

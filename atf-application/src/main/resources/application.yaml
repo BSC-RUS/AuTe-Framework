@@ -1,0 +1,20 @@
+server:
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+  port: 8080
+logging:
+  pattern:
+    console: '%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{36}.%M - %msg%n'
+    file: ${logging.pattern.console}
+  file: at-framework.log
+  level:
+    ru.bsc: debug
+app:
+  title: AutoTester-UI REST API
+  description: AutoTester-UI REST API
+  contact.name: BSC RUS
+  contact.url: http://www.bsc-ideas.com/ru/
+  contact.email: marketing.ru@bsc-ideas.com
+  license.name: Apache License 2.0
+  license.url: https://github.com/BSC-RUS/AuTe-Framework/blob/master/LICENSE

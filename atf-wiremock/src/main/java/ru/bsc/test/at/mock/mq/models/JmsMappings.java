@@ -19,12 +19,19 @@
 package ru.bsc.test.at.mock.mq.models;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
-public class PropertiesYaml {
-    private List<MockMessage> mockMessageList;
+@NoArgsConstructor
+public class JmsMappings {
+    private List<MockMessage> mappings = new ArrayList<>();
+
+    public JmsMappings(List<MockMessage> mappings) {
+        this.mappings.addAll(mappings);
+    }
 }

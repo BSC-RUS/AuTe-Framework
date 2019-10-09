@@ -20,10 +20,12 @@ package ru.bsc.test.at.executor.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.exception.ScenarioStopException;
 import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.ServiceRequestsComparatorHelper;
+import ru.bsc.test.at.executor.model.Project;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.model.StepParameterSet;
 import ru.bsc.test.at.executor.model.StepResult;
@@ -34,6 +36,7 @@ import ru.bsc.test.at.executor.step.executor.IStepExecutor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
@@ -61,6 +64,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
         }
         List<IStepExecutor> stepExecutorList = IStepExecutor.getStepExecutorList();
         for (Step step : stepExecutorRequest.getStepList()) {
+            applyGlobalRequestHeaders(stepExecutorRequest.getProject(), step);
             if (!step.getDisabled()) {
                 List<StepParameterSet> parametersEnvironment;
                 if (step.getStepParameterSetList() != null && !step.getStepParameterSetList().isEmpty()) {
@@ -124,6 +128,39 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Unites global and local headers.
+     * If local and global headers contains property with the same name than will be returned local property
+     */
+    private void applyGlobalRequestHeaders(Project project, Step step) {
+        String requestHeaders = step.getRequestHeaders();
+        String globalRequestHeaders = project.getGlobalRequestHeaders();
+
+        if (StringUtils.isEmpty(globalRequestHeaders)) {
+            return;
+        }
+
+        if (StringUtils.isEmpty(requestHeaders)) {
+            step.setRequestHeaders(globalRequestHeaders);
+        } else {
+            Set<String> headerNamesSet = Arrays.stream(requestHeaders.split("\n"))
+                                               .map(header -> header.split(":")[0])
+                                               .map(String::trim)
+                                               .collect(Collectors.toSet());
+
+            StringBuilder resultRequestHeadersBuilder = new StringBuilder(requestHeaders);
+
+            Arrays.stream(globalRequestHeaders.split("\n")).forEach(globalHeader -> {
+                String globalHeaderName = globalHeader.split(":")[0].trim();
+                if (!headerNamesSet.contains(globalHeaderName)) {
+                    resultRequestHeadersBuilder.append("\n").append(globalHeader);
+                }
+            });
+
+            step.setRequestHeaders(resultRequestHeadersBuilder.toString());
         }
     }
 

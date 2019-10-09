@@ -36,7 +36,6 @@ import java.util.List;
  * 01.06.2018 16:41
  */
 public class YamlUtilsTest {
-
     private static final String TEST_DATA_FILE = "tmp" + File.separator + "yaml-test.yml";
 
     private Yaml yaml = new Yaml();
@@ -49,18 +48,15 @@ public class YamlUtilsTest {
     @Test
     public void dumpToFileSuccess() throws IOException {
         TestObject testData = createTestData();
-        clearTestFile();
-        YamlUtils.dumpToFile(testData, TEST_DATA_FILE);
+        YamlUtils.saveToFile(testData, Paths.get(TEST_DATA_FILE));
         Object loaded = yaml.load(FileUtils.readFileToString(Paths.get(TEST_DATA_FILE).toFile()));
+        Files.delete(Paths.get(TEST_DATA_FILE));
         Assert.assertEquals(testData, loaded);
     }
 
     @Test
     public void loadAsSuccess() throws IOException {
         TestObject testData = createTestData();
-        if (Files.exists(Paths.get(TEST_DATA_FILE))) {
-            Files.delete(Paths.get(TEST_DATA_FILE));
-        }
         File file = new File(TEST_DATA_FILE);
         FileUtils.writeStringToFile(file, yaml.dump(testData));
         TestObject loaded = YamlUtils.loadAs(file, TestObject.class);
@@ -70,12 +66,9 @@ public class YamlUtilsTest {
     @Test
     public void loadAsEmptyFile() throws IOException {
         File file = new File(TEST_DATA_FILE);
-        if (Files.exists(Paths.get(TEST_DATA_FILE))) {
-            Files.delete(Paths.get(TEST_DATA_FILE));
-        }
         FileUtils.writeStringToFile(file, "");
         TestObject object = YamlUtils.loadAs(file, TestObject.class);
-        Assert.assertEquals(null, object);
+        Assert.assertNull(object);
     }
 
     private void clearTestFile() throws IOException {

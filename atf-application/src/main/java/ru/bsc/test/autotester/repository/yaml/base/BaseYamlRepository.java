@@ -63,7 +63,7 @@ public abstract class BaseYamlRepository {
         }
         String scenarioGroup = scenario.getScenarioGroup();
         scenario.setScenarioGroup(null);
-        YamlUtils.dumpToFile(scenario, scenarioFile.getAbsolutePath());
+        YamlUtils.saveToFile(scenario, scenarioFile.toPath());
         scenario.setScenarioGroup(scenarioGroup);
     }
 

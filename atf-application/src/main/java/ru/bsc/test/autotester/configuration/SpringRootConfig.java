@@ -18,6 +18,8 @@
 
 package ru.bsc.test.autotester.configuration;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -31,9 +33,13 @@ import java.io.IOException;
 /**
  * Created by sdoroshin on 21.03.2017.
  */
+@Slf4j
 @Configuration
 @ComponentScan("ru.bsc.test.autotester")
 public class SpringRootConfig {
+
+    @Value("${env.path:env.yml}")
+    private String envPath;
 
     @Bean
     public CommonsMultipartResolver multipartResolver() {
@@ -45,6 +51,7 @@ public class SpringRootConfig {
 
     @Bean
     public EnvironmentProperties environmentProperties() throws IOException {
-        return YamlUtils.loadAs(new File("env.yml"), EnvironmentProperties.class);
+        log.debug("env path: {}", envPath);
+        return YamlUtils.loadAs(new File(envPath), EnvironmentProperties.class);
     }
 }

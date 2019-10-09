@@ -1,19 +1,17 @@
 /*
+ * AuTe Framework project
  * Copyright 2018 BSC Msc, LLC
  *
- * This file is part of the AuTe Framework project
+ * ATF project is licensed under
+ *     The Apache 2.0 License
+ *     http://www.apache.org/licenses/LICENSE-2.0.html
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * For more information visit http://www.bsc-ideas.com/ru/
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Files ru.bsc.test.autotester.diff.DiffMatchPatch.java, ru.bsc.test.autotester.diff.Diff.java,
+ * ru.bsc.test.autotester.diff.LinesToCharsResult, ru.bsc.test.autotester.diff.Operation,
+ * ru.bsc.test.autotester.diff.Patch
+ * are copied from https://github.com/google/diff-match-patch
  */
 
 import { BrowserModule } from '@angular/platform-browser';
@@ -33,12 +31,16 @@ import ObjNgFor from './pipe/obj-ng-for-pipe';
 import { MqLogComponent } from './mq-log/mq-log.component';
 import {MqMockerService} from '../service/mq-mocker-service';
 import {EventService} from "../service/event-service";
+import { JmsMappingListComponent } from './jms-mapping-list/jms-mapping-list.component';
+import { JmsMappingDetailComponent } from './jms-mapping-detail/jms-mapping-detail.component';
 
 const routes: Routes = [
   { path: 'requests', component: RequestListComponent },
   { path: 'mq-log', component: MqLogComponent },
   { path: 'mapping', component: MappingListComponent },
-  { path: 'mapping/:uuid', component: MappingDetailComponent }
+  { path: 'jms-mapping', component: JmsMappingListComponent },
+  { path: 'mapping/:uuid', component: MappingDetailComponent },
+  { path: 'jms-mapping/:guid', component: JmsMappingDetailComponent }
 ];
 
 @NgModule({
@@ -49,7 +51,9 @@ const routes: Routes = [
     RequestListComponent,
     MappingListComponent,
     ObjNgFor,
-    MqLogComponent
+    MqLogComponent,
+    JmsMappingListComponent,
+    JmsMappingDetailComponent
   ],
   imports: [
     BrowserModule,

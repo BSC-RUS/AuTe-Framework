@@ -50,6 +50,8 @@ public class ProjectRo implements AbstractRo {
     private Boolean useRandomTestId;
     @ApiModelProperty("Header name for sending random test ID")
     private String testIdHeaderName;
+    @ApiModelProperty("Global headers which service must send with every project's request")
+    private String globalRequestHeaders;
     @ApiModelProperty("MQ connection parameters")
     private AmqpBrokerRo amqpBroker;
     @ApiModelProperty("List of scenario groups")

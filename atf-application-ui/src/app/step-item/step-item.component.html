@@ -114,7 +114,7 @@
             <a href="#" (click)="selectTab('mqResponses')">{{'Mock responses' | translate}} <span *ngIf="step.mockServiceResponseList?.length > 0 || step.mqMessages?.length > 0 || step.mqMockResponseList?.length > 0" class="glyphicon glyphicon-tag"></span></a>
           </li>
           <li [class.active]="tab == 'mqRequests'">
-            <a href="#" (click)="selectTab('mqRequests')">{{'Mock requests' | translate}} <span *ngIf="step.expectedServiceRequestList?.length > 0 || (step.expectedMqRequestList?.length > 0 || step.scenarioVariableFromMqRequestList?.length > 0)" class="glyphicon glyphicon-tag"></span></a>
+            <a href="#" (click)="selectTab('mqRequests')">{{'Mock requests' | translate}} <span *ngIf="step.expectedServiceRequestList?.length > 0 || (step.expectedMqRequestList?.length > 0 || step.scenarioVariableFromMqRequestList?.length > 0 || step.ignoreRequestsInvocations)" class="glyphicon glyphicon-tag"></span></a>
           </li>
           <li [class.active]="tab == 'polling'">
             <a href="#" (click)="selectTab('polling')">{{'Polling' | translate}} <span *ngIf="step.usePolling" class="glyphicon glyphicon-tag"></span></a>

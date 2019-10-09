@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package ru.bsc.test.at.mock.mq.mq;
+package ru.bsc.test.at.mock.mq.worker;
 
 import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,6 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Slf4j
 public class RabbitMQWorker extends AbstractMqWorker {
-
     private final Buffer fifo;
     private Channel channelFrom;
     private Channel channelTo;
@@ -51,13 +50,13 @@ public class RabbitMQWorker extends AbstractMqWorker {
     }
 
     @Override
-    void runWorker() {
+    public void run() {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
-            connectionFactory.setHost(brokerUrl);
+            connectionFactory.setHost(getBrokerUrl());
             connectionFactory.setPort(port);
-            connectionFactory.setUsername(username);
-            connectionFactory.setPassword(password);
+            connectionFactory.setUsername(getUsername());
+            connectionFactory.setPassword(getPassword());
 
             connection = connectionFactory.newConnection();
             channelFrom = connection.createChannel();
@@ -86,7 +85,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
     }
 
     private void waitMessage() throws IOException {
-        channelFrom.basicConsume(queueNameFrom, true, new DefaultConsumer(channelFrom) {
+        channelFrom.basicConsume(getQueueNameFrom(), true, new DefaultConsumer(channelFrom) {
             @Override
             public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String stringBody = new String(body, StandardCharsets.UTF_8);
@@ -96,10 +95,10 @@ public class RabbitMQWorker extends AbstractMqWorker {
                 //noinspection unchecked
                 fifo.add(mockedRequest);
                 mockedRequest.setRequestBody(stringBody);
-                mockedRequest.setSourceQueue(queueNameFrom);
+                mockedRequest.setSourceQueue(getQueueNameFrom());
 
                 // Найти соответствие по названию очереди и testIdProperty
-                String testId = properties.getHeaders().get(testIdHeaderName) == null ? null : properties.getHeaders().get(testIdHeaderName).toString();
+                String testId = properties.getHeaders().get(getTestIdHeaderName()) == null ? null : properties.getHeaders().get(getTestIdHeaderName()).toString();
                 mockedRequest.setTestId(testId);
 
                 MockMessage mockMessage = findMockMessage(testId, stringBody);
@@ -113,7 +112,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
                             response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
                         } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                             try (HttpClient httpClient = new HttpClient()) {
-                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), testIdHeaderName, testId).getBytes();
+                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
                             }
                             mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                         } else {
@@ -136,11 +135,11 @@ public class RabbitMQWorker extends AbstractMqWorker {
                     }
                 } else {
                     // Переслать сообщение в очередь "по-умолчанию".
-                    mockedRequest.setDestinationQueue(queueNameTo);
-                    if (isNotEmpty(queueNameTo)) {
+                    mockedRequest.setDestinationQueue(getQueueNameTo());
+                    if (isNotEmpty(getQueueNameTo())) {
                         mockedRequest.setResponseBody(stringBody);
-                        channelTo.basicPublish("", queueNameTo, properties, body);
-                        log.info(" [x] Send >>> {} '{}'", queueNameTo, new String(body, StandardCharsets.UTF_8));
+                        channelTo.basicPublish("", getQueueNameTo(), properties, body);
+                        log.info(" [x] Send >>> {} '{}'", getQueueNameTo(), new String(body, StandardCharsets.UTF_8));
                     } else {
                         log.info(" [x] Send >>> ***black hole***");
                     }

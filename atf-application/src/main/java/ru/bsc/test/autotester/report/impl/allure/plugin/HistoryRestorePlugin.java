@@ -52,7 +52,12 @@ public class HistoryRestorePlugin implements Reader {
     public void readResults(Configuration configuration, ResultsVisitor visitor, Path directory) {
         ProjectContext projectContext = configuration.requireContext(ProjectContext.class);
         Path targetDirectory = directory.resolve(HISTORY_DIRECTORY);
-        if (!targetDirectory.toFile().mkdirs()) {
+        if (!Files.exists(targetDirectory)) {
+            try {
+                Files.createDirectory(targetDirectory);
+            } catch (IOException e) {
+                log.error("Cannot create directory '{}'", HISTORY_DIRECTORY);
+            }
             return;
         }
         SAVING_FILES.forEach(name -> {

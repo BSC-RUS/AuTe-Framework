@@ -1,0 +1,44 @@
+<!--
+  ~ AuTe Framework project
+  ~ Copyright 2018 BSC Msc, LLC
+  ~
+  ~ ATF project is licensed under
+  ~     The Apache 2.0 License
+  ~     http://www.apache.org/licenses/LICENSE-2.0.html
+  ~
+  ~ For more information visit http://www.bsc-ideas.com/ru/
+  ~
+  ~ Files ru.bsc.test.autotester.diff.DiffMatchPatch.java, ru.bsc.test.autotester.diff.Diff.java,
+  ~ ru.bsc.test.autotester.diff.LinesToCharsResult, ru.bsc.test.autotester.diff.Operation,
+  ~ ru.bsc.test.autotester.diff.Patch
+  ~ are copied from https://github.com/google/diff-match-patch
+  -->
+
+<div style="margin-bottom: 20px;">
+  <button class="btn btn-default" (click)="detailsToggle()">Details</button>
+  <button class="btn btn-default" [routerLink]="['/jms-mapping/new']">
+    <span class="glyphicon glyphicon-plus"></span>
+    <i>Add mapping</i>
+  </button>
+</div>
+<div class="just-padding">
+  <div class="list-group list-group-root well" *ngIf="mappings" data-toggle="collapse">
+    <div *ngFor="let group of mappings.groups; let i = index" style="overflow: hidden">
+      <a href= "#item{{i}}" data-toggle="collapse" class="list-group-item">
+        <span class="glyphicon glyphicon-folder-open"></span> {{group.name}}
+      </a>
+      <div class="list-group collapse" id="item{{i}}">
+        <div *ngFor="let mapping of group.messages">
+          <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+            {{mapping.name ? mapping.name : mapping.sourceQueueName}}
+          </a>
+        </div>
+      </div>
+    </div>
+    <div *ngFor="let mapping of mappings.messages">
+      <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+        {{mapping.name ? mapping.name : mapping.sourceQueueName}}
+      </a>
+    </div>
+  </div>
+</div>

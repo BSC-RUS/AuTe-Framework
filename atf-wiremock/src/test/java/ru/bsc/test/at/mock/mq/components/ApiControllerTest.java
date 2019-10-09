@@ -32,22 +32,18 @@ import java.time.ZoneId;
 import java.util.Collection;
 
 public class ApiControllerTest {
-
-    public static final int BUFF_SIZE = 1000;
+    private static final int BUFF_SIZE = 1000;
     private ApiController apiController;
 
     public ApiControllerTest() throws NoSuchFieldException, IllegalAccessException {
-
-        MqRunnerComponent mqRunnerComponent = new MqRunnerComponent();
-        Field fifo =  MqRunnerComponent.class.getDeclaredField("fifo");
+        MqRunnerComponent mqRunnerComponent = new MqRunnerComponent(new DummyJmsMappingsRepository());
+        Field fifo = MqRunnerComponent.class.getDeclaredField("fifo");
         fifo.setAccessible(true);
         fifo.set(mqRunnerComponent, BufferUtils.synchronizedBuffer(new CircularFifoBuffer(BUFF_SIZE)));
 
-
-
-        for(int i = 0; i < BUFF_SIZE; i++) {
+        for (int i = 0; i < BUFF_SIZE; i++) {
             MockedRequest mockedRequest = new MockedRequest();
-            mockedRequest.setDate(Date.from(LocalDateTime.of(2000+i,01,01,6,30).atZone(ZoneId.systemDefault()).toInstant()));
+            mockedRequest.setDate(Date.from(LocalDateTime.of(2000 + i, 1, 1, 6, 30).atZone(ZoneId.systemDefault()).toInstant()));
             Buffer b = mqRunnerComponent.getFifo();
             b.add(mockedRequest);
         }
@@ -55,15 +51,13 @@ public class ApiControllerTest {
         apiController = new ApiController(mqRunnerComponent);
     }
 
-
     @Test()
-    public void getRequestListSizeTest(){
+    public void getRequestListSizeTest() {
         Collection requestList = apiController.getRequestList(null);
-        Assert.assertTrue(requestList.size() == BUFF_SIZE);
+        Assert.assertEquals(requestList.size(), BUFF_SIZE);
         requestList = apiController.getRequestList(BUFF_SIZE);
-        Assert.assertTrue(requestList.size() == BUFF_SIZE);
+        Assert.assertEquals(requestList.size(), BUFF_SIZE);
         requestList = apiController.getRequestList(5);
-        Assert.assertTrue(requestList.size() == 5);
-
+        Assert.assertEquals(5, requestList.size());
     }
 }
