@@ -23,7 +23,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,7 +32,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class MqMessage implements Serializable, AbstractModel {
+public class MqMessage implements AbstractModel {
     private static final long serialVersionUID = -2284237307005166339L;
 
     private String queueName;

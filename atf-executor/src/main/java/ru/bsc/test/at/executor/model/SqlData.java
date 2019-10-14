@@ -20,10 +20,8 @@ package ru.bsc.test.at.executor.model;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class SqlData implements Serializable, AbstractModel {
+public class SqlData implements AbstractModel {
     private static final long serialVersionUID = -5297373310164570345L;
 
     private String sql;

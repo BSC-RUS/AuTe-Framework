@@ -20,8 +20,10 @@ package ru.bsc.test.autotester.ro;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
-public class ScenarioVariableFromServiceRequestRo {
+public class ScenarioVariableFromServiceRequestRo implements Serializable {
   private String scenarioVariableName;
   private String expression;
   private String matchingType;

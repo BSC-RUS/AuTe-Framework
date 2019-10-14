@@ -23,10 +23,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @ApiModel(description = "HTTP header")
-public class HeaderItemRo {
+public class HeaderItemRo implements Serializable {
     @ApiModelProperty("Name of header")
     String headerName;
     @ApiModelProperty("Value of header")

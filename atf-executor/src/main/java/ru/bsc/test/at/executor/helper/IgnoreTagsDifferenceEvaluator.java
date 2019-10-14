@@ -90,7 +90,7 @@ class IgnoreTagsDifferenceEvaluator implements DifferenceEvaluator {
         final Node controlNode = comparison.getControlDetails().getTarget();
         final Node testNode = comparison.getTestDetails().getTarget();
 
-        if (comparison.getType() == ComparisonType.ATTR_VALUE && isXSIType(controlNode) && isXSIType(testNode)) {
+        if (comparison.getType() == ATTR_VALUE && isXSIType(controlNode) && isXSIType(testNode)) {
             if (getNameSpaceFromPrefix(controlNode).compareTo(getNameSpaceFromPrefix(testNode)) != 0) {
                 return ComparisonResult.DIFFERENT;
             }
@@ -175,11 +175,9 @@ class IgnoreTagsDifferenceEvaluator implements DifferenceEvaluator {
     }
 
     private boolean isControlNodeTag(String ignoredTag, Node controlNode) {
-        if (!ignoredTag.matches(TAG_REGEX)) {
-            if (controlNode.getParentNode() instanceof Element) {
-                Element element = (Element) controlNode.getParentNode();
-                return ignoredTag.equals(element.getTagName());
-            }
+        if (!ignoredTag.matches(TAG_REGEX) && controlNode.getParentNode() instanceof Element) {
+            Element element = (Element) controlNode.getParentNode();
+            return ignoredTag.equals(element.getTagName());
         }
         return false;
     }

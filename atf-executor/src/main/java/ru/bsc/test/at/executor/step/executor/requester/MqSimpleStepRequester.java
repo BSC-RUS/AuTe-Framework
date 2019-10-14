@@ -31,8 +31,8 @@ import java.util.Map;
  */
 public class MqSimpleStepRequester extends MqAbstractStepRequester {
 
-    public MqSimpleStepRequester(StepResult stepResult, Step step, String requestBody, String testId, Project project, MqClient mqClient, Map<String, Object> scenarioVariables, String projectPath) {
-        super(stepResult, step, requestBody, testId, project, mqClient, scenarioVariables, projectPath);
+    public MqSimpleStepRequester(StepResult stepResult, Step step, String requestBody, String testId, Project project, MqClient mqClient, Map<String, Object> scenarioVariables) {
+        super(stepResult, step, requestBody, testId, project, mqClient, scenarioVariables);
     }
 
     @Override

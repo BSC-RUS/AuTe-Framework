@@ -34,6 +34,7 @@ public class ClientHttpRequest implements ClientRequest {
   protected final Map headers;
   protected final String testId;
   protected final String testIdHeaderName;
+  protected final boolean useResponseAsBase64;
 
   @Override
   public String getResource() {
@@ -58,6 +59,10 @@ public class ClientHttpRequest implements ClientRequest {
   @Override
   public String getTestIdHeaderName() {
     return testIdHeaderName;
+  }
+
+  public boolean getUseResponseAsBase64() {
+    return useResponseAsBase64;
   }
 
   public HTTPMethod getMethod() {

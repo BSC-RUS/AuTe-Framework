@@ -30,6 +30,7 @@ import javax.jms.BytesMessage;
 import javax.jms.Message;
 import javax.jms.TextMessage;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -91,7 +92,7 @@ public class MqClient implements Client<ClientMQRequest, MqClient.ClientVoidResp
             BytesMessage bytesMessage = (BytesMessage) message;
             byte[] data = new byte[(int) bytesMessage.getBodyLength()];
             bytesMessage.readBytes(data);
-            return new ClientCommonResponse(0, new String(data), null);
+            return new ClientCommonResponse(0, new String(data, StandardCharsets.UTF_8), null);
         } else if (message instanceof TextMessage) {
             return new ClientCommonResponse(0, ((TextMessage) message).getText(), null);
         } else {
@@ -109,7 +110,7 @@ public class MqClient implements Client<ClientMQRequest, MqClient.ClientVoidResp
         }
     }
 
-    class ClientVoidResponse implements ClientResponse {
+    static class ClientVoidResponse implements ClientResponse {
         @Override
         public int getStatusCode() {
             return 0;

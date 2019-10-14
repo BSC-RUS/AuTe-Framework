@@ -91,7 +91,7 @@ public class RestStepExecutor implements IStepExecutor {
         for (int repetitionCounter = 0; repetitionCounter < numberRepetitions; repetitionCounter++) {
 
             // COM-123 Timeout
-            if (step.getTimeoutMs() != null && !step.getTimeoutMs().isEmpty() && (step.isTimeoutEachRepetition())) {
+            if (step.getTimeoutMs() != null && !step.getTimeoutMs().isEmpty() && step.isTimeoutEachRepetition()) {
                 delayUtilities.delay(parseLongOrVariable(scenarioVariables, step.getTimeoutMs(), 0));
             }
 

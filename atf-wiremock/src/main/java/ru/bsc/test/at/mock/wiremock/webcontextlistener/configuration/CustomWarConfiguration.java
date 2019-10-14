@@ -64,7 +64,7 @@ public class CustomWarConfiguration extends WarConfiguration {
             properties.setProperty("resource.loader", "file");
             properties.setProperty("file.resource.loader.path", "." + File.separator + "velocity");
 
-            try (final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(VELOCITY_PROPERTIES.getValue())) {
+            try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(VELOCITY_PROPERTIES.getValue())) {
                 properties.load(stream);
             } catch (Exception e) {
                 log.warn("Error while loading properties: {}. Using default values", VELOCITY_PROPERTIES.getValue());

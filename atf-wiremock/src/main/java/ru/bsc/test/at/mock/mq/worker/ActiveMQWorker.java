@@ -87,15 +87,19 @@ public class ActiveMQWorker extends AbstractMqWorker {
                         for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
                             byte[] response;
 
-                            if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
-                            } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
+                            if (isNotEmpty(mockResponse.getResponseBody())) {
+                                response = new VelocityTransformer()
+                                        .transform(stringBody, null, mockResponse.getResponseBody())
+                                        .getBytes(StandardCharsets.UTF_8);
+                            } else if (isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
-                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(message.getContent().getData(), StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
+                                    response = httpClient.sendPost(mockMessage.getHttpUrl(),
+                                            new String(message.getContent().getData(), StandardCharsets.UTF_8),
+                                            getTestIdHeaderName(), testId).getBytes(StandardCharsets.UTF_8);
                                 }
                                 mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                             } else {
-                                response = stringBody.getBytes();
+                                response = stringBody.getBytes(StandardCharsets.UTF_8);
                             }
 
                             mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
