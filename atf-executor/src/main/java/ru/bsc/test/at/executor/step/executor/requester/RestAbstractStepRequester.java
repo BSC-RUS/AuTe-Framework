@@ -101,9 +101,15 @@ public abstract class RestAbstractStepRequester implements StepRequester {
         ClientCommonResponse responseData;
         log.debug("Executing http request");
         if (step.getRequestBodyType() == null || RequestBodyType.JSON.equals(step.getRequestBodyType())) {
-            ClientHttpRequest clientHttpRequest = new ClientHttpRequest(
-                    requestUrl, requestBody, step.getRequestMethod(), requestHeaders,
-                    testId, project.getTestIdHeaderName());
+            ClientHttpRequest clientHttpRequest = ClientHttpRequest.defaultBuilder()
+                        .url(requestUrl)
+                        .body(requestBody)
+                        .method(step.getRequestMethod())
+                        .testId(testId)
+                        .headers(requestHeaders)
+                        .testIdHeaderName(project.getTestIdHeaderName())
+                        .useResponseAsBase64(step.isUseResponseAsBase64())
+                        .build();
             responseData = httpClient.request(clientHttpRequest);
         } else {
             if (step.getFormDataList() == null) {
@@ -122,9 +128,18 @@ public abstract class RestAbstractStepRequester implements StepRequester {
                                 return result;
                             })
                             .collect(Collectors.joining("\r\n")));
-            ClientHttpRequestWithVariables clientHttpRequest = new ClientHttpRequestWithVariables(
-                    requestUrl, requestBody, step.getRequestMethod(), requestHeaders,
-                    testId, project.getTestIdHeaderName(), scenarioVariables, projectPath, step);
+            ClientHttpRequestWithVariables clientHttpRequest = ClientHttpRequestWithVariables.builderWithVariables()
+                            .url(requestUrl)
+                            .body(requestBody)
+                            .method(step.getRequestMethod())
+                            .testId(testId)
+                            .headers(requestHeaders)
+                            .testIdHeaderName(project.getTestIdHeaderName())
+                            .useResponseAsBase64(step.isUseResponseAsBase64())
+                            .scenarioVariables(scenarioVariables)
+                            .projectPath(projectPath)
+                            .step(step)
+                            .build();
             responseData = httpClient.request(clientHttpRequest);
         }
         requestData.setRequestBody(stepResult.getRequestBody());

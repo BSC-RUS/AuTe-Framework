@@ -65,6 +65,7 @@ export class Step {
     stepMode = 'REST';
     mockPollingTimeout;
     mockRetryDelay;
+    useResponseAsBase64: boolean;
 
     mqOutputQueueName: string;
     mqInputQueueName: string;

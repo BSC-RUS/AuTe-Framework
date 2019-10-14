@@ -18,6 +18,7 @@
 
 package ru.bsc.test.at.executor.helper.client.impl.http;
 
+import lombok.Builder;
 import ru.bsc.test.at.executor.model.Step;
 
 import java.util.Map;
@@ -25,13 +26,17 @@ import java.util.Map;
 /**
  * @author Pavel Golovkin
  */
+
 public final class ClientHttpRequestWithVariables extends ClientHttpRequest {
   private final Map<String, Object> scenarioVariables;
   private final String projectPath;
   private final Step step;
 
-  public ClientHttpRequestWithVariables(String url, Object body, HTTPMethod method, Map headers, String testId, String testIdName, Map<String, Object> scenarioVariables, String projectPath, Step step) {
-    super(url, body, method, headers, testId, testIdName);
+  @Builder(builderMethodName = "builderWithVariables")
+  public ClientHttpRequestWithVariables(String url, Object body, HTTPMethod method, Map headers, String testId,
+                                        String testIdHeaderName, Map<String, Object> scenarioVariables,
+                                        String projectPath, Step step, boolean useResponseAsBase64) {
+    super(url, body, method, headers, testId, testIdHeaderName, useResponseAsBase64);
     this.scenarioVariables = scenarioVariables;
     this.projectPath = projectPath;
     this.step = step;

@@ -634,6 +634,8 @@ definitions:
         type: string
       script:
         type: string
+      useResponseAsBase64:
+        type: boolean
   StepResult:
     type: object
     properties:

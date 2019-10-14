@@ -19,6 +19,8 @@
 package ru.bsc.test.at.executor.helper.client.impl.http;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import ru.bsc.test.at.executor.helper.client.api.ClientRequest;
 
 import java.util.Map;
@@ -26,7 +28,6 @@ import java.util.Map;
 /**
  * @author Pavel Golovkin
  */
-@AllArgsConstructor
 public class ClientHttpRequest implements ClientRequest {
   protected final String url;
   protected final Object body;
@@ -34,9 +35,21 @@ public class ClientHttpRequest implements ClientRequest {
   protected final Map headers;
   protected final String testId;
   protected final String testIdHeaderName;
+  protected final boolean useResponseAsBase64;
 
-  @Override
-  public String getResource() {
+    @Builder(builderMethodName = "defaultBuilder")
+    public ClientHttpRequest(String url, Object body, HTTPMethod method, Map headers, String testId, String testIdHeaderName, boolean useResponseAsBase64) {
+        this.url = url;
+        this.body = body;
+        this.method = method;
+        this.headers = headers;
+        this.testId = testId;
+        this.testIdHeaderName = testIdHeaderName;
+        this.useResponseAsBase64 = useResponseAsBase64;
+    }
+
+    @Override
+    public String getResource() {
     return url;
   }
 
@@ -58,6 +71,10 @@ public class ClientHttpRequest implements ClientRequest {
   @Override
   public String getTestIdHeaderName() {
     return testIdHeaderName;
+  }
+
+  public boolean getUseResponseAsBase64() {
+    return useResponseAsBase64;
   }
 
   public HTTPMethod getMethod() {
