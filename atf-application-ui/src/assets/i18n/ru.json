@@ -192,5 +192,9 @@
   "Variables": "Переменные",
   "Variable value": "Значение переменной",
   "Global request headers": "Глобальные заголовки запросов",
-  "Global headers": "Глобальные заголовки"
+  "Global headers": "Глобальные заголовки",
+  "Response order": "Порядок ответов",
+  "Used in case of several identical requests for one url.": "Используется в случае нескольких одинаковых запросов на один url.",
+  "The order is determined within a single url.": "Порядок определяется в пределах одного url.",
+  "0 - no identical requests.": "0 - нет одинаковых запросов."
 }

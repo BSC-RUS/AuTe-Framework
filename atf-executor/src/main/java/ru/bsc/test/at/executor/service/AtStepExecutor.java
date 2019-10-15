@@ -100,7 +100,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                         for (IStepExecutor stepExecutor : stepExecutorList) {
                             if (stepExecutor.support(step)) {
                                 stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
-                                stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), step, stepResult, stepExecutorRequest.getProjectPath());
+                                stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
                                 break;
                             }
                         }
