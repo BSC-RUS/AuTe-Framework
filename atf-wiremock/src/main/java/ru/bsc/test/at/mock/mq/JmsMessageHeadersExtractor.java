@@ -17,9 +17,11 @@
 package ru.bsc.test.at.mock.mq;
 
 import org.apache.velocity.context.Context;
+import ru.bsc.test.at.mock.exception.UnexpectedMessageTypeException;
+import ru.bsc.test.at.mock.mq.utils.MessageUtils;
 
 import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import javax.jms.Message;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -35,18 +37,18 @@ public class JmsMessageHeadersExtractor {
     private static final String HEADERS_IN_KEY = "in";
     private static final String HEADERS_OUT_KEY = "out";
 
-    public Map<String, Object> createContext(TextMessage message) throws JMSException {
+    public Map<String, Object> createContext(Message message) throws JMSException, UnexpectedMessageTypeException {
         Map<String, Object> context = new HashMap<>();
         Map<Object, Object> headers = new HashMap<>();
         headers.put(HEADERS_IN_KEY, Collections.unmodifiableMap(getMessageHeaders(message)));
         headers.put(HEADERS_OUT_KEY, new HashMap<>());
         context.put(HEADERS_KEY, headers);
-        context.put(BODY_KEY, message.getText());
+        context.put(BODY_KEY, MessageUtils.extractMessageBody(message));
         return context;
     }
 
     @SuppressWarnings("unchecked")
-    public void setHeadersFromContext(TextMessage message, Context context) throws JMSException {
+    public void setHeadersFromContext(Message message, Context context) throws JMSException {
         Map<String, Object> headers = (Map<String, Object>) context.get(HEADERS_KEY);
         if (headers == null) {
             return;
@@ -60,7 +62,7 @@ public class JmsMessageHeadersExtractor {
         }
     }
 
-    private Map<Object, Object> getMessageHeaders(TextMessage message) throws JMSException {
+    private Map<Object, Object> getMessageHeaders(Message message) throws JMSException {
         Map<Object, Object> headers = new HashMap<>();
         Enumeration names = message.getPropertyNames();
         while (names.hasMoreElements()) {
