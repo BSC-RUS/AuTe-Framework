@@ -43,6 +43,9 @@ public class MqStepExecutor implements IStepExecutor {
         // 0. Установить ответы сервисов, которые будут использоваться в SoapUI для определения ответа
         ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), step.getCode(), scenario.getName(), scenarioVariables);
 
+        // 0.1 Установить ответы для имитации внешних сервисов, работающих через очереди сообщений
+        ExecutorUtils.setMqMockResponses(wireMockAdmin, testId, step.getMqMockResponseList(), scenarioVariables);
+
         // 1. Выполнить запрос БД и сохранить полученные значения
         ExecutorUtils.executeSql(connection, step, scenarioVariables, stepResult);
         stepResult.setSavedParameters(scenarioVariables.toString());

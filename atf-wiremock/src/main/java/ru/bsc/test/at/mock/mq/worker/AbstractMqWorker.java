@@ -21,13 +21,14 @@ package ru.bsc.test.at.mock.mq.worker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.predicate.JmsMessagePredicate;
 
 import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.Queue;
-import javax.jms.TextMessage;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -35,7 +36,7 @@ import java.util.concurrent.TimeoutException;
 @Slf4j
 @Getter
 @RequiredArgsConstructor
-abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
+public abstract class AbstractMqWorker implements Runnable, ExceptionListener {
     private final String queueNameFrom;
     private final String queueNameTo;
     private final List<MockMessage> mockMappingList;
@@ -65,13 +66,15 @@ abstract public class AbstractMqWorker implements Runnable, ExceptionListener {
     }
 
     void copyMessageProperties(
-            TextMessage message,
-            TextMessage newMessage,
+            Message message,
+            Message newMessage,
             String testId,
             Queue destination
     ) throws JMSException {
-        newMessage.setJMSCorrelationID(message.getJMSMessageID());
-        newMessage.setStringProperty(testIdHeaderName, testId);
+        String jmsCorrelationId = message.getJMSCorrelationID();
+        newMessage.setJMSCorrelationID(StringUtils.isNotEmpty(jmsCorrelationId) ? jmsCorrelationId : message.getJMSMessageID());
+
+        newMessage.setStringProperty(getTestIdHeaderName(), testId);
         newMessage.setJMSDestination(destination);
     }
 }
