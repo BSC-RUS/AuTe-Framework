@@ -18,19 +18,8 @@ package ru.bsc.test.at.mock.mq.predicate;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -41,18 +30,16 @@ import java.util.function.Predicate;
 @Slf4j
 public class JmsMessagePredicate implements Predicate<MockMessage> {
     private final String source;
-    private final Document messageBody;
     private final String testId;
 
-    public JmsMessagePredicate(String source, String body, String testId) {
+    public JmsMessagePredicate(String source, String testId) {
         this.source = source;
-        this.messageBody = parseXml(body);
         this.testId = testId;
     }
 
     @Override
     public boolean test(MockMessage message) {
-        return testSourceName(message) && testTestId(message) && testXpath(message);
+        return testSourceName(message) && testTestId(message);
     }
 
     private boolean testSourceName(MockMessage message) {
@@ -63,30 +50,4 @@ public class JmsMessagePredicate implements Predicate<MockMessage> {
         return Objects.equals(testId, message.getTestId()) || StringUtils.isEmpty(message.getTestId());
     }
 
-    private boolean testXpath(MockMessage message) {
-        if (StringUtils.isEmpty(message.getXpath())) {
-            return true;
-        }
-        try {
-            return null != XPathFactory.newInstance().newXPath().evaluate(
-                    message.getXpath(),
-                    messageBody,
-                    XPathConstants.NODE
-            );
-        } catch (XPathExpressionException e) {
-            log.warn("XPath problem: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    private Document parseXml(String stringBody) {
-        try {
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            DocumentBuilder db = dbf.newDocumentBuilder();
-            return db.parse(new InputSource(new StringReader(stringBody)));
-        } catch (IOException | ParserConfigurationException | SAXException e) {
-            log.info("Cannot parse XML document: {}", e.getMessage());
-            return null;
-        }
-    }
 }
