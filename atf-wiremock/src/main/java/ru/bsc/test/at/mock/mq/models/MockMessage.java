@@ -28,6 +28,10 @@ import java.util.List;
 @Data
 @ApiModel(description = "Mock MQ message.")
 public class MockMessage implements Comparable<MockMessage> {
+    private static final int TEST_ID_COEFFICIENT = 100;
+    private static final int XPATH_COEFFICIENT = 50;
+    private static final int EMPTY_PRIORITY_WEIGHT = 10;
+
     @ApiModelProperty("GUID of mock")
     private String guid;
     @ApiModelProperty("JMS mapping name")
@@ -49,14 +53,17 @@ public class MockMessage implements Comparable<MockMessage> {
 
     @Override
     public int compareTo(MockMessage message) {
-        return Integer.compare(getPriorityOrDefault(), message.getPriorityOrDefault());
+        return Integer.compare(getWeight(), message.getWeight());
     }
 
     public boolean hasGroup() {
         return StringUtils.isNotEmpty(group);
     }
 
-    private Integer getPriorityOrDefault() {
-        return priority != null ? priority : Integer.MAX_VALUE;
+    private Integer getWeight() {
+        final int testIdValue = testId != null ? 0 : 1;
+        final int xpathValue = xpath != null ? 0 : 1;
+        final int priorityValue = priority != null ? priority : EMPTY_PRIORITY_WEIGHT;
+        return TEST_ID_COEFFICIENT * testIdValue + XPATH_COEFFICIENT * xpathValue + priorityValue;
     }
 }

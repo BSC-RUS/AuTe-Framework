@@ -21,7 +21,7 @@ import { AppComponent } from './app.component';
 import {WireMockService} from '../service/wire-mock.service';
 import {HttpModule} from '@angular/http';
 import {MappingDetailComponent} from './mapping-detail/mapping-detail.component';
-import {FormsModule} from '@angular/forms';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { InputNullComponent } from './input-null/input-null.component';
 import {RouterModule, Routes} from '@angular/router';
 import {ToastyModule} from 'ng2-toasty';
@@ -30,9 +30,11 @@ import { MappingListComponent } from './mapping-list/mapping-list.component';
 import ObjNgFor from './pipe/obj-ng-for-pipe';
 import { MqLogComponent } from './mq-log/mq-log.component';
 import {MqMockerService} from '../service/mq-mocker-service';
-import {EventService} from "../service/event-service";
+import {EventService} from '../service/event-service';
 import { JmsMappingListComponent } from './jms-mapping-list/jms-mapping-list.component';
 import { JmsMappingDetailComponent } from './jms-mapping-detail/jms-mapping-detail.component';
+import {CheckboxComponent} from './checkbox/checkbox.component';
+import {MessageService} from '../service/message-service';
 
 const routes: Routes = [
   { path: 'requests', component: RequestListComponent },
@@ -53,16 +55,18 @@ const routes: Routes = [
     ObjNgFor,
     MqLogComponent,
     JmsMappingListComponent,
-    JmsMappingDetailComponent
+    JmsMappingDetailComponent,
+    CheckboxComponent
   ],
   imports: [
     BrowserModule,
     HttpModule,
     FormsModule,
-    RouterModule.forRoot(routes, { useHash: true }),
-    ToastyModule.forRoot()
+    RouterModule.forRoot(routes, {useHash: true}),
+    ToastyModule.forRoot(),
+    ReactiveFormsModule
   ],
-  providers: [WireMockService, MqMockerService, EventService],
+  providers: [WireMockService, MqMockerService, EventService, MessageService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

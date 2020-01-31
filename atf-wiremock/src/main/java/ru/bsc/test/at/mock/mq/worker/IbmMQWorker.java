@@ -31,9 +31,16 @@ import ru.bsc.test.at.mock.mq.models.MockedRequest;
 import ru.bsc.test.at.mock.mq.utils.MessageUtils;
 import ru.bsc.velocity.transformer.VelocityTransformer;
 
-import javax.jms.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
 
 import static com.ibm.msg.client.wmq.common.CommonConstants.WMQ_CM_CLIENT;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -104,7 +111,7 @@ public class IbmMQWorker extends AbstractMqWorker {
 
                     try {
                         stringBody = MessageUtils.extractMessageBody(receivedMessage);
-                    }catch (UnexpectedMessageTypeException e){
+                    } catch (UnexpectedMessageTypeException e){
                         mockedRequest.setRequestBody("<not text or byte message>");
                         continue;
                     }
@@ -114,8 +121,7 @@ public class IbmMQWorker extends AbstractMqWorker {
 
                     String testId = receivedMessage.getStringProperty(getTestIdHeaderName());
                     if (StringUtils.isEmpty(testId)) {
-                        convertTestIdHeaderName();
-                        testId = receivedMessage.getStringProperty(getTestIdHeaderName());
+                        testId = receivedMessage.getStringProperty(getConvertedTestHeaderIdName());
                     }
                     mockedRequest.setTestId(testId);
 
@@ -129,7 +135,7 @@ public class IbmMQWorker extends AbstractMqWorker {
                             byte[] response;
 
                             if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = transformer.transform(stringBody, extractor.createContext(receivedMessage), mockResponse.getResponseBody()).getBytes();
+                                response = transformer.transform(mockMessage.getGuid(), stringBody, extractor.createContext(receivedMessage), mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
                                     response = httpClient.sendPost(mockMessage.getHttpUrl(), stringBody, getTestIdHeaderName(), testId).getBytes();
@@ -180,14 +186,14 @@ public class IbmMQWorker extends AbstractMqWorker {
             // Переслать сообщение в очередь-назначение
             producer.send(newMessage);
             producer.close();
-            log.info(" [x] Send >>> {} '{}'", destinationQueue, messageBody, StandardCharsets.UTF_8);
+            log.info(" [x] Send >>> {} '{}'", destinationQueue, messageBody);
         } else {
             log.info(" [x] Send >>> ***black hole***");
         }
     }
 
-    private void convertTestIdHeaderName(){
-        testIdHeaderName = testIdHeaderName.contains("-")
+    private String getConvertedTestHeaderIdName(){
+        return testIdHeaderName.contains("-")
                ? testIdHeaderName.toLowerCase().replace("-", "_HYPHEN_")
                : testIdHeaderName.toLowerCase().replace("_HYPHEN_", "-") ;
     }

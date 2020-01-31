@@ -40,13 +40,19 @@ import org.apache.velocity.tools.ToolManager;
 import org.bouncycastle.util.encoders.Base64;
 import ru.bsc.test.at.util.MultipartConstant;
 
-import java.io.*;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.apache.commons.codec.binary.Base64.isBase64;
 import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServletRequest.DOUBLE_DASH;
 
 /**
@@ -55,19 +61,22 @@ import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServlet
  */
 @Slf4j
 public class CustomVelocityResponseTransformer extends ResponseDefinitionTransformer {
-
     private static final String NEW_LINE_VAR = "\r|\n|(\r\n)|(\n\n)|(\r\r)";
 
+    private final Map<String, Map<String, Object>> staticContexts = new HashMap<>();
+
     /**
-     * The Velocity context that will hold our request header
-     * data.
+     * The Velocity context that will hold our request header data.
      */
     private Context context;
 
     @Override
-    public ResponseDefinition transform(final Request request,
-                                        final ResponseDefinition responseDefinition, final FileSource files,
-                                        final Parameters parameters) {
+    public ResponseDefinition transform(
+        final Request request,
+        final ResponseDefinition responseDefinition,
+        final FileSource files,
+        final Parameters parameters
+    ) {
         final VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         final ToolManager toolManager = new ToolManager();
@@ -78,8 +87,8 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         context.put("requestAbsoluteUrl", request.getAbsoluteUrl());
         context.put("requestUrl", request.getUrl());
         context.put("requestMethod", request.getMethod());
+        context.put("staticContext", getStaticContextFor(request));
         String body;
-        byte[] binaryBody = null;
 
         if (responseDefinition.specifiesBodyFile() && templateDeclared(responseDefinition)) {
             body = getRenderedBody(responseDefinition);
@@ -93,13 +102,21 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         } else {
             return responseDefinition;
         }
-        if(isPresentConvertCommand(responseDefinition.getHeaders().getHeader(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue()))) {
+        if (isPresentConvertCommand(responseDefinition.getHeaders().getHeader(MultipartConstant.CONVERT_BASE64_IN_MULTIPART.getValue()))) {
             log.info(" >>> ");
             log.info(body);
-            binaryBody = parseConvertBody(body);
-            return buildResponse(binaryBody, body, responseDefinition, true);
+            return buildResponse(parseConvertBody(body), body, responseDefinition, true);
         }
-        return buildResponse(binaryBody, body, responseDefinition, false);
+        return buildResponse(null, body, responseDefinition, false);
+    }
+
+    private Map<String, Object> getStaticContextFor(Request request) {
+        try {
+            String key = new URL(request.getAbsoluteUrl()).getPath();
+            return staticContexts.computeIfAbsent(key, k -> new HashMap<>());
+        } catch (MalformedURLException e) {
+            return null;
+        }
     }
 
     private ResponseDefinition buildResponse(byte[] binaryBody, String body, ResponseDefinition responseDefinition, boolean useBinaryIfNeedConvert) {
@@ -119,15 +136,15 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
     }
 
     private byte[] parseConvertBody(String body) {
-        byte[] result = null;
+        byte[] result;
         // если начинается с boundary
-        if(body.startsWith(DOUBLE_DASH)) {
+        if (body.startsWith(DOUBLE_DASH)) {
             // получаем части multipart'a
             String[] partsMultipart = body.split(NEW_LINE_VAR);
             List<Byte> buffer = new ArrayList<>();
             // обрабатываем каждую часть multipart'a - ищем base64
-            for(String part : partsMultipart) {
-                if(isNotBoundaryAndInBase64(part)) {
+            for (String part : partsMultipart) {
+                if (isNotBoundaryAndInBase64(part)) {
                     result = Base64.decode(part.getBytes());
                 } else {
                     result = part.getBytes();
@@ -137,7 +154,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
             result = ArrayUtils.toPrimitive((Byte[]) buffer.toArray());
         } else {
             // если не начинается с boundary - проверяем, не base64 лежит в корне
-            if(org.apache.commons.codec.binary.Base64.isArrayByteBase64(body.getBytes())) {
+            if (isBase64(body.getBytes())) {
                 result = Base64.decode(body.getBytes());
             } else {
                 result = body.getBytes();
@@ -147,7 +164,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
     }
 
     private boolean isNotBoundaryAndInBase64(String part) {
-        return !part.startsWith(DOUBLE_DASH) && org.apache.commons.codec.binary.Base64.isArrayByteBase64(part.getBytes());
+        return !part.startsWith(DOUBLE_DASH) && isBase64(part.getBytes());
     }
 
     private Boolean templateDeclared(final ResponseDefinition response) {
@@ -160,8 +177,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         for (HttpHeader header : headers.all()) {
             final String rawKey = header.key();
             final String transformedKey = rawKey.replaceAll("-", "");
-            context.put("requestHeader".concat(transformedKey), header.values()
-                    .toString());
+            context.put("requestHeader".concat(transformedKey), header.values().toString());
         }
     }
 
@@ -197,5 +213,4 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
     public String getName() {
         return "bsc-velocity-transformer";
     }
-
 }

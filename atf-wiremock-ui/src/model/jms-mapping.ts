@@ -35,4 +35,5 @@ export class JmsMapping {
   httpUrl: string;
   xpath: string;
   priority: number;
+  selected?: boolean; // select for delete in jms-mapping-list
 }

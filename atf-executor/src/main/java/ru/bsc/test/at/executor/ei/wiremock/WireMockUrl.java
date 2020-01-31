@@ -29,4 +29,5 @@ interface WireMockUrl {
   String COUNT_REST_REQUESTS_URL = "/__admin/requests/count";
   String FIND_MQ_REQUEST_LIST_URL = "/mq-mock/__admin/request-list";
   String ADD_MQ_MAPPING_URL = "/mq-mock/__admin/add-mapping";
+  String DELETE_MQ_MAPPING = "/mq-mock/__admin/mappings/";
 }

@@ -57,4 +57,8 @@ public class WireMockUrlBuilder {
   String addMQMappingUrl() {
     return baseUrl + ADD_MQ_MAPPING_URL;
   }
+
+  String deleteMqMappingUrl(String guid) {
+    return baseUrl + DELETE_MQ_MAPPING + guid;
+  }
 }

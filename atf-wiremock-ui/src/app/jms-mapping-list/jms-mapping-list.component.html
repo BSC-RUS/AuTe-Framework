@@ -20,25 +20,32 @@
     <span class="glyphicon glyphicon-plus"></span>
     <i>Add mapping</i>
   </button>
+  <button class="btn btn-default" (click)="deleteSelected()" [disabled]="disabledDeleteSelected">Delete selected</button>
 </div>
 <div class="just-padding">
-  <div class="list-group list-group-root well" *ngIf="mappings" data-toggle="collapse">
+  <div class="list-group list-group-root well" *ngIf="mappings">
     <div *ngFor="let group of mappings.groups; let i = index" style="overflow: hidden">
       <a href= "#item{{i}}" data-toggle="collapse" class="list-group-item">
         <span class="glyphicon glyphicon-folder-open"></span> {{group.name}}
       </a>
       <div class="list-group collapse" id="item{{i}}">
-        <div *ngFor="let mapping of group.messages">
-          <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
-            {{mapping.name ? mapping.name : mapping.sourceQueueName}}
-          </a>
+        <div class="list-group-container" *ngFor="let mapping of group.messages">
+          <app-checkbox [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
+          <div class="list-group-item-container">
+            <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+              {{mapping.name ? mapping.name : mapping.sourceQueueName}}
+            </a>
+          </div>
         </div>
       </div>
     </div>
-    <div *ngFor="let mapping of mappings.messages">
-      <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
-        {{mapping.name ? mapping.name : mapping.sourceQueueName}}
-      </a>
+    <div class="list-group-container" *ngFor="let mapping of mappings.messages">
+      <app-checkbox [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
+      <div class="list-group-item-container">
+        <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+          {{mapping.name ? mapping.name : mapping.sourceQueueName}}
+        </a>
+      </div>
     </div>
   </div>
 </div>

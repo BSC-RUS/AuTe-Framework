@@ -31,9 +31,16 @@ import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
 import ru.bsc.test.at.mock.mq.models.MockedRequest;
 import ru.bsc.velocity.transformer.VelocityTransformer;
 
-import javax.jms.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -79,7 +86,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                     mockedRequest.setSourceQueue(getQueueNameFrom());
                     mockedRequest.setRequestBody(stringBody);
 
-                    String testId = message.getStringProperty("testIdHeaderName");
+                    String testId = message.getStringProperty(getTestIdHeaderName());
                     mockedRequest.setTestId(testId);
 
                     MockMessage mockMessage = findMockMessage(testId, stringBody);
@@ -92,7 +99,7 @@ public class ActiveMQWorker extends AbstractMqWorker {
                             byte[] response;
 
                             if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = transformer.transform(stringBody, extractor.createContext(message), mockResponse.getResponseBody()).getBytes();
+                                response = transformer.transform(mockMessage.getGuid(), stringBody, extractor.createContext(message), mockResponse.getResponseBody()).getBytes();
                             } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
                                     response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(message.getContent().getData(), StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();

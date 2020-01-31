@@ -18,7 +18,11 @@
 
 package ru.bsc.test.at.mock.mq.worker;
 
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
@@ -42,6 +46,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
     private Channel channelTo;
     private com.rabbitmq.client.Connection connection;
     private int port;
+    private VelocityTransformer velocityTransformer;
 
     public RabbitMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, int port, String testIdHeaderName) {
         super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
@@ -61,6 +66,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
             connection = connectionFactory.newConnection();
             channelFrom = connection.createChannel();
             channelTo = connection.createChannel();
+            velocityTransformer = new VelocityTransformer();
 
             try {
                 // Wait for a message
@@ -109,7 +115,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
                         byte[] response;
 
                         if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                            response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes();
+                            response = velocityTransformer.transform(mockMessage.getGuid(), stringBody, null, mockResponse.getResponseBody()).getBytes();
                         } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                             try (HttpClient httpClient = new HttpClient()) {
                                 response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
