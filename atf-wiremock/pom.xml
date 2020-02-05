@@ -194,7 +194,7 @@
                         <configuration>
                             <images>
                                 <image>
-                                    <name>makar1031/aute-wiremock:${project.version}</name>
+                                    <name>bscmsc/aute-wiremock:${project.version}</name>
                                     <build>
                                         <contextDir>${project.basedir}</contextDir>
                                         <tags>
