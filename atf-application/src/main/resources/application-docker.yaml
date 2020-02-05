@@ -1,4 +1,2 @@
-logging:
-  file: ''
 env:
   path: ./config/env.yml

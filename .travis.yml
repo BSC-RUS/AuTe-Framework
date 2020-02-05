@@ -1,7 +1,15 @@
 language: java
-jdk: oraclejdk8
-node_js:
-  - "iojs"
-  - "7"
-install: true
-script: mvn clean package -P npm-install
+jdk: openjdk8
+install: skip
+script: mvn package -P npm-install
+before_deploy: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: mvn deploy -P docker -DskipTests
+  on:
+    tags: true
+    branch: master
+cache:
+  directories:
+    - $HOME/.m2
