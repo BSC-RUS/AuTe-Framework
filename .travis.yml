@@ -6,7 +6,7 @@ script: mvn package -P npm-install
 before_deploy: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 deploy:
   provider: script
-  cleanup: true
+  cleanup: false
   script: mvn deploy -P docker -DskipTests
   on:
     branch: master
