@@ -9,6 +9,7 @@ deploy:
   skip_cleanup: true
   script: mvn deploy -P docker -DskipTests
   on:
+    tags: true
     branch: master
 cache:
   directories:
