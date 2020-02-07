@@ -166,7 +166,8 @@ public class ExecutorUtils {
                     mockDefinition.getRequest().setBasicAuthCredentials(credentials);
                 }
 
-                RequestMatcher matcher = RequestMatcher.build(mockServiceResponse.getTypeMatching(), mockServiceResponse.getPathFilter());
+                String bodyPattern = insertSavedValues(mockServiceResponse.getPathFilter(), scenarioVariables);
+                RequestMatcher matcher = RequestMatcher.build(mockServiceResponse.getTypeMatching(), bodyPattern);
 
                 if (matcher.isPresent()) {
                     mockDefinition.getRequest().setBodyPatterns(Collections.singletonList(matcher));

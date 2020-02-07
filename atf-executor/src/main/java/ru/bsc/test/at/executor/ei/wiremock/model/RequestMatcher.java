@@ -47,7 +47,6 @@ public class RequestMatcher {
     private String equalToXml;
     private String matchesXPath;
     private String absent;
-    @JsonRawValue
     private String contains;
     @JsonRawValue
     private String matches;
@@ -60,7 +59,7 @@ public class RequestMatcher {
         } else if (TYPE_EQUAL_TO_JSON.equalsIgnoreCase(type)) {
             newRequestMatcher.setEqualToJson(value);
         } else if (CONTAINS.equalsIgnoreCase(type)) {
-            newRequestMatcher.setContains(StringUtils.wrap(value, "\""));
+            newRequestMatcher.setContains(value);
         } else if (XPATH.equalsIgnoreCase(type)) {
             newRequestMatcher.setMatchesXPath(value);
         } else if (MATCHES.equalsIgnoreCase(type)) {

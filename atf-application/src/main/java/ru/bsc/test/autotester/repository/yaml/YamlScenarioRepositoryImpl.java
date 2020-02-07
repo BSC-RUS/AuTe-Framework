@@ -40,7 +40,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
+import static ru.bsc.test.autotester.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by sdoroshin on 27.10.2017.
@@ -159,11 +162,9 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
             return Collections.emptyList();
         }
         File[] directories = scenariosDirectory.listFiles(File::isDirectory);
-        if (directories == null) {
-            return Collections.emptyList();
-        }
+
         List<Scenario> scenarios = new ArrayList<>();
-        for (File directory : directories) {
+        nullSafeStream(directories).forEach(directory -> {
             File scenarioYml = new File(directory, SCENARIO_YML_FILENAME);
             if (scenarioYml.exists()) {
                 try {
@@ -172,21 +173,27 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
                     log.error("Read file " + scenarioYml.getAbsolutePath(), e);
                 }
             } else {
-                File[] innerFileList = directory.listFiles(File::isDirectory);
-                if (innerFileList != null) {
-                    for (File scenarioYmlInGroup : innerFileList) {
-                        if (new File(scenarioYmlInGroup, SCENARIO_YML_FILENAME).exists()) {
-                            try {
-                                scenarios.add(loadScenarioFromFiles(scenarioYmlInGroup, directory.getName(), fetchSteps));
-                            } catch (IOException | ReaderException e) {
-                                log.error("Read file {} {}", scenarioYmlInGroup, e);
-                            }
+                File[] innerDirectories = directory.listFiles(File::isDirectory);
+                nullSafeStream(innerDirectories)
+                    .filter(this::scenarioYmlFileExist)
+                    .forEach(scenarioYmlInGroup -> {
+                        try {
+                            scenarios.add(loadScenarioFromFiles(scenarioYmlInGroup, directory.getName(), fetchSteps));
+                        } catch (IOException | ReaderException e) {
+                            log.error("Read file {} {}", scenarioYmlInGroup, e);
                         }
-                    }
-                }
+                    });
             }
-        }
-        return scenarios;
+        });
+
+        return scenarios.stream()
+            .sorted(comparing(Scenario::getName))
+            .collect(toList());
+    }
+
+
+    private boolean scenarioYmlFileExist(File directory) {
+        return new File(directory, SCENARIO_YML_FILENAME).exists();
     }
 
     private boolean checkSteps(Scenario scenario, String relativeUrl) {

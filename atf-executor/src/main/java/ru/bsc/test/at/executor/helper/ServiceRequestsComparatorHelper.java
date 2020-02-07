@@ -234,7 +234,8 @@ public class ServiceRequestsComparatorHelper {
             mockRequest.setUrl(url);
         }
 
-        RequestMatcher matcher = RequestMatcher.build(request.getTypeMatching(), request.getPathFilter());
+        String bodyPattern = ExecutorUtils.insertSavedValues(request.getPathFilter(),variables);
+        RequestMatcher matcher = RequestMatcher.build(request.getTypeMatching(), bodyPattern);
         if (matcher.isPresent()) {
             mockRequest.setBodyPatterns(Collections.singletonList(matcher));
         }

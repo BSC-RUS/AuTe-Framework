@@ -18,7 +18,7 @@
 <div style="margin-bottom: 20px;">
   <button class="btn btn-default" (click)="detailsToggle()">Details</button>
   <button class="btn btn-default" [routerLink]="['/mapping/new']"><span class="glyphicon glyphicon-plus"></span> <i>Add mapping</i></button>
-  <button class="btn btn-default" (click)="deleteSelected()" [disabled]="disabledDeleteSelected">Delete selected</button>
+  <button class="btn btn-default" (click)="confirmDeleteSelected()" [disabled]="disabledDeleteSelected">Delete selected</button>
 </div>
 <div class="just-padding">
   <div class="list-group list-group-root well" *ngIf="mappingList">

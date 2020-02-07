@@ -75,6 +75,19 @@ export class JmsMappingListComponent implements OnInit {
   }
 
   /**
+   * Функция для подтвержения на удаление.
+   * @description Если пользователь подтверждает удаление, то вызывается deleteSelected,
+   * если не подтверждает, то ничего не происходит.
+   **/
+  confirmDeleteSelected() {
+    const result: boolean = confirm('Удалить выбранные JMS-маппинги?');
+
+    if (result) {
+      this.deleteSelected();
+    }
+  }
+
+  /**
    * Функция для удаления выбранных маппингов.
    * @description Из mappings выбираются маппинги с отметкой selected.
    * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов

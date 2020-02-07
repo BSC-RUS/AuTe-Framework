@@ -23,10 +23,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import ru.bsc.test.at.executor.model.AmqpBroker;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.Scenario;
-import ru.bsc.test.at.executor.model.Stand;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.util.YamlUtils;
 import ru.bsc.test.autotester.component.Translator;
 import ru.bsc.test.autotester.properties.EnvironmentProperties;
@@ -39,7 +36,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static ru.bsc.test.autotester.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by sdoroshin on 27.10.2017.
@@ -61,20 +60,13 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
 
     @Override
     public List<Project> findAllProjects() {
-        List<Project> projectList = new LinkedList<>();
         log.debug("Load projects from: {}", environmentProperties.getProjectsDirectoryPath());
         File[] fileList = new File(environmentProperties.getProjectsDirectoryPath()).listFiles(File::isDirectory);
-        if (fileList != null) {
-            for (File projectDirectory : fileList) {
-                log.debug("Reading directory: {}", projectDirectory.getAbsolutePath());
-                Project loadedProject = loadProject(projectDirectory);
-                if (loadedProject != null) {
-                    projectList.add(loadedProject);
-                }
-            }
-        }
-
-        return projectList;
+        return nullSafeStream(fileList)
+            .map(this::loadProject)
+            .filter(Objects::nonNull)
+            .sorted(Comparator.comparing(Project::getName))
+            .collect(toList());
     }
 
     @Override
@@ -138,7 +130,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
                 project.getCode()).toFile();
         Set<String> readGroups = new HashSet<>(readGroups(file));
         Set<String> groupSet = new HashSet<>(project.getGroupList() == null ? new ArrayList<>() : project.getGroupList());
-        List<String> removed = readGroups.stream().filter(group -> !groupSet.contains(group)).collect(Collectors.toList());
+        List<String> removed = readGroups.stream().filter(group -> !groupSet.contains(group)).collect(toList());
         for(String group : removed){
             FileUtils.deleteDirectory(Paths.get(
                     environmentProperties.getProjectsDirectoryPath(),
@@ -191,6 +183,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
     }
 
     private Project loadProject(File directory) {
+        log.debug("Reading directory: {}", directory.getAbsolutePath());
         File mainYml = new File(directory, MAIN_YML_FILENAME);
         if (!mainYml.exists()) {
             return null;
@@ -247,18 +240,13 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         if (!scenariosDirectory.exists()) {
             return new ArrayList<>();
         }
-        File[] files = scenariosDirectory.listFiles(File::isDirectory);
-        if (files == null) {
-            return new ArrayList<>();
-        }
-        List<String> groups = new ArrayList<>();
-        for (File directory : files) {
-            File scenarioYml = new File(directory, SCENARIO_YML_FILENAME);
-            if (!scenarioYml.exists() && !groups.contains(directory.getName())) {
-                groups.add(directory.getName());
-            }
-        }
-        return groups;
+        File[] directories = scenariosDirectory.listFiles(File::isDirectory);
+        return nullSafeStream(directories)
+            .filter(directory -> !new File(directory, SCENARIO_YML_FILENAME).exists())
+            .map(File::getName)
+            .distinct()
+            .sorted()
+            .collect(toList());
     }
 
     private void clearProjectBeforeSave(Project project) {
