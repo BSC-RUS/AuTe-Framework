@@ -54,7 +54,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private String userName;
     @ApiModelProperty("Password for using basic authentication")
     private String password;
-    @ApiModelProperty(value = "Type of matching response", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches")
+    @ApiModelProperty(value = "Type of matching response", allowableValues = "empty, equalToJson, equalToXml, XPath, contains, matches, absent")
     private String typeMatching;
     @ApiModelProperty("Value which will be used to match response. Depends on typeMatching")
     private String pathFilter;
@@ -62,5 +62,7 @@ public class MockServiceResponseRo implements AbstractRo {
     private Boolean convertBase64InMultipart;
     @ApiModelProperty("List of response HTTP headers")
     private List<HeaderItemRo> headers;
+    @ApiModelProperty("Order of response for similar requests")
+    private Integer responseOrder;
 
 }

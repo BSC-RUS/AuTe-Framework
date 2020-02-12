@@ -26,6 +26,7 @@ import ru.bsc.test.at.executor.exception.ScenarioStopException;
 import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.ServiceRequestsComparatorHelper;
 import ru.bsc.test.at.executor.model.Project;
+import ru.bsc.test.at.executor.model.Stand;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.model.StepParameterSet;
 import ru.bsc.test.at.executor.model.StepResult;
@@ -89,7 +90,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                                 .forEach(stepParameter -> stepExecutorRequest.getScenarioVariables().put(stepParameter.getName().trim(), stepParameter.getValue()));
                         stepResult.setDescription(stepParameterSet.getDescription());
                     }
-                    try (WireMockAdmin wireMockAdmin = stepExecutorRequest.getStand() != null && isNotEmpty(stepExecutorRequest.getStand().getWireMockUrl()) ? new WireMockAdmin(stepExecutorRequest.getStand().getWireMockUrl()) : null) {
+                    try (WireMockAdmin wireMockAdmin = getWiremockAdmin(stepExecutorRequest)) {
                         if (stepExecutorRequest.getStand() == null) {
                             log.error("Stand is not configured");
                             throw new Exception("Stand is not configured.");
@@ -100,7 +101,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                         for (IStepExecutor stepExecutor : stepExecutorList) {
                             if (stepExecutor.support(step)) {
                                 stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
-                                stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), step, stepResult, stepExecutorRequest.getProjectPath());
+                                stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
                                 break;
                             }
                         }
@@ -129,6 +130,12 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                 }
             }
         }
+    }
+
+    private WireMockAdmin getWiremockAdmin(StepExecutorRequest request) {
+        final Stand stand = request.getStand();
+        final String wireMockUrl = stand.getWireMockUrl();
+        return isNotEmpty(wireMockUrl) ? new WireMockAdmin(wireMockUrl) : null;
     }
 
     /**

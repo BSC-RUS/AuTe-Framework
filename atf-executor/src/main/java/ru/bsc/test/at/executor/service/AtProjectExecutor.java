@@ -34,13 +34,7 @@ import java.util.*;
  * Created by sdoroshin on 21.03.2017.
  */
 @Slf4j
-@SuppressWarnings("unused")
 public class AtProjectExecutor implements Executor<ProjectExecutorRequest> {
-
-    private static final int POLLING_RETRY_COUNT = 50;
-    private static final int POLLING_RETRY_TIMEOUT_MS = 1000;
-    private static final String DEFAULT_CONTENT_TYPE = "text/xml";
-
     private String projectPath;
 
     public AtProjectExecutor(String projectPath) {

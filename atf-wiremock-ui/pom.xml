@@ -5,7 +5,7 @@
   <parent>
     <groupId>ru.bsc.test</groupId>
     <artifactId>atf</artifactId>
-    <version>4.8.1-SNAPSHOT</version>
+    <version>4.11.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>atf-wiremock-ui</artifactId>
@@ -62,6 +62,14 @@
         <version>3.0.2</version>
         <configuration>
           <skipIfEmpty>true</skipIfEmpty>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>3.0.0-M1</version>
+        <configuration>
+          <skip>true</skip>
         </configuration>
       </plugin>
     </plugins>

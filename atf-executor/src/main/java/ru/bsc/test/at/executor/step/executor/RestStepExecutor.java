@@ -24,6 +24,7 @@ import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
 import ru.bsc.test.at.executor.model.Project;
+import ru.bsc.test.at.executor.model.Scenario;
 import ru.bsc.test.at.executor.model.Stand;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.model.StepResult;
@@ -46,17 +47,16 @@ import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVaria
 
 @Slf4j
 public class RestStepExecutor implements IStepExecutor {
-
     private final DelayUtilities delayUtilities = new DelayUtilities();
 
     @Override
-    public void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Step step, StepResult stepResult, String projectPath) throws Exception {
+    public void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Scenario scenario, Step step, StepResult stepResult, String projectPath) throws Exception {
 
-        log.debug("Executing test step {} {} {} {}", stand, scenarioVariables, testId, project, step);
+        log.debug("Executing test step {} {} {} {} {}", stand, scenarioVariables, testId, project, step);
         stepResult.setSavedParameters(scenarioVariables.toString());
 
         // 0. Установить ответы сервисов, которые будут использоваться в WireMock для определения ответа
-        ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), scenarioVariables);
+        ExecutorUtils.setMockResponses(wireMockAdmin, project, testId, step.getMockServiceResponseList(), step.getCode(), scenario.getName(), scenarioVariables);
 
         // 0.1 Установить ответы для имитации внешних сервисов, работающих через очереди сообщений
         ExecutorUtils.setMqMockResponses(wireMockAdmin, testId, step.getMqMockResponseList(), scenarioVariables);
@@ -81,7 +81,7 @@ public class RestStepExecutor implements IStepExecutor {
         stepResult.setRequestBody(requestBody);
 
         // 2.3 Подстановка переменных сценария в заголовки запроса
-        Map requestHeaders = generateHeaders(step.getRequestHeaders(), scenarioVariables);
+        Map<String, String> requestHeaders = generateHeaders(step.getRequestHeaders(), scenarioVariables);
 
         // 2.4 Cyclic sending request, COM-84
         long numberRepetitions = parseLongOrVariable(scenarioVariables, step.getNumberRepetitions(), 1);
@@ -124,12 +124,12 @@ public class RestStepExecutor implements IStepExecutor {
         }
     }
 
-    private Map generateHeaders(String template, Map<String, Object> scenarioVariables) {
+    private Map<String, String> generateHeaders(String template, Map<String, Object> scenarioVariables) {
         //TODO fix неоптимальная работа с параметрами
         String headersStr = ExecutorUtils.insertSavedValues(template, scenarioVariables);
         if (StringUtils.isEmpty(headersStr)) {
             //Возвращаем пустые хедеры
-            return new HashMap();
+            return new HashMap<>();
         }
         Map<String, String> headers = new HashMap<>();
         try (Scanner scanner = new Scanner(headersStr)) {

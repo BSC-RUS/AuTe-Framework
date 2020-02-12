@@ -16,21 +16,24 @@
  * limitations under the License.
  */
 
-import {RequestMapping} from './request-mapping';
-import {ResponseMapping} from './response-mapping';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 
-export class Mapping {
-  id: string;
-  request: RequestMapping;
-  response: ResponseMapping;
-  uuid: string;
-  priority: number;
-  scenarioName: string;
-  name: string;
-  selected?: boolean; // select for delete in mapping-list
+@Component({
+  selector: 'app-checkbox',
+  templateUrl: './checkbox.component.html'
+})
+export class CheckboxComponent implements OnInit {
+  @Input() selected: boolean;
+  @Output() toggle = new EventEmitter<boolean>();
 
-  constructor() {
-    this.request = new RequestMapping;
-    this.response = new ResponseMapping;
+  constructor(
+  ) {
+  }
+
+  ngOnInit() {
+  }
+
+  onToggle() {
+    this.toggle.emit(this.selected);
   }
 }

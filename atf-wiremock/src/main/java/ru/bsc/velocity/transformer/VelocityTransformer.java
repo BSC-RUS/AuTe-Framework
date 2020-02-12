@@ -32,16 +32,18 @@ import ru.bsc.velocity.directive.GroovyDirective;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @SuppressWarnings("Duplicates")
 public class VelocityTransformer {
+    private final Map<String, Map<String, Object>> staticContext = new HashMap<>();
 
     @Getter
     private Context velocityContext;
 
-    public String transform(String requestBody, Map<String, Object> context, String stringTemplate) {
+    public String transform(String mockGuid, String requestBody, Map<String, Object> context, String stringTemplate) {
         log.debug("transform (requestBody = {}, context = {}, template = {})", requestBody, context, stringTemplate);
 
         final VelocityEngine velocityEngine = new VelocityEngine();
@@ -52,6 +54,7 @@ public class VelocityTransformer {
         if (context != null) {
             context.forEach((k, v) -> velocityContext.put(k, v));
         }
+        velocityContext.put("staticContext", staticContext.computeIfAbsent(mockGuid, k -> new HashMap<>()));
 
         try {
             return render(stringTemplate);

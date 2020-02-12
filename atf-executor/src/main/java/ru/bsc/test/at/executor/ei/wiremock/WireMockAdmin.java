@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -30,7 +31,13 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
-import ru.bsc.test.at.executor.ei.wiremock.model.*;
+import ru.bsc.test.at.executor.ei.wiremock.model.MockDefinition;
+import ru.bsc.test.at.executor.ei.wiremock.model.MockRequest;
+import ru.bsc.test.at.executor.ei.wiremock.model.MockedRequest;
+import ru.bsc.test.at.executor.ei.wiremock.model.MqMockDefinition;
+import ru.bsc.test.at.executor.ei.wiremock.model.RequestList;
+import ru.bsc.test.at.executor.ei.wiremock.model.RequestsCount;
+import ru.bsc.test.at.executor.ei.wiremock.model.WireMockRequest;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -46,7 +53,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class WireMockAdmin implements Closeable {
-
     private final WireMockUrlBuilder wireMockUrlBuilder;
     private final List<String> mockIdList = new LinkedList<>();
     private final List<String> mockGuidList = new LinkedList<>();
@@ -94,9 +100,11 @@ public class WireMockAdmin implements Closeable {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private String sendDelete(String url) {
         try (CloseableHttpResponse response = HttpClientBuilder.create().build().execute(new HttpDelete(url))) {
-            return response.getEntity() == null || response.getEntity().getContent() == null ? "" : IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+            final HttpEntity entity = response.getEntity();
+            return entity == null || entity.getContent() == null ? "" : IOUtils.toString(entity.getContent(), "UTF-8");
         } catch (IOException e) {
             log.error("Error deleting mock", e);
             throw new UncheckedIOException(e);
@@ -123,13 +131,6 @@ public class WireMockAdmin implements Closeable {
                 .collect(Collectors.toList());
     }
 
-    public List<MockedRequest>  getMqRequestListByTestIdAndQueue(String sourceQueue, String testId) throws IOException {
-        return getMqRequestList()
-            .stream()
-            .filter(mockedRequest -> Objects.equals(mockedRequest.getTestId(), testId) && Objects.equals(mockedRequest.getSourceQueue(), sourceQueue))
-            .collect(Collectors.toList());
-    }
-
     public void addMqMapping(MqMockDefinition mockMessageDefinition) throws IOException {
         HttpPost httpPostAddMapping = new HttpPost(wireMockUrlBuilder.addMQMappingUrl());
         httpPostAddMapping.setEntity(new StringEntity(mapper.writeValueAsString(mockMessageDefinition), ContentType.APPLICATION_JSON));
@@ -140,7 +141,6 @@ public class WireMockAdmin implements Closeable {
     }
 
     private void clearMqMockList() {
-        // TODO нельзя удалять заглушки очередей сразу после завершения шага, так как MQ-Mocker может не успеть получить нужное сообщение и обработать его
-        // mockGuidList.forEach(guid -> sendDelete("/mappings/" + guid));
+        mockGuidList.forEach(guid -> sendDelete(wireMockUrlBuilder.deleteMqMappingUrl(guid)));
     }
 }

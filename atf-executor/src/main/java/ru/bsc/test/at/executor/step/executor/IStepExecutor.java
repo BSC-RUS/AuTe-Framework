@@ -21,10 +21,7 @@ package ru.bsc.test.at.executor.step.executor;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.Stand;
-import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.model.StepResult;
+import ru.bsc.test.at.executor.model.*;
 
 import java.sql.Connection;
 import java.util.Arrays;
@@ -37,6 +34,6 @@ public interface IStepExecutor {
         return Arrays.asList(new RestStepExecutor(), new MqStepExecutor());
     }
 
-    void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Step step, StepResult stepResult, String projectPath) throws Exception;
+    void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Scenario scenario, Step step, StepResult stepResult, String projectPath) throws Exception;
     boolean support(Step step);
 }

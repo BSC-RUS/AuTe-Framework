@@ -19,7 +19,9 @@
 import {Component, OnInit} from '@angular/core';
 import {Mapping} from '../../model/mapping';
 import {WireMockService} from '../../service/wire-mock.service';
-import {EventService} from "../../service/event-service";
+import {EventService} from '../../service/event-service';
+import {Router} from '@angular/router';
+import {MessageService} from '../../service/message-service';
 
 @Component({
   selector: 'app-mapping-list',
@@ -30,16 +32,19 @@ export class MappingListComponent implements OnInit {
   mappingList: Mapping[];
   displayDetails = false;
   scenariosName = [];
+  disabledDeleteSelected = true;
 
   constructor(
     public wireMockService: WireMockService,
-    private eventService: EventService
+    private eventService: EventService,
+    private router: Router,
+    private messageService: MessageService
   ) { }
 
   ngOnInit() {
     this.getMappings();
     this.eventService.updateMappingList.subscribe(value => {
-      if(value) {
+      if (value) {
         this.getMappings();
       }
     })
@@ -69,4 +74,47 @@ export class MappingListComponent implements OnInit {
     this.displayDetails = !this.displayDetails;
   }
 
+  /**
+   * Функция для отметки маппинга на удаление.
+   * @description Отмечает выбранный маппинг на удаление.
+   * Разблокирует/блокирует кнопку для удаления выбранных маппингов.
+   *
+   * @param {boolean} checked
+   * @param {Mapping} mapping
+   **/
+  onChange(checked: boolean, mapping: Mapping): void {
+    mapping.selected = checked;
+
+    this.disabledDeleteSelected = !(this.mappingList.some(el => el.selected));
+  }
+
+  /**
+  * Функция для удаления выбранных маппингов.
+  * @description Из mappingList выбираются маппинги с отметкой selected.
+  * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов
+  * потом в зависимости от страницы либо осуществляется переход на /mapping, либо обновляется список маппингов.
+  * Если список selected пуст, то выводится предупреждение.
+  **/
+  async deleteSelected() {
+    const selected: Mapping[] = this.mappingList.filter(mapping => mapping.selected);
+
+    if (selected && selected.length) {
+      try {
+        await Promise.all(selected.map(mapping => this.wireMockService.deleteOne(mapping)));
+        this.wireMockService.saveToBackStorage().then(() => {
+          this.messageService.success('Маппинги успешно удалены');
+        });
+        if (this.router.isActive('/mapping', true)) {
+          this.getMappings();
+        } else {
+          await this.router.navigate(['/mapping']);
+        }
+      } catch (e) {
+        this.messageService.error('Что-то пошло не так');
+        console.warn(e);
+      }
+    } else {
+      this.messageService.error('Не выбраны маппинги');
+    }
+  }
 }

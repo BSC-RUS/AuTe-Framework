@@ -2,3 +2,12 @@
 .list-group-item {
   padding: 3px 5px;
 }
+
+.list-group-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.list-group-item-container {
+  width: 100%;
+}

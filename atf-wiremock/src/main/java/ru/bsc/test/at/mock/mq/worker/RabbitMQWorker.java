@@ -42,6 +42,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
     private Channel channelTo;
     private Connection connection;
     private int port;
+    private VelocityTransformer velocityTransformer;
 
     public RabbitMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, int port, String testIdHeaderName) {
         super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
@@ -61,6 +62,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
             connection = connectionFactory.newConnection();
             channelFrom = connection.createChannel();
             channelTo = connection.createChannel();
+            velocityTransformer = new VelocityTransformer();
 
             try {
                 // Wait for a message
@@ -109,7 +111,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
                         byte[] response;
 
                         if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                            response = new VelocityTransformer().transform(stringBody, null, mockResponse.getResponseBody()).getBytes(StandardCharsets.UTF_8);
+                            response = velocityTransformer.transform(mockMessage.getGuid(), stringBody, null, mockResponse.getResponseBody()).getBytes(StandardCharsets.UTF_8);
                         } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                             try (HttpClient httpClient = new HttpClient()) {
                                 response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes(StandardCharsets.UTF_8);

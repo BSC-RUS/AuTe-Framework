@@ -5,7 +5,7 @@
     <parent>
         <groupId>ru.bsc.test</groupId>
         <artifactId>atf</artifactId>
-        <version>4.8.1-SNAPSHOT</version>
+        <version>4.11.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>atf-application</artifactId>
@@ -13,9 +13,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <start-class>ru.bsc.test.autotester.configuration.Application</start-class>
-        <java.version>1.8</java.version>
 
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
@@ -95,7 +93,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.3.2</version>
+            <version>1.3.3</version>
         </dependency>
 
         <dependency>
@@ -113,7 +111,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.0</version>
+            <version>2.9.10.1</version>
         </dependency>
 
         <dependency>
@@ -166,13 +164,13 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
-            <version>5.15.2</version>
+            <version>5.15.9</version>
         </dependency>
 
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-generator</artifactId>
-            <version>2.6.0</version>
+            <version>2.8.1</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -334,4 +332,30 @@
             <!--</plugin>-->
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>docker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <configuration>
+                            <images>
+                                <image>
+                                    <name>bscmsc/aute-framework:${project.version}</name>
+                                    <build>
+                                        <contextDir>${project.basedir}</contextDir>
+                                        <tags>
+                                            <tag>latest</tag>
+                                        </tags>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -44,17 +44,34 @@
       <div class="input-group">
         <input class="form-control" placeholder="Content-Type: application/json, text/xml" title="" [(ngModel)]="mockServiceResponse.contentType"/>
         <span class="input-group-btn">
-          <button class="btn btn-sm btn-default" style="line-height: 1.9;" (click)="deleteResponse()"><span class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
+          <button class="btn btn-sm btn-default" style="line-height: 1.9;" (click)="deleteResponse()"><span
+            class="glyphicon glyphicon-minus"></span> {{'Remove' | translate}}</button>
         </span>
       </div>
     </div>
   </div>
   <div class="row">
-    <div class="col-sm-4" style="margin-top: 10px">
+    <div class="col-sm-3" style="margin-top: 10px">
       <input class="form-control" placeholder='Basic Authentication(username), [empty]' title="" [(ngModel)]="mockServiceResponse.userName"/>
     </div>
-    <div class="col-sm-4" style="margin-top: 10px">
+    <div class="col-sm-3" style="margin-top: 10px">
       <input class="form-control" placeholder='Basic Authentication(password), [empty]' title="" [(ngModel)]="mockServiceResponse.password"/>
+    </div>
+    <div class="col-sm-1">
+      <label for="mock-response-order"
+             style="margin-top: 10px"
+             title="{{'Used in case of several identical requests for one url.' | translate}} {{'The order is determined within a single url.' | translate}}
+{{'0 - no identical requests.' | translate}}">
+        {{'Response order' | translate}}
+        <span class="glyphicon glyphicon-question-sign"></span>
+      </label>
+    </div>
+    <div class="col-sm-1">
+      <input id="mock-response-order"
+             class="form-control" style="margin-top: 10px"
+             type="number" min="0" step="1"
+             placeholder="0"
+             [(ngModel)]="mockServiceResponse.responseOrder">
     </div>
     <div class="col-sm-1" style="margin-top: 10px">
       <select class="form-control" title="{{'Type Matching' | translate}}" [(ngModel)]="mockServiceResponse.typeMatching">
@@ -64,6 +81,7 @@
         <option [ngValue]="'XPath'">XPath</option>
         <option [ngValue]="'contains'">contains</option>
         <option [ngValue]="'matches'">matches</option>
+        <option [ngValue]="'absent'">absent</option>
       </select>
     </div>
     <div class="col-sm-3" style="margin-top: 10px">
@@ -81,18 +99,21 @@
     <div class="col-sm-12" style="margin-top: 10px">
       <ul class="nav nav-tabs">
         <li [class.active]="tab == 'responseBody'">
-          <a href="#" (click)="selectTab('responseBody')">{{'Response body' | translate}} <span *ngIf="mockServiceResponse.responseBody" class="glyphicon glyphicon-tag"></span></a>
+          <a href="#" (click)="selectTab('responseBody')">{{'Response body' | translate}} <span *ngIf="mockServiceResponse.responseBody"
+                                                                                                class="glyphicon glyphicon-tag"></span></a>
         </li>
         <li [class.active]="tab == 'headers'">
-          <a href="#" (click)="selectTab('headers')">{{'Headers' | translate}} <span *ngIf="mockServiceResponse.headers?.length > 0" class="glyphicon glyphicon-tag"></span></a>
+          <a href="#" (click)="selectTab('headers')">{{'Headers' | translate}} <span *ngIf="mockServiceResponse.headers?.length > 0"
+                                                                                     class="glyphicon glyphicon-tag"></span></a>
         </li>
       </ul>
       <div class="tab-content">
         <div *ngIf="tab == 'responseBody'">
-          <textarea class="form-control" placeholder="{{'Response body' | translate}}" title="" rows="7" [(ngModel)]="mockServiceResponse.responseBody"></textarea>
+          <textarea class="form-control" placeholder="{{'Response body' | translate}}" title="" rows="7"
+                    [(ngModel)]="mockServiceResponse.responseBody"></textarea>
         </div>
         <div *ngIf="tab == 'headers'" class="row">
-          <div class="form-group" style="margin-top: 10px" *ngFor="let header of mockServiceResponse.headers">
+          <div class="form-group" style="margin: 10px" *ngFor="let header of mockServiceResponse.headers">
             <div class="col-sm-4">
               <input class="form-control" placeholder="{{'Header name' | translate}}" title="" [(ngModel)]="header.headerName">
             </div>
@@ -105,9 +126,9 @@
               <input class="form-control" placeholder="{{'Header value' | translate}}" title="" [(ngModel)]="header.headerValue">
             </div>
             <button class="btn btn-sm  btn-default" (click)="deleteHeader(header)">
-             <span class="glyphicon glyphicon-remove"></span></button>
+              <span class="glyphicon glyphicon-remove"></span></button>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin: 10px">
             <div class="col-sm-1">
               <button class="btn btn-sm  btn-default" (click)="addHeader();"><span class="glyphicon glyphicon-plus"></span>Add header</button>
             </div>
@@ -116,4 +137,5 @@
       </div>
     </div>
   </div>
+  <hr class="item-small-separator">
 </div>

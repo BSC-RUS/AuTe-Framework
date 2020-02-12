@@ -23,11 +23,24 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
-import ru.bsc.test.at.executor.ei.wiremock.model.*;
+import ru.bsc.test.at.executor.ei.wiremock.model.BasicAuthCredentials;
+import ru.bsc.test.at.executor.ei.wiremock.model.MockDefinition;
+import ru.bsc.test.at.executor.ei.wiremock.model.MqMockDefinition;
+import ru.bsc.test.at.executor.ei.wiremock.model.MqMockDefinitionResponse;
+import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
 import ru.bsc.test.at.executor.helper.NamedParameterStatement;
 import ru.bsc.test.at.executor.helper.client.impl.mq.ClientMQRequest;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.*;
+import ru.bsc.test.at.executor.model.MockServiceResponse;
+import ru.bsc.test.at.executor.model.MqMessage;
+import ru.bsc.test.at.executor.model.MqMock;
+import ru.bsc.test.at.executor.model.MqMockResponse;
+import ru.bsc.test.at.executor.model.NameValueProperty;
+import ru.bsc.test.at.executor.model.Project;
+import ru.bsc.test.at.executor.model.SqlData;
+import ru.bsc.test.at.executor.model.SqlResultType;
+import ru.bsc.test.at.executor.model.Step;
+import ru.bsc.test.at.executor.model.StepResult;
 import ru.bsc.test.at.executor.step.executor.scriptengine.JSScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
 import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineFunctionResult;
@@ -37,9 +50,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -114,18 +131,30 @@ public class ExecutorUtils {
         }
     }
 
-    static void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList, Map<String, Object> scenarioVariables) throws IOException {
+    static void setMockResponses(WireMockAdmin wireMockAdmin, Project project, String testId, List<MockServiceResponse> responseList, String stepCode, String scenarioName, Map<String, Object> scenarioVariables) throws IOException {
         log.debug("Setting REST-mock responses {} {} {} {}", wireMockAdmin, project, testId, responseList);
-        Long priority = 0L;
 
+        //for priority work it must be >= 1
+        //now it's off
+        long priority = 0L;
         if (responseList != null && wireMockAdmin != null) {
             for (MockServiceResponse mockServiceResponse : responseList) {
                 MockDefinition mockDefinition = new MockDefinition(priority--, project.getTestIdHeaderName(), testId);
 
+                final String url = ExecutorUtils.insertSavedValues(mockServiceResponse.getServiceUrl(), scenarioVariables);
+                String complexScenarioName = scenarioName + "_" + stepCode + "_"+ url;
+                mockDefinition.setScenarioName(complexScenarioName);
+
+                Integer responseOrder = mockServiceResponse.getResponseOrder();
+                if (responseOrder != null && responseOrder > 0){
+                    mockDefinition.setRequiredScenarioState(responseOrder > 1 ? "response_order_" + (responseOrder - 1) : null);
+                    mockDefinition.setNewScenarioState("response_order_" + responseOrder);
+                }
+
                 if (BooleanUtils.isTrue(mockServiceResponse.getUrlPattern())) {
-                    mockDefinition.getRequest().setUrlPattern(mockServiceResponse.getServiceUrl());
+                    mockDefinition.getRequest().setUrlPattern(url);
                 } else {
-                    mockDefinition.getRequest().setUrl(mockServiceResponse.getServiceUrl());
+                    mockDefinition.getRequest().setUrl(url);
                 }
 
                 mockDefinition.getRequest().setMethod(mockServiceResponse.getHttpMethodOrDefault());

@@ -22,6 +22,7 @@ import com.anarsoft.vmlens.concurrent.junit.ConcurrentTestRunner;
 import com.anarsoft.vmlens.concurrent.junit.ThreadCount;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
@@ -64,7 +65,8 @@ public class AbstractMqWorkerTest {
         testWorker = new TestAbstractMqWorker("queue", null, list, null, null, null, null);
     }
 
-    @Test()
+    @Test
+    @Ignore
     @ThreadCount(1000)
     public void testFindMockMessageConcurrentAccess() {
         for (int i = 0; i < 10; i++) {

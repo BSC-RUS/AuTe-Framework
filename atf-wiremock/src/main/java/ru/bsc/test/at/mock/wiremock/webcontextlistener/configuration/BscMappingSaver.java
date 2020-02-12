@@ -21,14 +21,13 @@ package ru.bsc.test.at.mock.wiremock.webcontextlistener.configuration;
 import com.github.tomakehurst.wiremock.core.MappingsSaver;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -43,7 +42,9 @@ class BscMappingSaver implements MappingsSaver {
     public void save(List<StubMapping> mappings) {
         try {
             final Path mappingsPath = Paths.get("mappings");
-            clearDirectory(mappingsPath);
+            if (Files.exists(mappingsPath)) {
+                FileUtils.cleanDirectory(mappingsPath.toFile());
+            }
             for (StubMapping m : mappings) {
                 Files.write(resolveMappingPath(mappingsPath, m), getMappingContent(m));
             }
@@ -67,16 +68,6 @@ class BscMappingSaver implements MappingsSaver {
     @Override
     public void removeAll() {
         log.trace("Remove all");
-    }
-
-    private void clearDirectory(Path mappingsPath) throws IOException {
-        boolean filesRemoved = Files.walk(mappingsPath)
-            .sorted(Comparator.reverseOrder())
-            .map(Path::toFile)
-            .allMatch(File::delete);
-        if (!filesRemoved) {
-            throw new IllegalStateException("Cannot clean mapping directory");
-        }
     }
 
     private Path resolveMappingPath(Path root, StubMapping mapping) throws IOException {

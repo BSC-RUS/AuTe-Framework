@@ -51,6 +51,7 @@ public class MockServiceResponse implements AbstractModel {
     private String pathFilter;
     private Boolean convertBase64InMultipart = false;
     private List<HeaderItem> headers;
+    private Integer responseOrder;
 
     protected MockServiceResponse copy() {
         MockServiceResponse response = new MockServiceResponse();
@@ -66,6 +67,7 @@ public class MockServiceResponse implements AbstractModel {
         response.setTypeMatching(getTypeMatching());
         response.setPathFilter(getPathFilter());
         response.setConvertBase64InMultipart(getConvertBase64InMultipart());
+        response.setResponseOrder(getResponseOrder());
         if (headers != null) {
             response.setHeaders(headers.stream().map(HeaderItem::copy).collect(Collectors.toList()));
         }

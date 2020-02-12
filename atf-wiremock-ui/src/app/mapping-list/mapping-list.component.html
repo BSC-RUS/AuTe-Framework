@@ -18,29 +18,34 @@
 <div style="margin-bottom: 20px;">
   <button class="btn btn-default" (click)="detailsToggle()">Details</button>
   <button class="btn btn-default" [routerLink]="['/mapping/new']"><span class="glyphicon glyphicon-plus"></span> <i>Add mapping</i></button>
+  <button class="btn btn-default" (click)="deleteSelected()" [disabled]="disabledDeleteSelected">Delete selected</button>
 </div>
 <div class="just-padding">
-  <div class="list-group list-group-root well" *ngIf="mappingList" data-toggle="collapse" >
+  <div class="list-group list-group-root well" *ngIf="mappingList">
     <div *ngFor="let scenarioName of scenariosName; let i = index" style="overflow: hidden;">
-      <a href= "#item{{i}}" data-toggle="collapse" class="list-group-item">
+      <a href="#item{{i}}" data-toggle="collapse" class="list-group-item" data-target="#item{{i}}" role="button">
         <span class="glyphicon glyphicon-folder-open"></span> {{scenarioName}}
       </a>
       <div class="list-group collapse" id="item{{i}}">
         <div *ngFor="let mapping of mappingList">
-          <div *ngIf="mapping.scenarioName == scenarioName">
-            <a class="list-group-item" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+          <div class="list-group-container" *ngIf="mapping.scenarioName == scenarioName">
+            <app-checkbox [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
+            <div class="list-group-item-container">
+              <a class="list-group-item" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
               {{mapping.name ? mapping.name : (mapping.request.url ? mapping.request.url : (mapping.request.urlPattern ? mapping.request.urlPattern : 'no name'))}}
-            </a>
+              </a>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div *ngFor="let mapping of mappingList">
-      <a class="list-group-item" *ngIf="!mapping.scenarioName" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
+    <div class="list-group-container" *ngFor="let mapping of mappingList">
+      <app-checkbox *ngIf="!mapping.scenarioName" [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
+      <div class="list-group-item-container">
+        <a class="list-group-item" *ngIf="!mapping.scenarioName" [routerLink]="['/mapping', mapping.uuid]" [routerLinkActive]="'active'" style="overflow: hidden;">
         {{mapping.name ? mapping.name : (mapping.request.url ? mapping.request.url : (mapping.request.urlPattern ? mapping.request.urlPattern : 'no name'))}}
-      </a>
+        </a>
+      </div>
     </div>
   </div>
 </div>
-
-

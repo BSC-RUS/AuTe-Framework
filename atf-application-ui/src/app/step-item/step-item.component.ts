@@ -45,7 +45,9 @@ import { ScenarioVariableFromServiceRequest } from '../model/scenario-variable-f
         '.request-body-field > * { margin: 0 5px; min-width: 0; }',
         '.request-body-field > .request-body-field__name { margin-left: 0; min-width: 25%; flex: 0 0; }',
         '.request-body-field > .request-body-field__type { min-width: 80px; flex: 0 0; }',
-        '.request-body-field > .request-body-field__remove { margin-right: 0; flex: 0 0; }'
+        '.request-body-field > .request-body-field__remove { margin-right: 0; flex: 0 0; }',
+        '.item-solid-separator { border: 1px solid black;}',
+        '.item-small-separator { border: 0;height: 1px;background: #333 linear-gradient(to right, #ccc, #333, #ccc) }'
     ]
 })
 export class StepItemComponent implements OnInit, DoCheck {

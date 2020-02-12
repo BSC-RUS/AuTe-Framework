@@ -36,39 +36,40 @@ import ru.bsc.test.at.mock.mq.worker.IbmMQWorker;
 import ru.bsc.test.at.mock.mq.worker.RabbitMQWorker;
 import ru.bsc.test.at.mock.wiremock.repository.JmsMappingsRepository;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
+import javax.annotation.PostConstruct;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MqRunnerComponent {
-    @Value("${mq.manager}")
+    @Value("${mq.manager:}")
     private String mqManager;
 
-    @Value("${mq.host}")
+    @Value("${mq.host:localhost}")
     private String mqHost;
 
-    @Value("${mq.port}")
+    @Value("${mq.port:1398}")
     private Integer mqPort;
 
     @Value("${mq.channel:}")
     private String mqChannel;
 
-    @Value("${mq.username}")
+    @Value("${mq.username:}")
     private String mqUsername;
 
-    @Value("${mq.password}")
+    @Value("${mq.password:}")
     private String mqPassword;
 
-    @Value("${mq.default.destination.queue.name}")
+    @Value("${mq.default.destination.queue.name:}")
     private String defaultDestinationQueueName;
-
-    @Value("${properties.yaml.file}")
-    private String propertiesYamlFile;
 
     @Value("${test.id.header.name:testIdHeader}")
     private String testIdHeaderName;
@@ -132,6 +133,10 @@ public class MqRunnerComponent {
 
     @PostConstruct
     public void initMappings() {
+        if (mqManager == null || mqManager.isEmpty()) {
+            log.warn("MQ manager not defined, skip JMS mappings initialization");
+            return;
+        }
         fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(requestBufferSize));
         repository.load().getMappings().forEach(this::applyMapping);
     }
@@ -149,6 +154,7 @@ public class MqRunnerComponent {
                         mappings,
                         fifo,
                         mqHost,
+                        mqPort,
                         mqUsername,
                         mqPassword,
                         testIdHeaderName
@@ -183,6 +189,11 @@ public class MqRunnerComponent {
     }
 
     private void applyMapping(MockMessage mockMessage) {
+        if (mqManager == null || mqManager.isEmpty()) {
+            log.warn("MQ manager not defined, unable to create JMS mapping");
+            return;
+        }
+
         log.info("Applying JMS mapping: {}", mockMessage);
         String sourceQueueName = mockMessage.getSourceQueueName();
         if (StringUtils.isEmpty(sourceQueueName)) {

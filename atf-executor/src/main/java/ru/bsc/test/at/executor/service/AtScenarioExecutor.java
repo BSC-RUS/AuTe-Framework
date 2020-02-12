@@ -59,15 +59,15 @@ public class AtScenarioExecutor implements Executor<ScenarioExecutorRequest> {
             Scenario beforeScenario = scenarioExecutorRequest.getScenario().getBeforeScenarioIgnore() ? null : findScenarioByPath(project.getBeforeScenarioPath(), project.getScenarioList());
             if (beforeScenario != null) {
                 atStepExecutor.execute(
-                        new StepExecutorRequest(scenarioExecutorRequest.getConnection(), scenarioExecutorRequest.getStand(), beforeScenario.getStepList(),
-                                project, scenarioExecutorRequest.getStepResultList(), httpClient, mqClient, scenarioVariables, false,
+                        new StepExecutorRequest(scenarioExecutorRequest.getConnection(), scenarioExecutorRequest.getStand(), scenarioExecutorRequest.getScenario(),
+                                beforeScenario.getStepList(), project, scenarioExecutorRequest.getStepResultList(), httpClient, mqClient, scenarioVariables, false,
                                 scenarioExecutorRequest.getProjectPath(), scenarioExecutorRequest.getStopObserver())
                 );
             }
 
             atStepExecutor.execute(
                     new StepExecutorRequest(scenarioExecutorRequest.getConnection(), scenarioExecutorRequest.getStand(),
-                            scenarioExecutorRequest.getScenario().getStepList(), project, scenarioExecutorRequest.getStepResultList(),
+                            scenarioExecutorRequest.getScenario(), scenarioExecutorRequest.getScenario().getStepList(), project, scenarioExecutorRequest.getStepResultList(),
                             httpClient, mqClient, scenarioVariables, true, scenarioExecutorRequest.getProjectPath(),
                             scenarioExecutorRequest.getStopObserver())
             );
@@ -76,7 +76,7 @@ public class AtScenarioExecutor implements Executor<ScenarioExecutorRequest> {
             Scenario afterScenario = scenarioExecutorRequest.getScenario().getAfterScenarioIgnore() ? null : findScenarioByPath(project.getAfterScenarioPath(), project.getScenarioList());
             if (afterScenario != null) {
                 atStepExecutor.execute(new StepExecutorRequest(scenarioExecutorRequest.getConnection(), scenarioExecutorRequest.getStand(),
-                        afterScenario.getStepList(), project, scenarioExecutorRequest.getStepResultList(), httpClient,
+                        scenarioExecutorRequest.getScenario(), afterScenario.getStepList(), project, scenarioExecutorRequest.getStepResultList(), httpClient,
                         mqClient, scenarioVariables, false, scenarioExecutorRequest.getProjectPath(),
                         scenarioExecutorRequest.getStopObserver())
                 );

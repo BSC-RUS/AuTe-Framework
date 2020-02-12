@@ -22,7 +22,10 @@ import {MqMockResponse} from "../model/mq-mock-response";
 
 @Component({
   selector: 'app-mq-mock-response',
-  templateUrl: './mq-mock-response.component.html'
+  templateUrl: './mq-mock-response.component.html',
+  styles: [
+    '.item-small-separator { border: 0;height: 1px;background: #333 linear-gradient(to right, #ccc, #333, #ccc) }'
+  ]
 })
 export class MqMockResponseComponent implements OnInit{
   @Input()

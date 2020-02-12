@@ -30,6 +30,7 @@ export class MockServiceResponse {
   typeMatching: string;
   pathFilter: string;
   convertBase64InMultipart: boolean;
+  responseOrder: number;
 }
 
 export class HeaderItem {

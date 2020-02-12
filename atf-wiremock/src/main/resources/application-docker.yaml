@@ -1,0 +1,22 @@
+server:
+  port: ${SERVER_PORT:1398}
+
+logging:
+  level:
+    ru.bsc: debug
+
+mq:
+  manager: ${JMS_MANAGER:}
+  host: ${JMS_HOST:}
+  port: ${JMS_PORT:}
+  username: ${JMS_USER:}
+  password: ${JMS_PASSWORD:}
+  default:
+    destination:
+      queue:
+        name: ${JMS_DEFAULT_QUEUE:}
+
+test:
+  id:
+    header:
+      name: ${TEST_ID_HEADER:testIdHeader}

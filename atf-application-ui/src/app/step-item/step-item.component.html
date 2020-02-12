@@ -335,7 +335,8 @@
             </div>
             <button class="btn btn-sm btn-default" (click)="addMockServiceResponse()"><span class="glyphicon glyphicon-plus"></span> {{'Add REST-mock' | translate}}</button>
 
-            <hr/>
+            <hr class="item-solid-separator"/>
+
             <h4>{{'Messages Queue' | translate}}</h4>
             <div class="row" *ngFor="let mqMessage of step.mqMessages">
               <div class="col-sm-12">
@@ -373,13 +374,15 @@
                   <button class="btn btn-sm btn-default" (click)="removeMqProperty(mqMessage, property)"><span class="glyphicon glyphicon-minus"></span></button>
                 </div>
               </ng-container>
-              <div class="col-sm-12">
+              <div class="col-sm-12" style="margin-top: 7px">
                 <button class="btn btn-sm btn-default" (click)="addMqProperty(mqMessage)"><span class="glyphicon glyphicon-plus"></span> {{'Add property' | translate}}</button>
               </div>
             </div>
+            <hr class="item-small-separator">
             <button class="btn btn-sm btn-default" (click)="addMqMessage()"><span class="glyphicon glyphicon-plus"></span> {{'Add message' | translate}}</button>
 
-            <hr/>
+            <hr class="item-solid-separator"/>
+
             <h4>{{'MQ mock responses' | translate}}</h4>
             <div class="row" *ngFor="let mqMockResponse of step.mqMockResponseList">
               <div class="col-sm-12">
@@ -479,6 +482,7 @@
                         <option [ngValue]="'XPath'">XPath</option>
                         <option [ngValue]="'contains'">contains</option>
                         <option [ngValue]="'matches'">matches</option>
+                        <option [ngValue]="'absent'">absent</option>
                       </select>
                     </div>
 
@@ -533,7 +537,7 @@
                 <!-- Saved variables forms -->
                 <div class="form-horizontal" *ngFor="let variable of expectedServiceRequest.scenarioVariablesFromServiceRequest; let j = index">
 
-                  <hr/>
+                  <hr class="item-solid-separator"/>
 
                   <!-- Delete saved variable button -->
                   <div class="col-sm-2 col-sm-offset-1" style="margin-bottom: 15px">
@@ -620,7 +624,7 @@
               <span class="glyphicon glyphicon-plus"></span>
               {{'Add expected mock request' | translate}}
             </button>
-            <hr/>
+            <hr class="item-solid-separator"/>
             <h4>{{'Save scenario variables from MQ request' | translate}}</h4>
 
             <div class="row" *ngFor="let variable of step.scenarioVariableFromMqRequestList; let i = index">
@@ -691,7 +695,7 @@
               <span class="glyphicon glyphicon-plus"></span>
               {{'Add scenario variable' | translate}}
             </button>
-            <hr/>
+            <hr class="item-solid-separator"/>
 
             <h4>{{'Expected MQ requests' | translate}}</h4>
 
