@@ -41,8 +41,13 @@ public final class YamlUtils {
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     public static <T> boolean saveToFile(T data, Path path) {
+        if (path == null) {
+            log.error("Unable to create dir cause path is null");
+            return false;
+        }
+
         try {
-            if (Files.notExists(path.getParent())) {
+            if (path.getParent().toFile().exists()) {
                 Files.createDirectory(path.getParent());
             }
         } catch (IOException e) {
