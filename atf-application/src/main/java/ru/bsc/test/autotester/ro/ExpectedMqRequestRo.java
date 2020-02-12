@@ -23,10 +23,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @ApiModel(description = "Request to MQ stub that need to check")
-public class ExpectedMqRequestRo {
+public class ExpectedMqRequestRo implements Serializable {
     @ApiModelProperty("Unique MQ request code")
     private String code;
     @ApiModelProperty("Name of service being tested queue, which define in sourceQueueName param of the properties.yml")

@@ -23,6 +23,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 /**
  * Created by smakarov
  * 21.05.2018 15:39
@@ -30,7 +32,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @ApiModel(description = "Response from MQ stub")
-public class MqMockResponseRo {
+public class MqMockResponseRo implements Serializable {
     @ApiModelProperty("Response message text")
     private String responseBody;
     @ApiModelProperty("Name of the destination queue")

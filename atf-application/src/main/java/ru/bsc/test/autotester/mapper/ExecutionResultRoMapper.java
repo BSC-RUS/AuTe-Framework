@@ -66,7 +66,7 @@ public abstract class ExecutionResultRoMapper {
                                     .stream()
                                     .filter(step -> !step.getDisabled())
                                     .map(Step::getStepParameterSetList)
-                                    .mapToInt(list -> list != null ? (list.size() == 0 ? 1 : list.size()) : 1)
+                                    .mapToInt(list -> list != null ? list.size() == 0 ? 1 : list.size() : 1)
                                     .sum()
                             ).build()
                     )

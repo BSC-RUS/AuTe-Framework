@@ -147,7 +147,7 @@ public class RequesterUtils {
         }
         boolean retry = true;
         try {
-            if (StringUtils.isNotEmpty(content) && JsonPath.read(content, step.getPollingJsonXPath()) != null) {
+            if (isNotEmpty(content) && JsonPath.read(content, step.getPollingJsonXPath()) != null) {
                 log.info("Required attribute for polling found in path {}. Stop polling", step.getPollingJsonXPath());
                 retry = false;
             }
@@ -175,8 +175,8 @@ public class RequesterUtils {
 
     private static void jsonComparing(String expectedResponse, String responseContent, String jsonCompareMode) throws Exception {
         log.debug("Json comparing {} {} {}", expectedResponse, responseContent, jsonCompareMode);
-        if ((StringUtils.isNotEmpty(expectedResponse) || StringUtils.isNotEmpty(responseContent)) &&
-                (!responseContent.equals(expectedResponse))) {
+        if ((isNotEmpty(expectedResponse) || isNotEmpty(responseContent)) &&
+                !responseContent.equals(expectedResponse)) {
             try {
                 JSONAssert.assertEquals(
                         expectedResponse == null ? "" : expectedResponse.replaceAll(" ", " "),

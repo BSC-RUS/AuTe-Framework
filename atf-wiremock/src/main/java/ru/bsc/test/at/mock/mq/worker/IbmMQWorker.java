@@ -77,7 +77,7 @@ public class IbmMQWorker extends AbstractMqWorker {
             connectionFactory.setHostName(getBrokerUrl());
             connectionFactory.setPort(port);
             connectionFactory.setTransportType(WMQ_CM_CLIENT);
-            if (StringUtils.isNotEmpty(channel)) {
+            if (isNotEmpty(channel)) {
                 connectionFactory.setChannel(channel);
             }
         } catch (JMSException e) {
@@ -134,15 +134,15 @@ public class IbmMQWorker extends AbstractMqWorker {
                         for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
                             byte[] response;
 
-                            if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                                response = transformer.transform(mockMessage.getGuid(), stringBody, extractor.createContext(receivedMessage), mockResponse.getResponseBody()).getBytes();
-                            } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
+                            if (isNotEmpty(mockResponse.getResponseBody())) {
+                                response = transformer.transform(mockMessage.getGuid(), stringBody, extractor.createContext(receivedMessage), mockResponse.getResponseBody()).getBytes(StandardCharsets.UTF_8);
+                            } else if (isNotEmpty(mockMessage.getHttpUrl())) {
                                 try (HttpClient httpClient = new HttpClient()) {
-                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), stringBody, getTestIdHeaderName(), testId).getBytes();
+                                    response = httpClient.sendPost(mockMessage.getHttpUrl(), stringBody, getTestIdHeaderName(), testId).getBytes(StandardCharsets.UTF_8);
                                 }
                                 mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                             } else {
-                                response = stringBody.getBytes();
+                                response = stringBody.getBytes(StandardCharsets.UTF_8);
                             }
 
                             String destinationQueue = isNotEmpty(mockResponse.getDestinationQueueName())
@@ -162,7 +162,7 @@ public class IbmMQWorker extends AbstractMqWorker {
             consumer.close();
             session.close();
             connection.close();
-        } catch (Exception e) {
+        } catch (JMSException e) {
             log.error("Caught:", e);
         }
     }
@@ -186,7 +186,7 @@ public class IbmMQWorker extends AbstractMqWorker {
             // Переслать сообщение в очередь-назначение
             producer.send(newMessage);
             producer.close();
-            log.info(" [x] Send >>> {} '{}'", destinationQueue, messageBody);
+            log.info(" [x] Send >>> {} '{}'", destinationQueue, messageBody, StandardCharsets.UTF_8);
         } else {
             log.info(" [x] Send >>> ***black hole***");
         }

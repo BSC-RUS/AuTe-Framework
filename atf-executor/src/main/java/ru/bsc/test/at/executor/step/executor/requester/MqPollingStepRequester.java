@@ -35,8 +35,8 @@ import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVaria
 @Slf4j
 public class MqPollingStepRequester extends MqAbstractStepRequester {
 
-    public MqPollingStepRequester(StepResult stepResult, Step step, String requestBody, String testId, Project project, MqClient mqClient, Map<String, Object> scenarioVariables, String projectPath) {
-        super(stepResult, step, requestBody, testId, project, mqClient, scenarioVariables, projectPath);
+    public MqPollingStepRequester(StepResult stepResult, Step step, String requestBody, String testId, Project project, MqClient mqClient, Map<String, Object> scenarioVariables) {
+        super(stepResult, step, requestBody, testId, project, mqClient, scenarioVariables);
     }
 
     @Override

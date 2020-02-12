@@ -61,8 +61,9 @@ public final class YamlUtils {
     public static <T> T loadAs(File fileName, Class<T> type) throws IOException {
         Representer representer = new Representer();
         representer.getPropertyUtils().setSkipMissingProperties(true);
-        try (FileReader fileReader = new FileReader(fileName)) {
-            return new Yaml(representer).loadAs(fileReader, type);
+        try (FileInputStream fileStream = new FileInputStream(fileName);
+            InputStreamReader reader = new InputStreamReader(fileStream, StandardCharsets.UTF_8)) {
+            return new Yaml(representer).loadAs(reader, type);
         }
     }
 

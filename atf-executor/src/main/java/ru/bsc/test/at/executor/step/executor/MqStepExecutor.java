@@ -70,9 +70,9 @@ public class MqStepExecutor implements IStepExecutor {
         for (int repetitionCounter = 0; repetitionCounter < numberRepetitions; repetitionCounter++) {
             StepRequester stepRequester;
             if (step.getUsePolling()) {
-                stepRequester = new MqPollingStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables, projectPath);
+                stepRequester = new MqPollingStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables);
             } else {
-                stepRequester = new MqSimpleStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables, projectPath);
+                stepRequester = new MqSimpleStepRequester(stepResult, step, requestBody, testId,  project, mqClient, scenarioVariables);
             }
             stepRequester.request();
         }

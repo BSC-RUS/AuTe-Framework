@@ -44,6 +44,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -145,26 +146,26 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
             // обрабатываем каждую часть multipart'a - ищем base64
             for (String part : partsMultipart) {
                 if (isNotBoundaryAndInBase64(part)) {
-                    result = Base64.decode(part.getBytes());
+                    result = Base64.decode(part.getBytes(StandardCharsets.UTF_8));
                 } else {
-                    result = part.getBytes();
+                    result = part.getBytes(StandardCharsets.UTF_8);
                 }
                 buffer.addAll(Arrays.asList(ArrayUtils.toObject(result)));
             }
-            result = ArrayUtils.toPrimitive((Byte[]) buffer.toArray());
+            result = ArrayUtils.toPrimitive(buffer.toArray(new Byte[buffer.size()]));
         } else {
             // если не начинается с boundary - проверяем, не base64 лежит в корне
-            if (isBase64(body.getBytes())) {
-                result = Base64.decode(body.getBytes());
+            if (isBase64(body.getBytes(StandardCharsets.UTF_8))) {
+                result = Base64.decode(body.getBytes(StandardCharsets.UTF_8));
             } else {
-                result = body.getBytes();
+                result = body.getBytes(StandardCharsets.UTF_8);
             }
         }
         return result;
     }
 
     private boolean isNotBoundaryAndInBase64(String part) {
-        return !part.startsWith(DOUBLE_DASH) && isBase64(part.getBytes());
+        return !part.startsWith(DOUBLE_DASH) && isBase64(part.getBytes(StandardCharsets.UTF_8));
     }
 
     private Boolean templateDeclared(final ResponseDefinition response) {

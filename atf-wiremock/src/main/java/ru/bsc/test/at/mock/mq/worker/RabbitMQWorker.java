@@ -18,11 +18,7 @@
 
 package ru.bsc.test.at.mock.mq.worker;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
@@ -44,7 +40,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
     private final Buffer fifo;
     private Channel channelFrom;
     private Channel channelTo;
-    private com.rabbitmq.client.Connection connection;
+    private Connection connection;
     private int port;
     private VelocityTransformer velocityTransformer;
 
@@ -115,10 +111,10 @@ public class RabbitMQWorker extends AbstractMqWorker {
                         byte[] response;
 
                         if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                            response = velocityTransformer.transform(mockMessage.getGuid(), stringBody, null, mockResponse.getResponseBody()).getBytes();
+                            response = velocityTransformer.transform(mockMessage.getGuid(), stringBody, null, mockResponse.getResponseBody()).getBytes(StandardCharsets.UTF_8);
                         } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
                             try (HttpClient httpClient = new HttpClient()) {
-                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
+                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes(StandardCharsets.UTF_8);
                             }
                             mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
                         } else {

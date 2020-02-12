@@ -2042,9 +2042,11 @@ public class DiffMatchPatch {
     public String patchAddPadding(LinkedList<Patch> patches) {
         short paddingLength = this.Patch_Margin;
         String nullPadding = "";
+        StringBuilder buffer = new StringBuilder();
         for (short x = 1; x <= paddingLength; x++) {
-            nullPadding += String.valueOf((char) x);
+             buffer.append(String.valueOf((char) x));
         }
+        nullPadding = buffer.toString();
 
         // Bump all the patches forward.
         for (Patch aPatch : patches) {

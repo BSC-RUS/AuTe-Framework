@@ -26,43 +26,60 @@ import java.util.Map;
 /**
  * @author Pavel Golovkin
  */
-@AllArgsConstructor
 public class ClientHttpRequest implements ClientRequest {
-  protected final String url;
-  protected final Object body;
-  protected final HTTPMethod method;
-  protected final Map headers;
-  protected final String testId;
-  protected final String testIdHeaderName;
+    protected final String url;
+    protected final Object body;
+    protected final HTTPMethod method;
+    protected final Map headers;
+    protected final String testId;
+    protected final String testIdHeaderName;
+    protected final boolean useResponseAsBase64;
 
-  @Override
-  public String getResource() {
-    return url;
+  public ClientHttpRequest(String url, Object body, HTTPMethod method, Map headers, String testId, String testIdHeaderName) {
+    this(url, body, method, headers, testId, testIdHeaderName, false);
+  }
+
+  public ClientHttpRequest(String url, Object body, HTTPMethod method, Map headers, String testId, String testIdHeaderName, boolean useResponseAsBase64) {
+    this.url = url;
+    this.body = body;
+    this.method = method;
+    this.headers = headers;
+    this.testId = testId;
+    this.testIdHeaderName = testIdHeaderName;
+    this.useResponseAsBase64 = useResponseAsBase64;
   }
 
   @Override
-  public Object getBody() {
-    return body;
-  }
+    public String getResource() {
+        return url;
+    }
 
-  @Override
-  public Map getHeaders() {
-    return headers;
-  }
+    @Override
+    public Object getBody() {
+        return body;
+    }
 
-  @Override
-  public String getTestId() {
-    return testId;
-  }
+    @Override
+    public Map getHeaders() {
+        return headers;
+    }
 
-  @Override
-  public String getTestIdHeaderName() {
-    return testIdHeaderName;
-  }
+    @Override
+    public String getTestId() {
+        return testId;
+    }
 
-  public HTTPMethod getMethod() {
-    return method;
-  }
+    @Override
+    public String getTestIdHeaderName() {
+        return testIdHeaderName;
+    }
 
+    public boolean getUseResponseAsBase64() {
+        return useResponseAsBase64;
+    }
+
+    public HTTPMethod getMethod() {
+        return method;
+    }
 
 }

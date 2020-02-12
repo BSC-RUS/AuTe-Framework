@@ -18,11 +18,13 @@
 
 package ru.bsc.test.autotester.diff;
 
+import java.io.Serializable;
+
 /**
  * Class representing one diff operation.
  */
 @SuppressWarnings("all")
-public class Diff {
+public class Diff implements Serializable {
     /**
      * One of: INSERT, DELETE or EQUAL.
      */
