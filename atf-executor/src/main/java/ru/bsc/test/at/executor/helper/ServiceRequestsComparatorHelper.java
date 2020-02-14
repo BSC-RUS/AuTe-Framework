@@ -74,12 +74,9 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
  */
 @Slf4j
 public class ServiceRequestsComparatorHelper {
-    private static final String IGNORE = "\\u002A" + "ignore" + "\\u002A";
+
     private static final String REGEX_PART = "\\u002A" + "part" + "\\u002A";
     private static final String STRING_PART = "*part*";
-    private static final String STR_SPLIT = "(\r\n|\n\r|\r|\n|" + IGNORE + ")";
-    private static final String CLEAR_STR_PATTERN = "(\r\n|\n\r|\r|\n)";
-    private static final String NBS_PATTERN = "[\\s\\u00A0]";
 
     public void assertTestCaseWSRequests(Project project, Map<String, Object> variables, WireMockAdmin wireMockAdmin, String testId, Step step) throws Exception {
         if (wireMockAdmin == null) {
@@ -331,16 +328,10 @@ public class ServiceRequestsComparatorHelper {
     }
 
     private void compareWSRequestAsXml(String expectedRequest, String actualRequest, Set<String> ignoredTags) throws ComparisonException {
-        Diff diff = DiffBuilder.compare(defaultString(expectedRequest))
-                .withTest(actualRequest)
-                .checkForIdentical()
-                .ignoreComments()
-                .ignoreWhitespace()
-                .withDifferenceEvaluator(new IgnoreTagsDifferenceEvaluator(ignoredTags))
-                .build();
+        ComparisonResult comparisonResult = CompareUtils.compareRequestAsXml(expectedRequest, actualRequest, ignoredTags);
 
-        if (diff.hasDifferences()) {
-            throw new ComparisonException(diff, expectedRequest, actualRequest);
+        if (comparisonResult.isHasDifferences()) {
+            throw new ComparisonException(comparisonResult.getDiff(), expectedRequest, actualRequest);
         }
     }
 
@@ -348,52 +339,17 @@ public class ServiceRequestsComparatorHelper {
         if (StringUtils.isEmpty(expected) && StringUtils.isEmpty(actual)) {
             return;
         }
-        ObjectMapper om = new ObjectMapper();
-        try {
-            om.readValue(expected, Object.class);
-            om.readValue(actual, Object.class);
-        } catch (Exception e) {
-            throw new JsonParsingException(e);
-        }
+        ComparisonResult comparisonResult = CompareUtils.compareRequestAsJson(expected, actual, ignoringPaths, mode);
 
-        try {
-            List<Customization> customizations = ignoringPaths.stream()
-                    .map(p -> new Customization(p, (o1, o2) -> true))
-                    .collect(Collectors.toList());
-            JSONAssert.assertEquals(
-                    expected == null ? "" : expected.replaceAll(" ", " "),
-                    actual.replaceAll(" ", " "),
-                    new IgnoringComparator(
-                            StringUtils.isEmpty(mode) ? JSONCompareMode.STRICT : JSONCompareMode.valueOf(mode),
-                            customizations
-                    )
-            );
-        } catch (Error assertionError) {
-            throw new ComparisonException(assertionError.getMessage(), expected, actual);
+        if (comparisonResult.isHasDifferences()) {
+            throw new ComparisonException(comparisonResult.getDiff(), expected, actual);
         }
     }
 
     private void compareWSRequestAsString(String expectedRequest, String actualRequest) throws ComparisonException {
-        String[] split = expectedRequest.split(STR_SPLIT);
-        actualRequest = actualRequest.replaceAll(CLEAR_STR_PATTERN, "").replaceAll(NBS_PATTERN, " ");
-
-        if (split.length == 1 && !Objects.equals(defaultIfNull(split[0], ""), defaultIfNull(actualRequest, ""))) {
-            throw new ComparisonException("", expectedRequest, actualRequest);
-        }
-
-        int i = 0;
-        boolean notEquals = false;
-        StringBuilder diff = new StringBuilder("\n");
-        for (String s : split) {
-            i = actualRequest.indexOf(s.trim(), i);
-            if (i < 0) {
-                notEquals = true;
-                diff.append(s.trim()).append("\n");
-            }
-        }
-
-        if (notEquals) {
-            throw new ComparisonException(diff.toString(), expectedRequest, actualRequest);
+        ComparisonResult comparisonResult = CompareUtils.compareRequestAsString(expectedRequest, actualRequest);
+        if (comparisonResult.isHasDifferences()) {
+            throw new ComparisonException(comparisonResult.getDiff(), expectedRequest, actualRequest);
         }
     }
 

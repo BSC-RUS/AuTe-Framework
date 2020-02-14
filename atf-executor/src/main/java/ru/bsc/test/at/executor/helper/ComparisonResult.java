@@ -6,14 +6,10 @@ import org.xmlunit.diff.Diff;
 
 @AllArgsConstructor
 @Getter
-public class MqComparisonResult {
+public class ComparisonResult {
 
-    private Diff diff;
+    private boolean hasDifferences;
+    private String diff;
     private String expectedRequestBody;
     private String actualRequestBody;
-
-    public boolean hasDifferences(){
-        return diff.hasDifferences();
-    }
-
 }

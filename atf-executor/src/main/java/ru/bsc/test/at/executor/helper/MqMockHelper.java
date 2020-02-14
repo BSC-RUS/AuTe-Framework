@@ -21,13 +21,11 @@ package ru.bsc.test.at.executor.helper;
 import com.fasterxml.jackson.core.JsonParseException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.diff.DefaultNodeMatcher;
-import org.xmlunit.diff.Diff;
-import org.xmlunit.diff.ElementSelectors;
+import org.xmlunit.XMLUnitException;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockedRequest;
 import ru.bsc.test.at.executor.exception.ComparisonException;
+import ru.bsc.test.at.executor.exception.JsonParsingException;
 import ru.bsc.test.at.executor.exception.UnMockedRequestsException;
 import ru.bsc.test.at.executor.model.ExpectedMqRequest;
 import ru.bsc.test.at.executor.model.ScenarioVariableFromMqRequest;
@@ -46,14 +44,13 @@ public class MqMockHelper {
     private static final String HYPHEN = "_HYPHEN_";
     private static final String DOT = "_DOT_";
 
-
     public static String convertPropertyCamelPolicy(String testIdHeaderNameProperty, boolean useCamelNaming) {
         return useCamelNaming && !StringUtils.isEmpty(testIdHeaderNameProperty) ?
-                testIdHeaderNameProperty.replace("-", HYPHEN).replace(".", DOT) : testIdHeaderNameProperty;
+               testIdHeaderNameProperty.replace("-", HYPHEN).replace(".", DOT) : testIdHeaderNameProperty;
     }
 
-
-    public void assertMqRequests(WireMockAdmin mqMockerAdmin, String testId, Step step, Map<String, Object> scenarioVariables, Integer mqCheckCount, Long mqCheckInterval) throws Exception {
+    public void assertMqRequests(WireMockAdmin mqMockerAdmin, String testId, Step step, Map<String, Object> scenarioVariables, Integer mqCheckCount,
+            Long mqCheckInterval) throws Exception {
         if (mqMockerAdmin == null) {
             return;
         }
@@ -65,7 +62,7 @@ public class MqMockHelper {
             try {
                 List<MockedRequest> actualMqRequestList = null;
                 int counter = 0;
-                while(counter < maxCount && isEmpty(actualMqRequestList)) {
+                while (counter < maxCount && isEmpty(actualMqRequestList)) {
                     if (isEmpty(actualMqRequestList)) {
                         Thread.sleep(sleepInterval);
                     }
@@ -80,54 +77,56 @@ public class MqMockHelper {
                     throw new UnMockedRequestsException(sb.toString());
                 }
 
-            }catch (JsonParseException ex) {
+            } catch (JsonParseException ex) {
                 // DO NOTING (не во всех wiremock есть mq)
             }
             return;
         }
 
-	    List<MockedRequest> actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
-	    List<MockedRequest> unMockedRequests = Collections.emptyList();
-	    Map<ExpectedMqRequest, List<MockedRequest>> incorrectExpectedActualMultimap = new HashMap<>();
-	    for (int counter = 0; counter < maxCount; counter++) {
-		    actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
-		    List<MockedRequest> actualMqRequestListF = actualMqRequestList;
-		    if (!Boolean.TRUE.equals(step.getIgnoreRequestsInvocations())) { // если не стоит галочка и есть запросы для которых нет заглушек, то запоминаем и ругаемся
-			    unMockedRequests = actualMqRequestList.stream().filter(actual -> step.getExpectedMqRequestList().stream().filter(exp -> isSame(actual, exp, scenarioVariables)).count() == 0).collect(toList());
-			    if (!isEmpty(unMockedRequests)) {
-				    break;
-			    }
-		    }
+        List<MockedRequest> actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
+        List<MockedRequest> unMockedRequests = Collections.emptyList();
+        Map<ExpectedMqRequest, List<MockedRequest>> incorrectExpectedActualMultimap = new HashMap<>();
+        for (int counter = 0; counter < maxCount; counter++) {
+            actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
+            List<MockedRequest> actualMqRequestListF = actualMqRequestList;
+            if (!Boolean.TRUE
+                    .equals(step.getIgnoreRequestsInvocations())) { // если не стоит галочка и есть запросы для которых нет заглушек, то запоминаем и ругаемся
+                unMockedRequests = actualMqRequestList.stream().filter(actual ->
+                        step.getExpectedMqRequestList().stream().filter(exp -> isSame(actual, exp, scenarioVariables)).count() == 0).collect(toList());
+                if (!isEmpty(unMockedRequests)) {
+                    break;
+                }
+            }
 
-		    incorrectExpectedActualMultimap = new HashMap<>();
-		    Map<ExpectedMqRequest, List<MockedRequest>> incorrectExpectedActualMultimapF = incorrectExpectedActualMultimap;
-		    step.getExpectedMqRequestList().forEach(exp -> {
-			    List<MockedRequest> actualList = actualMqRequestListF.stream().filter(actual -> isSame(actual, exp, scenarioVariables)).collect(toList());
-			    long expectedCount = AtProjectExecutor.parseLongOrVariable(scenarioVariables,
-				    ExecutorUtils.evaluateExpressions(exp.getCount(), scenarioVariables),
-				    1
-			    );
-			    if (expectedCount != actualList.size()) {
-				    incorrectExpectedActualMultimapF.put(exp, actualList);
-			    }
-		    });
-		    // тут все нормально, дальше ничего не ждем,
-		    // TODO - подстава будет в том слечае, если у нас WM узнает о новом сообщении после проверки, эту ситуацию обработать нельзя,
-		    // как вариант можно дольше ждать, но тогда сценарии будут выпольняться очень долго
-		    // что делать пока не понятно
-		    if (incorrectExpectedActualMultimap.isEmpty()) {
-			    break;
-		    }
+            incorrectExpectedActualMultimap = new HashMap<>();
+            Map<ExpectedMqRequest, List<MockedRequest>> incorrectExpectedActualMultimapF = incorrectExpectedActualMultimap;
+            step.getExpectedMqRequestList().forEach(exp -> {
+                List<MockedRequest> actualList = actualMqRequestListF.stream().filter(actual -> isSame(actual, exp, scenarioVariables)).collect(toList());
+                long expectedCount = AtProjectExecutor.parseLongOrVariable(scenarioVariables,
+                        ExecutorUtils.evaluateExpressions(exp.getCount(), scenarioVariables),
+                        1
+                );
+                if (expectedCount != actualList.size()) {
+                    incorrectExpectedActualMultimapF.put(exp, actualList);
+                }
+            });
+            // тут все нормально, дальше ничего не ждем,
+            // TODO - подстава будет в том слечае, если у нас WM узнает о новом сообщении после проверки, эту ситуацию обработать нельзя,
+            // как вариант можно дольше ждать, но тогда сценарии будут выпольняться очень долго
+            // что делать пока не понятно
+            if (incorrectExpectedActualMultimap.isEmpty()) {
+                break;
+            }
 
-		    Thread.sleep(sleepInterval);
-	    }
+            Thread.sleep(sleepInterval);
+        }
 
         if (step.getScenarioVariableFromMqRequestList() != null) {
             for (ScenarioVariableFromMqRequest variable : step.getScenarioVariableFromMqRequestList()) {
                 MockedRequest actual = actualMqRequestList.stream()
-                        .filter(mockedRequest -> Objects.equals(mockedRequest.getSourceQueue(), variable.getSourceQueue()))
-                        .findAny()
-                        .orElse(null);
+                                                          .filter(mockedRequest -> Objects.equals(mockedRequest.getSourceQueue(), variable.getSourceQueue()))
+                                                          .findAny()
+                                                          .orElse(null);
                 if (actual != null) {
                     scenarioVariables.put(
                             variable.getVariableName().trim(),
@@ -139,14 +138,14 @@ public class MqMockHelper {
 
         for (ExpectedMqRequest expectedMqRequest : step.getExpectedMqRequestList()) {
             MockedRequest actualRequest = actualMqRequestList.stream()
-                    .filter(mockedRequest -> mockedRequest.getSourceQueue().equals(expectedMqRequest.getSourceQueue()))
-                    .findAny().orElse(null);
+                                                             .filter(mockedRequest -> mockedRequest.getSourceQueue().equals(expectedMqRequest.getSourceQueue()))
+                                                             .findAny().orElse(null);
             if (actualRequest != null) {
                 actualMqRequestList.remove(actualRequest);
 
-                MqComparisonResult comparisonResult =
+                ComparisonResult comparisonResult =
                         compareRequestsBody(expectedMqRequest, actualRequest, scenarioVariables);
-                if (comparisonResult.hasDifferences()) {
+                if (comparisonResult.isHasDifferences()) {
                     throw new ComparisonException(
                             comparisonResult.getDiff(),
                             comparisonResult.getExpectedRequestBody(),
@@ -158,79 +157,84 @@ public class MqMockHelper {
             }
         }
 
-	    if (!isEmpty(incorrectExpectedActualMultimap)) {
-		    StringBuilder message = new StringBuilder();
-		    for (Map.Entry<ExpectedMqRequest, List<MockedRequest>> entry : incorrectExpectedActualMultimap.entrySet()) {
-			    message.append("\n");
-			    long expectedCount = AtProjectExecutor.parseLongOrVariable(scenarioVariables,
-				    ExecutorUtils.evaluateExpressions(entry.getKey().getCount(), scenarioVariables),
-				    1
-			    );
-			    // Вызвать ошибку: не совпадает количество вызовов сервисов
-			    message.append(String.format(
-				    "Invalid number of JMS requests: expected: %d, actual: %d%nActual requests:%n",
-				    expectedCount,
-				    entry.getValue().size()
-			    ));
-			    int i = 0;
-			    for (MockedRequest actual : entry.getValue()) {
-				    message.append(String.format(
-					    " %d: Source queue: %s; Destination queue: %s",
-					    i + 1,
-					    actual.getSourceQueue(),
-					    actual.getDestinationQueue()
-				    ));
-			    }
-		    }
-		    throw new Exception(message.toString());
-	    }
+        if (!isEmpty(incorrectExpectedActualMultimap)) {
+            StringBuilder message = new StringBuilder();
+            for (Map.Entry<ExpectedMqRequest, List<MockedRequest>> entry : incorrectExpectedActualMultimap.entrySet()) {
+                message.append("\n");
+                long expectedCount = AtProjectExecutor.parseLongOrVariable(scenarioVariables,
+                        ExecutorUtils.evaluateExpressions(entry.getKey().getCount(), scenarioVariables),
+                        1
+                );
+                // Вызвать ошибку: не совпадает количество вызовов сервисов
+                message.append(String.format(
+                        "Invalid number of JMS requests: expected: %d, actual: %d%nActual requests:%n",
+                        expectedCount,
+                        entry.getValue().size()
+                ));
+                int i = 0;
+                for (MockedRequest actual : entry.getValue()) {
+                    message.append(String.format(
+                            " %d: Source queue: %s; Destination queue: %s",
+                            i + 1,
+                            actual.getSourceQueue(),
+                            actual.getDestinationQueue()
+                    ));
+                }
+            }
+            throw new Exception(message.toString());
+        }
 
-	    if (!isEmpty(unMockedRequests)) {
-		    StringBuilder sb = new StringBuilder();
-		    sb.append("Sent request without mock : \n");
-		    unMockedRequests.forEach(r -> sb.append("queue: " + r.getSourceQueue() + "body: " + r.getRequestBody() + "\n"));
-		    throw new UnMockedRequestsException(sb.toString());
-	    }
+        if (!isEmpty(unMockedRequests)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Sent request without mock : \n");
+            unMockedRequests.forEach(r -> sb.append("queue: " + r.getSourceQueue() + "body: " + r.getRequestBody() + "\n"));
+            throw new UnMockedRequestsException(sb.toString());
+        }
 
     }
 
-
-    protected MqComparisonResult compareRequestsBody(ExpectedMqRequest expectedMqRequest, MockedRequest actualRequest, Map<String, Object> scenarioVariables) {
+    protected ComparisonResult compareRequestsBody(ExpectedMqRequest expectedMqRequest, MockedRequest actualRequest, Map<String, Object> scenarioVariables) {
         Set<String> ignoredTags;
         if (expectedMqRequest.getIgnoredTags() != null) {
             ignoredTags = new HashSet<>(Arrays.stream(expectedMqRequest.getIgnoredTags()
-                    .split(","))
-                    .map(String::trim)
-                    .collect(toList()));
+                                                                       .split(","))
+                                              .map(String::trim)
+                                              .collect(toList()));
         } else {
             ignoredTags = null;
         }
 
         String expectedRequestBody = ExecutorUtils.evaluateExpressions(
                 ExecutorUtils.insertSavedValues(expectedMqRequest.getRequestBody(), scenarioVariables),
-                scenarioVariables
-        );
+                scenarioVariables);
         String actualRequestBody = actualRequest.getRequestBody();
 
-        Diff diff = DiffBuilder.compare(expectedRequestBody)
-                .withTest(actualRequestBody)
-                .checkForIdentical()
-                .ignoreComments()
-                .ignoreWhitespace()
-                .withNodeMatcher(new DefaultNodeMatcher(ElementSelectors.byName))
-                .withDifferenceEvaluator(new IgnoreTagsDifferenceEvaluator(ignoredTags))
-                .build();
+        ComparisonResult comparisonResult = null;
+        try {
+            comparisonResult = CompareUtils.compareRequestAsXml(expectedRequestBody, actualRequestBody, ignoredTags);
+        } catch (XMLUnitException xUnitEx) {
+            log.debug("Exception while compare mq request as XML", xUnitEx);
+            try {
+                comparisonResult = CompareUtils.compareRequestAsJson(expectedRequestBody, actualRequestBody, ignoredTags, null);
+            }catch (JsonParsingException jsonEx){
+                log.debug("Exception while compare mq request as JSON", jsonEx);
+                try {
+                    comparisonResult = CompareUtils.compareRequestAsString(expectedRequestBody, actualRequestBody);
+                }catch (ComparisonException strEx){
+                    log.debug("Exception while compare mq request as String", strEx);
+                }
+            }
+        }
 
-        return new MqComparisonResult(diff, expectedRequestBody, actualRequestBody);
-
+        return comparisonResult;
     }
 
-	private boolean isSame(MockedRequest mockedRequest, ExpectedMqRequest expected, Map<String, Object> scenarioVariables) {
-		if (!Objects.equals(expected.getSourceQueue(), mockedRequest.getSourceQueue())) {
-			return false;
-		}
-		MqComparisonResult result = compareRequestsBody(expected, mockedRequest, scenarioVariables);
-		return !result.hasDifferences();
-	}
+    private boolean isSame(MockedRequest mockedRequest, ExpectedMqRequest expected, Map<String, Object> scenarioVariables) {
+        if (!Objects.equals(expected.getSourceQueue(), mockedRequest.getSourceQueue())) {
+            return false;
+        }
+        ComparisonResult result = compareRequestsBody(expected, mockedRequest, scenarioVariables);
+        return !result.isHasDifferences();
+    }
 
 }

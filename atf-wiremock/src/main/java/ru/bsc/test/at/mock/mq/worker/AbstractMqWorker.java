@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.predicate.JmsMessagePredicate;
+import ru.bsc.test.at.mock.mq.predicate.JmsMessagePredicateFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,7 +56,7 @@ public abstract class AbstractMqWorker implements Runnable, ExceptionListener {
 
     MockMessage findMockMessage(String testId, String stringBody) {
         synchronized (mockMappingList) {
-            final JmsMessagePredicate jmsMessageFilter = new JmsMessagePredicate(queueNameFrom, stringBody, testId);
+            final JmsMessagePredicate jmsMessageFilter = JmsMessagePredicateFactory.getInstance().newJmsMessagePredicate(queueNameFrom, testId, stringBody);
             return mockMappingList
                     .stream()
                     .sorted()
