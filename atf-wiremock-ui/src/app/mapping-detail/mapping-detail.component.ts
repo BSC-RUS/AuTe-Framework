@@ -30,7 +30,6 @@ import {HeaderItem} from '../../model/request-mapping';
 import {BasicAuthCredentials} from '../../model/basic-auth-credentials';
 import {PlatformLocation} from '@angular/common';
 
-
 @Component({
   selector: 'app-mapping-detail',
   templateUrl: './mapping-detail.component.html'
@@ -115,6 +114,54 @@ export class MappingDetailComponent implements OnInit {
         this.eventService.updateMappingList.next(true);
       });
   }
+
+  copyMapping() {
+    var mapping_copy = new Mapping();
+    mapping_copy.name = this.mapping.name + '_copy';
+    mapping_copy.scenarioName = this.mapping.scenarioName;
+    mapping_copy.priority = this.mapping.priority;
+    mapping_copy.request = this.deepCopy(this.mapping.request)
+    mapping_copy.response = this.deepCopy(this.mapping.response)
+
+    console.log('New mapping name: ' + mapping_copy.name);
+    console.log(mapping_copy.uuid);
+
+    this.wireMockService
+      .apply(mapping_copy)
+      .then(value => {
+        mapping_copy = value;
+        this.saveMappings('Маппинг применен');
+        console.log('New uuid: ' + mapping_copy.uuid)
+        this.router.navigate(['/mapping']);
+      });
+  }
+
+private deepCopy(obj: any) {
+    var copy;
+    // Handle the 3 simple types, and null or undefined
+    if (null == obj || 'object' !== typeof obj) { return obj; }
+    // Handle Date
+    if (obj instanceof Date) {
+        copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+    if (obj instanceof Array) {
+        copy = [];
+        for (let i = 0, len = obj.length; i < len; i++) {
+            copy[i] = this.deepCopy(obj[i]);
+        }
+        return copy;
+    }
+    if (obj instanceof Object) {
+        copy = {};
+        for (const attr in obj) {
+            if (obj.hasOwnProperty(attr)) { copy[attr] = this.deepCopy(obj[attr]); }
+        }
+        return copy;
+    }
+    throw new Error('Unable to copy obj! Its type isn\'t supported.');
+}
 
   private saveMappings(title: string) {
     this.wireMockService.saveToBackStorage().then(() => {
