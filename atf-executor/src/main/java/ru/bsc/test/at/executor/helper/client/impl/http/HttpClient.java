@@ -47,6 +47,7 @@ import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -88,7 +89,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
             HttpEntity httpEntity = new StringEntity((String) request.getBody(), ContentType.APPLICATION_JSON);
             ((HttpEntityEnclosingRequestBase) httpRequest).setEntity(httpEntity);
         }
-        return execute(httpRequest, request.getHeaders());
+        return execute(httpRequest, request.getHeaders(), request.getUseResponseAsBase64());
     }
 
     private ClientCommonResponse executeWithScenarioVariables(ClientHttpRequestWithVariables request) throws Exception {
@@ -115,7 +116,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
             }
             ((HttpEntityEnclosingRequestBase) httpRequest).setEntity(httpEntity);
         }
-        return execute(httpRequest, request.getHeaders());
+        return execute(httpRequest, request.getHeaders(), request.getUseResponseAsBase64());
     }
 
     private MultipartEntityBuilder setEntity(List<FormData> formDataList, String projectPath, Map<String, Object> scenarioVariables) throws IOException {
@@ -140,7 +141,7 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
         return entity;
     }
 
-    private ClientCommonResponse execute(HttpRequestBase httpRequest, Map headers) throws IOException {
+    private ClientCommonResponse execute(HttpRequestBase httpRequest, Map headers, boolean useResponseAsBase64) throws IOException {
         setHeaders(httpRequest, headers);
         try (CloseableHttpResponse response = httpClient.execute(httpRequest, context)) {
             Map<String, List<String>> responseHeaders = new HashMap<>();
@@ -154,9 +155,15 @@ public class HttpClient implements Client<ClientHttpRequest, ClientCommonRespons
                     responseHeaders.put(header.getName(), list);
                 }
             });
-            String theString = response.getEntity() == null || response.getEntity().getContent() == null ? "" : IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+            boolean isEntityOrContentNull = response.getEntity() == null || response.getEntity().getContent() == null;
+            String theString =  isEntityOrContentNull? "" : convertByteArrayToBase64IfNeed(response.getEntity().getContent(), useResponseAsBase64);
             return new ClientCommonResponse(response.getStatusLine().getStatusCode(), theString, responseHeaders);
         }
+    }
+
+    private String convertByteArrayToBase64IfNeed(InputStream content, boolean useResponseAsBase64) throws IOException {
+        return useResponseAsBase64? new String(Base64.getEncoder().encode(IOUtils.toByteArray(content)), StandardCharsets.UTF_8.name()):
+                                    IOUtils.toString(content, StandardCharsets.UTF_8.name());
     }
 
     private void setHeaders(HttpRequestBase request, Map headers) {

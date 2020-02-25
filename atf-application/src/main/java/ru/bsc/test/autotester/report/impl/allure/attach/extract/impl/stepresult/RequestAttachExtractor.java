@@ -62,6 +62,7 @@ public class RequestAttachExtractor extends AbstractAttachExtractor<StepResult> 
         String data = "URL: " + step.getRelativeUrl();
         data += "\nMethod: " + step.getRequestMethod();
         data += "\nIgnore response: " + (step.getExpectedResponseIgnore() ? "yes" : "no");
+        data += "\nConvert response into base64: " + (step.isUseResponseAsBase64() ? "yes" : "no");
         if (StringUtils.isNotEmpty(step.getTimeoutMs())) {
             data += "\nTimeout, ms: " + step.getTimeoutMs();
         }

@@ -73,6 +73,7 @@ public class Step implements Serializable, AbstractModel {
     private StepMode stepMode;
     private String mockPollingTimeout;
     private String mockRetryDelay;
+    private boolean useResponseAsBase64;
 
     @Deprecated
     private String sql;

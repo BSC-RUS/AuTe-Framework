@@ -174,5 +174,6 @@
   "Ignore undeclared requests": "Ignore undeclared requests",
   "Repeat before each request": "Repeat before each request",
   "Variables": "Variables",
-  "Variable value": "Variable value"
+  "Variable value": "Variable value",
+  "Response as base64": "Response as base64"
 }
