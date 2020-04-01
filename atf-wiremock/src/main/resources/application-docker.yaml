@@ -11,6 +11,7 @@ mq:
   port: ${JMS_PORT:}
   username: ${JMS_USER:}
   password: ${JMS_PASSWORD:}
+  channel: ${JMS_CHANNEL:}
   default:
     destination:
       queue:
