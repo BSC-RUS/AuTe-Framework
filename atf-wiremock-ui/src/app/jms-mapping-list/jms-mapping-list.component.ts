@@ -30,6 +30,7 @@ export class JmsMappingListComponent implements OnInit {
   mappings: JmsMappings;
   displayDetails = false;
   disabledDeleteSelected = true;
+  isBusy = false;
 
   constructor(
     public wireMockService: WireMockService,
@@ -90,8 +91,11 @@ export class JmsMappingListComponent implements OnInit {
   /**
    * Функция для удаления выбранных маппингов.
    * @description Из mappings выбираются маппинги с отметкой selected.
-   * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов
-   * потом в зависимости от страницы либо осуществляется переход на /jms-mapping, либо обновляется список маппингов.
+   * Создается messageService переменная для изменения уведомлений и их состояния.
+   * Блокируется кнопка удаления на время выполнения запросов.
+   * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов.
+   * По завершении, сообщение об ожидании удаляется, выводится сообщение об удалении, и,
+   * в зависимости от страницы, либо осуществляется переход на /jms-mapping, либо обновляется список маппингов.
    * Если список selected пуст, то выводится предупреждение.
    **/
   async deleteSelected() {
@@ -104,20 +108,32 @@ export class JmsMappingListComponent implements OnInit {
       });
     }
 
+    let messageService;
+
     if (selected && selected.length) {
       try {
+        this.isBusy = true;
+        // Добавление сообщения об ожидании
+        messageService = this.messageService.wait('Удаление', 'Удаление может занять некоторое время');
+
         await Promise.all(selected.map(mapping => this.wireMockService.deleteJmsMapping(mapping)));
-        this.wireMockService.saveToBackStorage().then(() => {
-          this.messageService.success('JMS-маппинги успешно удалены');
-        });
+        await this.wireMockService.saveToBackStorage();
+      } catch (e) {
+        this.messageService.error('Что-то пошло не так');
+        console.warn(e);
+      } finally {
         if (this.router.isActive('/jms-mapping', true)) {
           this.getMappings();
         } else {
           await this.router.navigate(['/jms-mapping']);
         }
-      } catch (e) {
-        this.messageService.error('Что-то пошло не так');
-        console.warn(e);
+
+        // Удаление сообщения об ожидании
+        messageService.clear(messageService.uniqueCounter);
+        this.messageService.success('Маппинги успешно удалены');
+
+        this.isBusy = false;
+        this.disabledDeleteSelected = true;
       }
     } else {
       this.messageService.error('Не выбраны JMS-маппинги');

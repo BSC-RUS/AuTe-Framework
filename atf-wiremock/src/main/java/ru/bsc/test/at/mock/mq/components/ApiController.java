@@ -151,7 +151,7 @@ public class ApiController {
     @ResponseBody
     public Collection getRequestList(@RequestParam(required = false, defaultValue = "${mq.requestBufferSize:1000}") Integer limit) {
         Buffer fifo = mqRunnerComponent.getFifo();
-        List result = new LinkedList(fifo);
+        List result = fifo != null ? new LinkedList(fifo) : new LinkedList();
         if (limit != null && result.size() > limit) {
             result = result.subList(result.size() - limit, result.size());
         }
@@ -168,7 +168,9 @@ public class ApiController {
     @PostMapping("request-list/clear")
     @ResponseBody
     public void clearRequestList() {
-        mqRunnerComponent.getFifo().clear();
+        if (mqRunnerComponent.getFifo() != null) {
+            mqRunnerComponent.getFifo().clear();
+        }
     }
 
     private <T> Function<T, String> valueOrDefault(Function<T, String> extractor) {

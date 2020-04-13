@@ -33,6 +33,7 @@ export class MappingListComponent implements OnInit {
   displayDetails = false;
   scenariosName = [];
   disabledDeleteSelected = true;
+  isBusy = false;
 
   constructor(
     public wireMockService: WireMockService,
@@ -104,27 +105,42 @@ export class MappingListComponent implements OnInit {
   /**
   * Функция для удаления выбранных маппингов.
   * @description Из mappingList выбираются маппинги с отметкой selected.
-  * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов
-  * потом в зависимости от страницы либо осуществляется переход на /mapping, либо обновляется список маппингов.
+  * Создается messageService переменная для изменения уведомлений и их состояния.
+  * Блокируется кнопка удаления на время выполнения запросов.
+  * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов.
+  * По завершении, сообщение об ожидании удаляется, выводится сообщение об удалении, и,
+  * в зависимости от страницы, либо осуществляется переход на /mapping, либо обновляется список маппингов.
   * Если список selected пуст, то выводится предупреждение.
   **/
   async deleteSelected() {
     const selected: Mapping[] = this.mappingList.filter(mapping => mapping.selected);
 
+    let messageService;
+
     if (selected && selected.length) {
       try {
+        this.isBusy = true;
+        // Добавление сообщения об ожидании
+        messageService = this.messageService.wait('Удаление', 'Удаление может занять некоторое время');
+
         await Promise.all(selected.map(mapping => this.wireMockService.deleteOne(mapping)));
-        this.wireMockService.saveToBackStorage().then(() => {
-          this.messageService.success('Маппинги успешно удалены');
-        });
+        await this.wireMockService.saveToBackStorage();
+      } catch (e) {
+        this.messageService.error('Что-то пошло не так');
+        console.warn(e);
+      } finally {
         if (this.router.isActive('/mapping', true)) {
           this.getMappings();
         } else {
           await this.router.navigate(['/mapping']);
         }
-      } catch (e) {
-        this.messageService.error('Что-то пошло не так');
-        console.warn(e);
+
+        // Удаление сообщения об ожидании
+        messageService.clear(messageService.uniqueCounter);
+        this.messageService.success('Маппинги успешно удалены');
+
+        this.isBusy = false;
+        this.disabledDeleteSelected = true;
       }
     } else {
       this.messageService.error('Не выбраны маппинги');

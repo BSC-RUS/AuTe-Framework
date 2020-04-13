@@ -114,7 +114,10 @@
             <a href="#" (click)="selectTab('mqResponses')">{{'Mock responses' | translate}} <span *ngIf="step.mockServiceResponseList?.length > 0 || step.mqMessages?.length > 0 || step.mqMockResponseList?.length > 0" class="glyphicon glyphicon-tag"></span></a>
           </li>
           <li [class.active]="tab == 'mqRequests'">
-            <a href="#" (click)="selectTab('mqRequests')">{{'Mock requests' | translate}} <span *ngIf="step.expectedServiceRequestList?.length > 0 || (step.expectedMqRequestList?.length > 0 || step.scenarioVariableFromMqRequestList?.length > 0 || step.ignoreRequestsInvocations)" class="glyphicon glyphicon-tag"></span></a>
+            <a href="#" (click)="selectTab('mqRequests')">
+              {{'Mock requests' | translate}}
+              <span *ngIf="step.expectedServiceRequestList?.length > 0 || (step.expectedMqRequestList?.length > 0 || step.scenarioVariableFromMqRequestList?.length > 0 || step.ignoreRequestsInvocations || step.ignoreUndeclaredMqRequests)" class="glyphicon glyphicon-tag"></span>
+            </a>
           </li>
           <li [class.active]="tab == 'polling'">
             <a href="#" (click)="selectTab('polling')">{{'Polling' | translate}} <span *ngIf="step.usePolling" class="glyphicon glyphicon-tag"></span></a>
@@ -132,34 +135,54 @@
 
           <!-- Details tab -->
           <div *ngIf="tab == 'details'" class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-6 col-md-4 col-lg-5">
               <div class="row">
-                <div class="col-sm-9" *ngIf="calculateStepMode() == 'REST'">
+                <div class="col-sm-8" *ngIf="calculateStepMode() == 'REST'">
                   <label>{{'Request body type' | translate}}:</label>
                 </div>
-                <div class="col-sm-9" *ngIf="calculateStepMode() == 'JMS'">
+                <div class="col-sm-8" *ngIf="calculateStepMode() == 'JMS'">
                   <label>{{'Wait response timeout' | translate}}:</label>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                   <label>{{'Number of repetitions' | translate}}:</label>
                 </div>
               </div>
               <div class="row">
-                <div class="col-sm-9" *ngIf="calculateStepMode() == 'REST'">
+                <div class="col-sm-8" *ngIf="calculateStepMode() == 'REST'">
                   <select class="form-control" title="{{'Request body type' | translate}}" [(ngModel)]="step.requestBodyType">
                     <option [ngValue]="'JSON'">{{'JSON request body (default)' | translate}}</option>
                     <option [ngValue]="'FORM'">{{'FORM-data request body' | translate}}</option>
                   </select>
                 </div>
-                <div class="col-sm-9" *ngIf="calculateStepMode() == 'JMS'">
+                <div class="col-sm-8" *ngIf="calculateStepMode() == 'JMS'">
                   <input title="" placeholder="N or variable (ms, 1000 default)" class="form-control" [(ngModel)]="step.mqTimeoutMs"/>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-sm-4">
                   <input title="" placeholder="N or variable" class="form-control" [(ngModel)]="step.numberRepetitions"/>
                 </div>
               </div>
             </div>
-            <div class="col-sm-6">
+            <div class="col-sm-6 col-md-4 col-lg-2">
+              <div class="row">
+                <div class="col-sm-12 col-md-offset-1">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" [(ngModel)]="step.useResponseAsBase64">
+                      <strong>{{'Response as base64' | translate}}</strong>
+                    </label>
+                  </div>
+                </div>
+                <div class="col-sm-12 col-md-offset-1">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" [(ngModel)]="step.expectedResponseIgnore">
+                      <strong>{{'Ignore response' | translate}}</strong>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-md-4 col-lg-5">
               <div class="row">
                 <div class="col-sm-4" *ngIf="calculateStepMode() == 'REST'">
                   <label>{{'Expected status' | translate}}:</label>
@@ -189,27 +212,6 @@
                     <option [ngValue]="'LENIENT'">LENIENT (Extensible, non-strict array ordering)</option>
                     <option [ngValue]="'STRICT_ORDER'">STRICT_ORDER (Extensible, strict array ordering)</option>
                   </select>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6"></div>
-            <div class="col-sm-6">
-              <div class="row">
-                <div class="col-sm-4" style="text-align: center; padding-top: 10px;">
-                  <div class="checkbox">
-                    <label>
-                      <input type="checkbox" [(ngModel)]="step.useResponseAsBase64">
-                      <strong>{{'Response as base64' | translate}}</strong>
-                    </label>
-                  </div>
-                </div>
-                <div class="col-sm-4" style="text-align: center; padding-top: 10px;">
-                  <div class="checkbox">
-                    <label>
-                      <input type="checkbox" [(ngModel)]="step.expectedResponseIgnore">
-                      <strong>{{'Ignore response' | translate}}</strong>
-                    </label>
-                  </div>
                 </div>
               </div>
             </div>

@@ -30,9 +30,7 @@ import java.util.Map;
 
 public interface IStepExecutor {
 
-    static List<IStepExecutor> getStepExecutorList() {
-        return Arrays.asList(new RestStepExecutor(), new MqStepExecutor());
-    }
+    List<IStepExecutor> STEP_EXECUTORS = Arrays.asList(new RestStepExecutor(), new MqStepExecutor());
 
     void execute(WireMockAdmin wireMockAdmin, Connection connection, Stand stand, HttpClient httpClient, MqClient mqClient, Map<String, Object> scenarioVariables, String testId, Project project, Scenario scenario, Step step, StepResult stepResult, String projectPath) throws Exception;
     boolean support(Step step);

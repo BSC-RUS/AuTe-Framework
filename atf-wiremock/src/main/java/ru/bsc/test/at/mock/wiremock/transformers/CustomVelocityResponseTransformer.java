@@ -26,6 +26,7 @@ import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.velocity.Template;
@@ -38,6 +39,8 @@ import org.apache.velocity.runtime.parser.ParseException;
 import org.apache.velocity.runtime.parser.node.SimpleNode;
 import org.apache.velocity.tools.ToolManager;
 import org.bouncycastle.util.encoders.Base64;
+import ru.bsc.test.at.mock.mq.components.MqProperties;
+import ru.bsc.test.at.mock.script.groovy.ExtendedScript;
 import ru.bsc.test.at.util.MultipartConstant;
 
 import java.io.StringReader;
@@ -60,10 +63,13 @@ import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServlet
  *
  */
 @Slf4j
+@RequiredArgsConstructor
 public class CustomVelocityResponseTransformer extends ResponseDefinitionTransformer {
     private static final String NEW_LINE_VAR = "\r|\n|(\r\n)|(\n\n)|(\r\r)";
 
     private final Map<String, Map<String, Object>> staticContexts = new HashMap<>();
+
+    private final MqProperties properties;
 
     /**
      * The Velocity context that will hold our request header data.
@@ -88,6 +94,7 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         context.put("requestUrl", request.getUrl());
         context.put("requestMethod", request.getMethod());
         context.put("staticContext", getStaticContextFor(request));
+        context.put(ExtendedScript.MQ_PROPERTIES, properties);
         String body;
 
         if (responseDefinition.specifiesBodyFile() && templateDeclared(responseDefinition)) {

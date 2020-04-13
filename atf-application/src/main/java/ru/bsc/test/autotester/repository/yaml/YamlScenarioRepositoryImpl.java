@@ -187,7 +187,7 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
         });
 
         return scenarios.stream()
-            .sorted(comparing(Scenario::getName))
+            .sorted(comparing(Scenario::getName, String.CASE_INSENSITIVE_ORDER))
             .collect(toList());
     }
 

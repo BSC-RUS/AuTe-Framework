@@ -26,15 +26,14 @@ import com.github.tomakehurst.wiremock.servlet.WarConfiguration;
 import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.velocity.app.Velocity;
-import ru.bsc.test.at.mock.wiremock.transformers.CustomVelocityResponseTransformer;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.servlet.ServletContext;
 
 import static ru.bsc.test.at.mock.wiremock.Constants.VELOCITY_PROPERTIES;
 
@@ -46,10 +45,12 @@ public class CustomWarConfiguration extends WarConfiguration {
     private static final Integer DEFAULT_MAX_REQUEST_JOURNAL_ENTRIES = 250;
 
     private final String fileSourceRoot;
+    private final ResponseDefinitionTransformer responseTransformer;
 
-    public CustomWarConfiguration(ServletContext servletContext, String fileSourceRoot) {
+    public CustomWarConfiguration(ServletContext servletContext, String fileSourceRoot, ResponseDefinitionTransformer responseTransformer) {
         super(servletContext);
         this.fileSourceRoot = fileSourceRoot;
+        this.responseTransformer = responseTransformer;
     }
 
     @Override
@@ -71,7 +72,7 @@ public class CustomWarConfiguration extends WarConfiguration {
             }
             Velocity.init(properties);
 
-            transformers.put("velocity-response-transformer", (T) new CustomVelocityResponseTransformer());
+            transformers.put("velocity-response-transformer", (T) responseTransformer);
             return transformers;
         }
         return Collections.emptyMap();

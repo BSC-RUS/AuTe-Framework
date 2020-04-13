@@ -36,10 +36,17 @@ import ru.bsc.test.at.executor.step.executor.IStepExecutor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.springframework.util.CollectionUtils.isEmpty;
 import static ru.bsc.test.at.executor.service.AtProjectExecutor.parseLongOrVariable;
 
 /**
@@ -63,18 +70,10 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
             log.warn("executeSteps got empty stepList");
             return;
         }
-        List<IStepExecutor> stepExecutorList = IStepExecutor.getStepExecutorList();
         for (Step step : stepExecutorRequest.getStepList()) {
             applyGlobalRequestHeaders(stepExecutorRequest.getProject(), step);
             if (!step.getDisabled()) {
-                List<StepParameterSet> parametersEnvironment;
-                if (step.getStepParameterSetList() != null && !step.getStepParameterSetList().isEmpty()) {
-                    parametersEnvironment = step.getStepParameterSetList();
-                } else {
-                    parametersEnvironment = new LinkedList<>();
-                    parametersEnvironment.add(new StepParameterSet());
-                }
-                for (StepParameterSet stepParameterSet : parametersEnvironment) {
+                for (StepParameterSet stepParameterSet : getParametersEnvironment(step.getStepParameterSetList())) {
                     StepResult stepResult = new StepResult(stepExecutorRequest.getProject().getCode(), step);
                     stepResult.setStart(new Date().getTime());
                     stepResult.setEditable(stepExecutorRequest.isStepEditable());
@@ -98,13 +97,9 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                         String testId = stepExecutorRequest.getProject().getUseRandomTestId() ? UUID.randomUUID().toString() : "-";
                         stepResult.setTestId(testId);
 
-                        for (IStepExecutor stepExecutor : stepExecutorList) {
-                            if (stepExecutor.support(step)) {
-                                stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
-                                stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
-                                break;
-                            }
-                        }
+                        IStepExecutor stepExecutor = findStepExecutor(step);
+                        stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
+                        stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
 
                         delayUtilities.waitWiremockDelayFromGroovyScripts(step);
                         serviceRequestsComparatorHelper.assertTestCaseWSRequests(stepExecutorRequest.getProject(), stepExecutorRequest.getScenarioVariables(), wireMockAdmin, testId, step);
@@ -113,6 +108,7 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                         stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
                         stepResult.setResult(StepResult.StepResultType.OK);
                     } catch (Exception e) {
+                        log.error("Step {} finished with error:", step.getCode(), e);
                         StringWriter sw = new StringWriter();
                         e.printStackTrace(new PrintWriter(sw));
 
@@ -130,6 +126,17 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                 }
             }
         }
+    }
+
+    private List<StepParameterSet> getParametersEnvironment(List<StepParameterSet> parametersFromStep) {
+        return isEmpty(parametersFromStep) ? singletonList(new StepParameterSet()) : parametersFromStep;
+    }
+
+    private IStepExecutor findStepExecutor(Step step) {
+        return IStepExecutor.STEP_EXECUTORS.stream()
+            .filter(executor -> executor.support(step))
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Not found executor for step " + step.getCode()));
     }
 
     private WireMockAdmin getWiremockAdmin(StepExecutorRequest request) {

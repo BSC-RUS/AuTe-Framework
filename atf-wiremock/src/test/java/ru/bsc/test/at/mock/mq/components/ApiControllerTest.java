@@ -36,7 +36,7 @@ public class ApiControllerTest {
     private ApiController apiController;
 
     public ApiControllerTest() throws NoSuchFieldException, IllegalAccessException {
-        MqRunnerComponent mqRunnerComponent = new MqRunnerComponent(new DummyJmsMappingsRepository());
+        MqRunnerComponent mqRunnerComponent = new MqRunnerComponent(new MqProperties(), new DummyJmsMappingsRepository());
         Field fifo = MqRunnerComponent.class.getDeclaredField("fifo");
         fifo.setAccessible(true);
         fifo.set(mqRunnerComponent, BufferUtils.synchronizedBuffer(new CircularFifoBuffer(BUFF_SIZE)));

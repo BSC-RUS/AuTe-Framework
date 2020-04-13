@@ -25,15 +25,15 @@ import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.jms.client.message.RMQTextMessage;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.jms.Connection;
-import javax.jms.JMSException;
-import javax.jms.Message;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
+import javax.jms.Connection;
+import javax.jms.JMSException;
+import javax.jms.Message;
 
 // Это реализация для работы с RabbitMQ.
 // Сообщения не отправляются в очередь через стандартные интерфейсы JMS, если у очереди указан параметр x-dead-letter-exchange
@@ -65,6 +65,10 @@ class RabbitMqManager extends AbstractMqManager {
         AMQP.BasicProperties.Builder propertiesBuilder = new AMQP.BasicProperties().builder();
 
         Map<String, Object> headers = new HashMap<>();
+
+        if (testId != null) {
+            headers.put(testIdHeaderName, testId);
+        }
 
         if (properties != null) {
             properties.forEach((name, value) -> {

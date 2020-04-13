@@ -266,7 +266,7 @@ public class ScenarioServiceImpl implements ScenarioService {
             Step existsStep = scenario.getStepList().stream()
                     .filter(step -> Objects.equals(step.getCode(), stepCode))
                     .findAny()
-                    .orElse(null);
+                    .orElseThrow(() -> new IOException("Step not found by code " + stepCode));
             stepRoMapper.updateStep(stepRo, existsStep);
             scenarioRepository.saveScenario(projectCode, scenarioPath, scenario, false);
             return stepRoMapper.stepToStepRo(existsStep);

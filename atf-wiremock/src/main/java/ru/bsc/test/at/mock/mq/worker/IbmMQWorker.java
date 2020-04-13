@@ -24,6 +24,7 @@ import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.mock.exception.UnexpectedMessageTypeException;
 import ru.bsc.test.at.mock.mq.JmsMessageHeadersExtractor;
+import ru.bsc.test.at.mock.mq.components.MqProperties;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -48,23 +49,11 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Slf4j
 @SuppressWarnings("Duplicates")
 public class IbmMQWorker extends AbstractMqWorker {
-
-    private final Buffer fifo;
-    private Integer port;
-    private String channel;
-
     private JmsMessageHeadersExtractor extractor;
     private VelocityTransformer transformer;
 
-    private String testIdHeaderName;
-
-    public IbmMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, Integer port, String testIdHeaderName, String channel) {
-        super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
-        this.fifo = fifo;
-        this.port = port;
-        this.channel = channel;
-        this.testIdHeaderName = testIdHeaderName;
-
+    public IbmMQWorker(String sourceQueueName, MqProperties properties, List<MockMessage> mappings, Buffer fifo, String testIdHeaderName) {
+        super(sourceQueueName, properties, mappings, fifo, testIdHeaderName);
         extractor = new JmsMessageHeadersExtractor();
         transformer = new VelocityTransformer();
     }
@@ -74,11 +63,11 @@ public class IbmMQWorker extends AbstractMqWorker {
         MQQueueConnectionFactory connectionFactory;
         try {
             connectionFactory = new MQQueueConnectionFactory();
-            connectionFactory.setHostName(getBrokerUrl());
-            connectionFactory.setPort(port);
+            connectionFactory.setHostName(getProperties().getHost());
+            connectionFactory.setPort(getProperties().getPort());
             connectionFactory.setTransportType(WMQ_CM_CLIENT);
-            if (StringUtils.isNotEmpty(channel)) {
-                connectionFactory.setChannel(channel);
+            if (StringUtils.isNotEmpty(getProperties().getChannel())) {
+                connectionFactory.setChannel(getProperties().getChannel());
             }
         } catch (JMSException e) {
             log.error("exception while create connection factory:", e);
@@ -86,7 +75,7 @@ public class IbmMQWorker extends AbstractMqWorker {
         }
 
         try {
-            Connection connection = connectionFactory.createConnection(getUsername(), getPassword());
+            Connection connection = connectionFactory.createConnection(getProperties().getUsername(), getProperties().getPassword());
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageConsumer consumer = session.createConsumer(session.createQueue(getQueueNameFrom()));
@@ -104,7 +93,7 @@ public class IbmMQWorker extends AbstractMqWorker {
 
                     MockedRequest mockedRequest = new MockedRequest();
                     //noinspection unchecked
-                    fifo.add(mockedRequest);
+                    getFifo().add(mockedRequest);
                     mockedRequest.setSourceQueue(getQueueNameFrom());
 
                     String stringBody;
@@ -152,7 +141,7 @@ public class IbmMQWorker extends AbstractMqWorker {
                         }
                     } else {
                         // Переслать сообщение в очередь "по-умолчанию".
-                        sendMessage(session, receivedMessage, mockedRequest, getQueueNameTo(), stringBody, testId, null);
+                        sendMessage(session, receivedMessage, mockedRequest, getProperties().getDefaultDestinationQueueName(), stringBody, testId, null);
                     }
                 }
             } catch (Exception e) {
@@ -181,7 +170,7 @@ public class IbmMQWorker extends AbstractMqWorker {
             Message newMessage = session.createTextMessage(messageBody);
             extractor.setHeadersFromContext(newMessage, transformer.getVelocityContext());
 
-            copyMessageProperties(receivedMessage, newMessage, testId, destination);
+            copyMessageProperties(receivedMessage, newMessage, testId, destination, getConvertedTestHeaderIdName());
 
             // Переслать сообщение в очередь-назначение
             producer.send(newMessage);
@@ -193,13 +182,8 @@ public class IbmMQWorker extends AbstractMqWorker {
     }
 
     private String getConvertedTestHeaderIdName(){
-        return testIdHeaderName.contains("-")
-               ? testIdHeaderName.toLowerCase().replace("-", "_HYPHEN_")
-               : testIdHeaderName.toLowerCase().replace("_HYPHEN_", "-") ;
-    }
-
-    @Override
-    public String getTestIdHeaderName() {
-        return testIdHeaderName;
+        return getTestIdHeaderName().contains("-")
+               ? getTestIdHeaderName().toLowerCase().replace("-", "_HYPHEN_")
+               : getTestIdHeaderName().toLowerCase().replace("_HYPHEN_", "-") ;
     }
 }

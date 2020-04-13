@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import ru.bsc.test.at.mock.mq.models.JmsMappings;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
-import ru.bsc.test.at.mock.mq.models.enums.MqBrokerType;
 import ru.bsc.test.at.mock.mq.worker.AbstractMqWorker;
 import ru.bsc.test.at.mock.mq.worker.ActiveMQWorker;
 import ru.bsc.test.at.mock.mq.worker.IbmMQWorker;
@@ -50,33 +49,10 @@ import javax.annotation.PostConstruct;
 @Component
 @RequiredArgsConstructor
 public class MqRunnerComponent {
-    @Value("${mq.manager:}")
-    private String mqManager;
-
-    @Value("${mq.host:localhost}")
-    private String mqHost;
-
-    @Value("${mq.port:1398}")
-    private Integer mqPort;
-
-    @Value("${mq.channel:}")
-    private String mqChannel;
-
-    @Value("${mq.username:}")
-    private String mqUsername;
-
-    @Value("${mq.password:}")
-    private String mqPassword;
-
-    @Value("${mq.default.destination.queue.name:}")
-    private String defaultDestinationQueueName;
-
     @Value("${test.id.header.name:testIdHeader}")
     private String testIdHeaderName;
 
-    @Value("${mq.requestBufferSize:1000}")
-    private int requestBufferSize;
-
+    private final MqProperties properties;
     private final JmsMappingsRepository repository;
 
     private final List<MockMessage> mappings = new LinkedList<>();
@@ -133,63 +109,29 @@ public class MqRunnerComponent {
 
     @PostConstruct
     public void initMappings() {
-        if (mqManager == null || mqManager.isEmpty()) {
+        if (properties.isManagerNotDefined()) {
             log.warn("MQ manager not defined, skip JMS mappings initialization");
             return;
         }
-        fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(requestBufferSize));
+        fifo = BufferUtils.synchronizedBuffer(new CircularFifoBuffer(properties.getRequestBufferSize()));
         repository.load().getMappings().forEach(this::applyMapping);
     }
 
-    private MqBrokerType getBrokerType() {
-        return MqBrokerType.valueOf(this.mqManager);
-    }
-
     private AbstractMqWorker createMqBroker(String sourceQueueName) {
-        switch (getBrokerType()) {
+        switch (properties.getManager()) {
             case ACTIVE_MQ:
-                return new ActiveMQWorker(
-                        sourceQueueName,
-                        defaultDestinationQueueName,
-                        mappings,
-                        fifo,
-                        mqHost,
-                        mqPort,
-                        mqUsername,
-                        mqPassword,
-                        testIdHeaderName
-                );
+                return new ActiveMQWorker(sourceQueueName, properties, mappings, fifo, testIdHeaderName);
             case RABBIT_MQ:
-                return new RabbitMQWorker(
-                        sourceQueueName,
-                        defaultDestinationQueueName,
-                        mappings,
-                        fifo,
-                        mqHost,
-                        mqUsername,
-                        mqPassword,
-                        mqPort,
-                        testIdHeaderName
-                );
+                return new RabbitMQWorker(sourceQueueName, properties, mappings, fifo, testIdHeaderName);
             case IBM_MQ:
+                return new IbmMQWorker(sourceQueueName, properties, mappings, fifo, testIdHeaderName);
             default:
-                return new IbmMQWorker(
-                        sourceQueueName,
-                        defaultDestinationQueueName,
-                        mappings,
-                        fifo,
-                        mqHost,
-                        mqUsername,
-                        mqPassword,
-                        mqPort,
-                        testIdHeaderName,
-                        mqChannel
-                );
+                return null;
         }
     }
 
     private void applyMapping(MockMessage mockMessage) {
-        if (mqManager == null || mqManager.isEmpty()) {
+        if (properties.isManagerNotDefined()) {
             log.warn("MQ manager not defined, unable to create JMS mapping");
             return;
         }

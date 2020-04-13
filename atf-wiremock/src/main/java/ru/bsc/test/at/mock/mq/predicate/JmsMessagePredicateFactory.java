@@ -53,7 +53,7 @@ public class JmsMessagePredicateFactory {
             objectMapper.readValue(json, Object.class);
             return JsonPath.parse(json);
         }catch (IOException e){
-            log.debug("Cannot parse JSON: {}", e.getMessage());
+            log.info("Cannot parse JSON: {}", e.getMessage());
             return null;
         }
     }
@@ -64,7 +64,7 @@ public class JmsMessagePredicateFactory {
             DocumentBuilder db = dbf.newDocumentBuilder();
             return db.parse(new InputSource(new StringReader(stringBody)));
         } catch (IOException | ParserConfigurationException | SAXException e) {
-            log.debug("Cannot parse XML document: {}", e.getMessage());
+            log.info("Cannot parse XML document: {}", e.getMessage());
             return null;
         }
     }

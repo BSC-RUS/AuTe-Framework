@@ -102,6 +102,7 @@ public class WireMockAdmin implements Closeable {
 
     @SuppressWarnings("UnusedReturnValue")
     private String sendDelete(String url) {
+        log.debug("Delete request for url {}", url);
         try (CloseableHttpResponse response = HttpClientBuilder.create().build().execute(new HttpDelete(url))) {
             final HttpEntity entity = response.getEntity();
             return entity == null || entity.getContent() == null ? "" : IOUtils.toString(entity.getContent(), "UTF-8");

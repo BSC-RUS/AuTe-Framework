@@ -65,7 +65,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         return nullSafeStream(fileList)
             .map(this::loadProject)
             .filter(Objects::nonNull)
-            .sorted(Comparator.comparing(Project::getName))
+            .sorted(Comparator.comparing(Project::getName, String.CASE_INSENSITIVE_ORDER))
             .collect(toList());
     }
 
@@ -245,7 +245,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
             .filter(directory -> !new File(directory, SCENARIO_YML_FILENAME).exists())
             .map(File::getName)
             .distinct()
-            .sorted()
+            .sorted(String::compareToIgnoreCase)
             .collect(toList());
     }
 

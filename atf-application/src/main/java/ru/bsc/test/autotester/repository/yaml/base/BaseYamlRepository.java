@@ -48,6 +48,7 @@ public abstract class BaseYamlRepository {
     private static final String FILE_ENCODING = "UTF-8";
     private static final String REQUEST_JSON = "request.json";
     private static final String MQ_MOCK_RESPONSES_PATH = "mq-mock-responses";
+    private static final String MQ_MESSAGES_PATH = "mq-messages";
 
     protected final Translator translator;
 
@@ -80,7 +81,7 @@ public abstract class BaseYamlRepository {
         if (step.getMqMessages() != null) {
             step.getMqMessages().forEach(message -> {
                 if (message.getMessageFile() != null && message.getMessage() == null) {
-                    message.setMessage(readFile(scenarioRootDirectory + File.separator + message.getMessageFile()));
+                    message.setMessage(readFile(scenarioRootDirectory + File.separator + getMqMessageFilePath(step, message)));
                 }
             });
         }
@@ -116,9 +117,8 @@ public abstract class BaseYamlRepository {
                     .stream()
                     .map(MqMock::getResponses)
                     .flatMap(List::stream)
-                    .filter(response -> StringUtils.isNotEmpty(response.getResponseFile()))
                     .forEach(response -> {
-                        File file = new File(scenarioRootDirectory, response.getResponseFile());
+                        File file = new File(scenarioRootDirectory + File.separator + getMqResponseFilePath(step, response));
                         if (file.exists()) {
                             response.setResponseBody(readFile(file.toString()));
                         }
@@ -214,12 +214,12 @@ public abstract class BaseYamlRepository {
             step.getMqMessages().forEach(message -> {
                 if (message.getMessage() != null) {
                     try {
-                        message.setMessageFile(stepPath(step) + stepMqMessageFile(message));
-                        File file = new File(scenarioRootDirectory + File.separator + message.getMessageFile());
+                        message.setMessageFile(getMqMessageFileName(message));
+                        File file = new File(scenarioRootDirectory + File.separator + getMqMessageFilePath(step, message));
                         FileUtils.writeStringToFile(file, message.getMessage(), FILE_ENCODING);
                         message.setMessage(null);
                     } catch (IOException e) {
-                        log.error("Save file {}", scenarioRootDirectory + File.separator + message.getMessageFile(), e);
+                        log.error("Save file {}", scenarioRootDirectory + File.separator + getMqMessageFilePath(step, message), e);
                     }
                 } else {
                     message.setMessageFile(null);
@@ -264,8 +264,8 @@ public abstract class BaseYamlRepository {
         step.getMqMockResponseList().stream().map(MqMock::getResponses).flatMap(List::stream).forEach(response -> {
             String body = response.getResponseBody();
             if (body != null) {
-                response.setResponseFile(stepPath(step) + mqMockResponseFile(response));
-                File file = new File(scenarioRootDirectory + File.separator + response.getResponseFile());
+                response.setResponseFile(getMqResponseFileName(response));
+                File file = new File(scenarioRootDirectory + File.separator + getMqResponseFilePath(step, response));
                 try {
                     FileUtils.writeStringToFile(file, response.getResponseBody(), FILE_ENCODING);
                     response.setResponseBody(null);
@@ -346,13 +346,52 @@ public abstract class BaseYamlRepository {
         return "expected-response." + FileExtensionsUtils.extensionByContent(step.getExpectedResponse());
     }
 
-    private String stepMqMessageFile(MqMessage message) {
+    private String getMqMessageFilePath(Step step, MqMessage message) {
         return String.format(
-                "mq-messages%s%s.%s",
-                File.separator,
-                UUID.randomUUID().toString(),
-                FileExtensionsUtils.extensionByContent(message.getMessage())
+            "%s%s%s%s",
+            stepPath(step),
+            MQ_MESSAGES_PATH,
+            File.separator,
+            getMqMessageFileName(message)
         );
+    }
+
+    private String getMqResponseFilePath(Step step, MqMockResponse response) {
+        return String.format(
+            "%s%s%s%s",
+            stepPath(step),
+            MQ_MOCK_RESPONSES_PATH,
+            File.separator,
+            getMqResponseFileName(response)
+        );
+    }
+
+    private String getMqMessageFileName(MqMessage message) {
+        return getObjectPathByContent(message.getMessageFile(), message.getMessage());
+    }
+
+    private String getMqResponseFileName(MqMockResponse response) {
+        return getObjectPathByContent(response.getResponseFile(), response.getResponseBody());
+    }
+
+    private String getObjectPathByContent(String currentPath, String content) {
+        if (StringUtils.isNotEmpty(currentPath)) {
+
+            //необходимо, чтобы не потерять старое расположение
+            currentPath = cutPathIfContains(currentPath, File.separator);
+            currentPath = cutPathIfContains(currentPath, "/");
+
+            return currentPath;
+        }
+        return UUID.randomUUID().toString() + "." + FileExtensionsUtils.extensionByContent(content);
+    }
+
+    private String cutPathIfContains(String path, String separator) {
+        if (path.contains(separator)) {
+            int startIndex = path.lastIndexOf(separator);
+            return path.substring(startIndex + 1);
+        }
+        return path;
     }
 
     private String mockResponseBodyFile(MockServiceResponse mockServiceResponse) {
@@ -369,15 +408,6 @@ public abstract class BaseYamlRepository {
         }
         return "expected-service-request-" + expectedServiceRequest.getCode() + "." +
                FileExtensionsUtils.extensionByContent(expectedServiceRequest.getExpectedServiceRequest());
-    }
-
-    private String mqMockResponseFile(MqMockResponse response) {
-        return String.format(
-                "%s/%s.%s",
-                MQ_MOCK_RESPONSES_PATH,
-                UUID.randomUUID().toString(),
-                FileExtensionsUtils.extensionByContent(response.getResponseBody())
-        );
     }
 
     protected Scenario loadScenarioFromFiles(File scenarioDirectory, String group, boolean fetchSteps) throws IOException {

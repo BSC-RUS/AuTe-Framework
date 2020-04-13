@@ -21,7 +21,9 @@ package ru.bsc.test.at.mock.mq.worker;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.mock.mq.components.MqProperties;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.predicate.JmsMessagePredicate;
 import ru.bsc.test.at.mock.mq.predicate.JmsMessagePredicateFactory;
@@ -39,11 +41,9 @@ import javax.jms.Queue;
 @RequiredArgsConstructor
 public abstract class AbstractMqWorker implements Runnable, ExceptionListener {
     private final String queueNameFrom;
-    private final String queueNameTo;
+    private final MqProperties properties;
     private final List<MockMessage> mockMappingList;
-    private final String brokerUrl;
-    private final String username;
-    private final String password;
+    private final Buffer fifo;
     private final String testIdHeaderName;
 
     public void stop() throws IOException, TimeoutException {
@@ -66,16 +66,11 @@ public abstract class AbstractMqWorker implements Runnable, ExceptionListener {
         }
     }
 
-    void copyMessageProperties(
-            Message message,
-            Message newMessage,
-            String testId,
-            Queue destination
-    ) throws JMSException {
+    void copyMessageProperties(Message message, Message newMessage, String testId, Queue destination, String testIdHeaderName) throws JMSException {
         String jmsCorrelationId = message.getJMSCorrelationID();
         newMessage.setJMSCorrelationID(StringUtils.isNotEmpty(jmsCorrelationId) ? jmsCorrelationId : message.getJMSMessageID());
 
-        newMessage.setStringProperty(getTestIdHeaderName(), testId);
+        newMessage.setStringProperty(testIdHeaderName, testId);
         newMessage.setJMSDestination(destination);
     }
 }

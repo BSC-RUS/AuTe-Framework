@@ -26,6 +26,7 @@ import com.rabbitmq.client.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.mock.mq.components.MqProperties;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
 import ru.bsc.test.at.mock.mq.models.MockMessage;
 import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
@@ -41,27 +42,23 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Slf4j
 public class RabbitMQWorker extends AbstractMqWorker {
-    private final Buffer fifo;
     private Channel channelFrom;
     private Channel channelTo;
     private com.rabbitmq.client.Connection connection;
-    private int port;
     private VelocityTransformer velocityTransformer;
 
-    public RabbitMQWorker(String queueNameFrom, String queueNameTo, List<MockMessage> mockMappingList, Buffer fifo, String brokerUrl, String username, String password, int port, String testIdHeaderName) {
-        super(queueNameFrom, queueNameTo, mockMappingList, brokerUrl, username, password, testIdHeaderName);
-        this.fifo = fifo;
-        this.port = port;
+    public RabbitMQWorker(String sourceQueueName, MqProperties properties, List<MockMessage> mappings, Buffer fifo, String testIdHeaderName) {
+        super(sourceQueueName, properties, mappings, fifo, testIdHeaderName);
     }
 
     @Override
     public void run() {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
-            connectionFactory.setHost(getBrokerUrl());
-            connectionFactory.setPort(port);
-            connectionFactory.setUsername(getUsername());
-            connectionFactory.setPassword(getPassword());
+            connectionFactory.setHost(getProperties().getHost());
+            connectionFactory.setPort(getProperties().getPort());
+            connectionFactory.setUsername(getProperties().getUsername());
+            connectionFactory.setPassword(getProperties().getPassword());
 
             connection = connectionFactory.newConnection();
             channelFrom = connection.createChannel();
@@ -99,7 +96,7 @@ public class RabbitMQWorker extends AbstractMqWorker {
 
                 MockedRequest mockedRequest = new MockedRequest();
                 //noinspection unchecked
-                fifo.add(mockedRequest);
+                getFifo().add(mockedRequest);
                 mockedRequest.setRequestBody(stringBody);
                 mockedRequest.setSourceQueue(getQueueNameFrom());
 
@@ -141,11 +138,12 @@ public class RabbitMQWorker extends AbstractMqWorker {
                     }
                 } else {
                     // Переслать сообщение в очередь "по-умолчанию".
-                    mockedRequest.setDestinationQueue(getQueueNameTo());
-                    if (isNotEmpty(getQueueNameTo())) {
+                    String defaultQueue = getProperties().getDefaultDestinationQueueName();
+                    mockedRequest.setDestinationQueue(defaultQueue);
+                    if (isNotEmpty(defaultQueue)) {
                         mockedRequest.setResponseBody(stringBody);
-                        channelTo.basicPublish("", getQueueNameTo(), properties, body);
-                        log.info(" [x] Send >>> {} '{}'", getQueueNameTo(), new String(body, StandardCharsets.UTF_8));
+                        channelTo.basicPublish("", defaultQueue, properties, body);
+                        log.info(" [x] Send >>> {} '{}'", defaultQueue, new String(body, StandardCharsets.UTF_8));
                     } else {
                         log.info(" [x] Send >>> ***black hole***");
                     }

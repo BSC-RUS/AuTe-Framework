@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by sdoroshin on 04.08.2017.
@@ -40,17 +41,21 @@ class BscMappingSaver implements MappingsSaver {
 
     @Override
     public void save(List<StubMapping> mappings) {
-        try {
-            final Path mappingsPath = Paths.get("mappings");
-            if (Files.exists(mappingsPath)) {
+        final Path mappingsPath = Paths.get("mappings");
+        if (Files.exists(mappingsPath)) {
+            try {
                 FileUtils.cleanDirectory(mappingsPath.toFile());
+            } catch (IOException e) {
+                log.error("Error while cleaning directory", e);
+                throw new RuntimeException(e);
             }
-            for (StubMapping m : mappings) {
+        }
+        for (StubMapping m : mappings) {
+            try {
                 Files.write(resolveMappingPath(mappingsPath, m), getMappingContent(m));
+            } catch (IOException e) {
+                log.error("Error while saving mappings",e);
             }
-        } catch (IOException e) {
-            log.error("Error while saving mappings",e);
-            throw new RuntimeException(e);
         }
         log.trace("Save list: {}", mappings.toString());
     }
@@ -84,6 +89,9 @@ class BscMappingSaver implements MappingsSaver {
     }
 
     private String safeName(String name) {
-        return name.replaceAll(SAFE_CHARACTERS_PATTERN, "_");
+        String safeName = name.replaceAll(SAFE_CHARACTERS_PATTERN, "_");
+        return safeName.length() > 50
+            ? safeName.substring(0, 46) + safeName.hashCode() % 10000
+            : safeName;
     }
 }

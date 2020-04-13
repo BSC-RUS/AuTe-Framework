@@ -24,12 +24,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.xmlunit.XMLUnitException;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockedRequest;
-import ru.bsc.test.at.executor.exception.ComparisonException;
-import ru.bsc.test.at.executor.exception.JsonParsingException;
-import ru.bsc.test.at.executor.exception.UnMockedRequestsException;
-import ru.bsc.test.at.executor.model.ExpectedMqRequest;
-import ru.bsc.test.at.executor.model.ScenarioVariableFromMqRequest;
-import ru.bsc.test.at.executor.model.Step;
+import ru.bsc.test.at.executor.exception.*;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 
@@ -201,7 +197,7 @@ public class MqMockHelper {
                                               .map(String::trim)
                                               .collect(toList()));
         } else {
-            ignoredTags = null;
+            ignoredTags = new HashSet<>();
         }
 
         String expectedRequestBody = ExecutorUtils.evaluateExpressions(
@@ -213,14 +209,16 @@ public class MqMockHelper {
         try {
             comparisonResult = CompareUtils.compareRequestAsXml(expectedRequestBody, actualRequestBody, ignoredTags);
         } catch (XMLUnitException xUnitEx) {
-            log.debug("Exception while compare mq request as XML", xUnitEx);
+            log.info("Exception while compare mq request as XML. Trying parse as json");
+            log.debug("Detached exception", xUnitEx);
             try {
                 comparisonResult = CompareUtils.compareRequestAsJson(expectedRequestBody, actualRequestBody, ignoredTags, null);
-            }catch (JsonParsingException jsonEx){
-                log.debug("Exception while compare mq request as JSON", jsonEx);
+            } catch (JsonParsingException jsonEx) {
+                log.info("Exception while compare mq request as JSON. Trying parse as string");
+                log.debug("Detached exception", jsonEx);
                 try {
                     comparisonResult = CompareUtils.compareRequestAsString(expectedRequestBody, actualRequestBody);
-                }catch (ComparisonException strEx){
+                } catch (ComparisonException strEx) {
                     log.debug("Exception while compare mq request as String", strEx);
                 }
             }

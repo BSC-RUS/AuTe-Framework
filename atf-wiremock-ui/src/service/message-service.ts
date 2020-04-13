@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import {ToastyService} from 'ng2-toasty';
+import {ToastyService, ToastData} from 'ng2-toasty';
 import {Injectable} from '@angular/core';
 
 @Injectable()
@@ -24,15 +24,32 @@ export class MessageService {
   /**
    * Набор опций для вывода сообщей для toastyService
    *
-   * @param {string} title Принимаемое сообщение
+   * @param {string} title - Принимаемое сообщение или заголовок
+   * @param {string} msg - Принимаемое сообщение
    * @return {object}
    **/
-  private static toastyOptions(title: string) {
+  private static toastyOptions(title: string, msg?: string) {
     return {
       title,
+      msg,
       showClose: true,
       timeout: 5000,
       theme: 'bootstrap'
+    };
+  }
+
+  /**
+   * Набор опций для вывода сообщей для toastyService с увеличенным временем
+   *
+   * @param {string} title - Принимаемое сообщение или заголовок
+   * @param {string} message - Принимаемое сообщение
+   * @return {object}
+   **/
+  private static toastyWaitOptions(title: string, message?: string) {
+    const obj = this.toastyOptions(title, message);
+    return {
+      ...obj,
+      timeout: 5000000000
     };
   }
 
@@ -41,11 +58,19 @@ export class MessageService {
   ) {
   }
 
-  success(title: string) {
-    this.toastyService.success(MessageService.toastyOptions(title));
+  success(title: string, message?: string) {
+    this.toastyService.success(MessageService.toastyOptions(title, message));
   }
 
-  error(title: string) {
-    this.toastyService.error(MessageService.toastyOptions(title));
+  wait(title: string, message?: string) {
+    const service = this.toastyService;
+
+    service.wait(MessageService.toastyWaitOptions(title, message));
+
+    return service;
+  }
+
+  error(title: string, message?: string) {
+    this.toastyService.error(MessageService.toastyOptions(title, message));
   }
 }

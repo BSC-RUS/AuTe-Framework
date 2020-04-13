@@ -20,7 +20,7 @@
     <span class="glyphicon glyphicon-plus"></span>
     <i>Add mapping</i>
   </button>
-  <button class="btn btn-default" (click)="confirmDeleteSelected()" [disabled]="disabledDeleteSelected">Delete selected</button>
+  <button class="btn btn-default" (click)="confirmDeleteSelected()" [disabled]="disabledDeleteSelected || isBusy">Delete selected</button>
 </div>
 <div class="just-padding">
   <div class="list-group list-group-root well" *ngIf="mappings">

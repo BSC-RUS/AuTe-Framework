@@ -1,6 +1,7 @@
 package ru.bsc.test.at.executor.helper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.skyscreamer.jsonassert.Customization;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
+@Slf4j
 public class CompareUtils {
 
     private static final String IGNORE = "\\u002A" + "ignore" + "\\u002A";
@@ -66,7 +68,10 @@ public class CompareUtils {
                     new IgnoringComparator(compareMode, customizations));
 
             comparisonResult = new ComparisonResult(false, "", expectedRequestBody, actualBody);
-        }catch (Throwable assertionError){
+        } catch (Throwable assertionError) {
+            if (!(assertionError instanceof AssertionError)) {
+              log.error("Exception while parse json {} {} {} {}", expectedRequestBody, actualBody, ignoringPaths, mode, assertionError);
+            }
             comparisonResult = new ComparisonResult(true, assertionError.getMessage(), expectedRequestBody, actualBody);
         }
 
