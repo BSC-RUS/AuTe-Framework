@@ -4,7 +4,7 @@
 
     <groupId>ru.bsc.test</groupId>
     <artifactId>atf</artifactId>
-    <version>4.13.1-SNAPSHOT</version>
+    <version>4.14.0</version>
     <name>atf</name>
     <packaging>pom</packaging>
 
@@ -44,7 +44,7 @@
 
     <scm>
         <connection>scm:git:git@github.com:BSC-RUS/AuTe-Framework.git</connection>
-        <tag>HEAD</tag>
+        <tag>v4.14.0</tag>
     </scm>
 
     <dependencyManagement>
