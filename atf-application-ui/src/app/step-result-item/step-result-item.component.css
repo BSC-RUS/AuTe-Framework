@@ -1,0 +1,166 @@
+/*
+ * Copyright 2018 BSC Msc, LLC
+ *
+ * This file is part of the ATF project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.request-element {
+  position: relative;
+  margin-bottom: 1px;
+  width: 100%;
+  color: #555555;
+  overflow: hidden;
+}
+
+.request-element input {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+.request-element label {
+  position: relative;
+  display: block;
+  padding: 0 0 0 1em;
+  font-weight: bold;
+  line-height: 3;
+  cursor: pointer;
+}
+
+.request-element-content {
+  background: white;
+  margin-bottom: 5px;
+  max-height: 0;
+  overflow: hidden;
+  -webkit-transition: max-height .35s;
+  -o-transition: max-height .35s;
+  transition: max-height .35s;
+}
+
+.request-element-content p {
+  margin: 1em;
+}
+/* :checked */
+.request-element input:checked ~ .request-element-content {
+  max-height: 100vh;
+}
+
+.request-element label {
+  margin-bottom: 2px;
+}
+
+/* Icon */
+.request-element label::after {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: block;
+  width: 3em;
+  height: 3em;
+  line-height: 3;
+  text-align: center;
+  -webkit-transition: all .35s;
+  -o-transition: all .35s;
+  transition: all .35s;
+}
+
+.request-element input[type=checkbox] + label::after {
+  content: "+";
+}
+
+.request-element input[type=radio] + label::after {
+  content: "\25BC";
+}
+
+.request-element input[type=checkbox]:checked + label::after {
+  transform: rotate(315deg);
+}
+
+.request-element input[type=radio]:checked + label::after {
+  transform: rotateX(180deg);
+}
+
+.request-element-header {
+  border: 1px solid #dddddd;
+  background: whitesmoke;
+}
+
+.request-element-table-header {
+  margin-bottom: 0 !important;
+  border: 1px solid #dddddd;
+  background: white;
+  border-bottom: none;
+}
+
+.request-element-table-header + .form-control {
+  border: 1px solid #ddd;
+  border-radius: 0;
+}
+
+.request-element-header-method {
+  display: inline-block;
+  background: #33b75f;
+  padding-left: 10px;
+  color: white;
+  padding-right: 10px;
+  margin-right: 10px;
+  text-align: center;
+  width: 70px;
+}
+
+.request-element-header-time {
+  display: inline-block;
+  float: right;
+  margin-right: 42px;
+  background: #33b75f;
+  padding-left: 10px;
+  color: white;
+  padding-right: 10px;
+}
+.red {
+  background: #ff0000 !important;
+}
+
+.request-element-header-expected {
+  display: inline-block;
+  float: right;
+  margin-right: 25px;
+  background: orange;
+  color: white;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.nav-tabs > li > a {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.tab-content {
+  border: 1px solid #ddd;
+  border-top-width: 0;
+}
+
+.row {
+  margin-bottom: 5px;
+}
+
+.input-group-btn > select {
+  padding: 0;
+  width: 85px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  border-right: 0;
+}

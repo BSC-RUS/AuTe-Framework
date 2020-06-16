@@ -115,6 +115,7 @@
   "Service name": "Service name",
   "Ignored tags": "Ignored tags",
   "Expected request": "Expected request",
+  "Requests to mock": "Requests to mock",
   "Add saved variable from mock request": "Add variable",
   "Mock request var delete": "Delete variable",
   "Mock request var name": "Variable name",
@@ -175,5 +176,9 @@
   "Repeat before each request": "Repeat before each request",
   "Variables": "Variables",
   "Variable value": "Variable value",
-  "Response as base64": "Response as base64"
+  "Response as base64": "Response as base64",
+  "Unexpected": "Unexpected",
+  "Actual requests": "Actual requests",
+  "Uncalled expected requests": "Uncalled expected requests",
+  "Need calls": "Need calls"
 }

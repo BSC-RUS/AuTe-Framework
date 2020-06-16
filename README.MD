@@ -41,7 +41,7 @@ Name | Description
         * wireMockUrl - wiremock URL
     * PROJECT_CODE_2: ...
 
-## Build and run wiremock ##
+## Build and run Wiremock ##
 1. Clone project
 1. Build project with install nodeJS packages `mvn clean package -P npm-install`
 1. Create working directory
@@ -81,6 +81,14 @@ response.status | response status
 response.body | response body
 response.headers | response headers
 uuid | mock's uuid
+
+## Run AuTe Framework in Docker ##
+1. Build docker images with command `mvn clean package -P docker` or use existed images from [DockerHub](https://hub.docker.com/r/bscmsc/aute-framework/tags)
+1. Copy [docker-compose.yml.sample](docker-compose.yml.sample) to your local machine and rename it to docker-compose.yml
+1. Modify image tags, volumes and ports if needed in local docker-compose.yml
+1. Change `projectsDirectoryPath` in your `env.yml` to `/app/repository/<AT_directory>`
+1. Run containers with command `docker-compose up` to run both ATF and Wiremock applications or `docker-compose up atf` to run ATF only
+1. Go to http://localhost:8080 to check running ATF application
 
 ## IBM MQ mocking ##
 For mocking IBM MQ you have to find and download

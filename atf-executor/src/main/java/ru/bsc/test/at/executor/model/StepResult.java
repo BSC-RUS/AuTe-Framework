@@ -18,12 +18,9 @@
 
 package ru.bsc.test.at.executor.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by sdoroshin on 12.05.2017.
@@ -53,6 +50,8 @@ public class StepResult {
     private List<RequestData> requestDataList;
     private Map<String, Object> scenarioVariables;
     private List<String> sqlQueryList;
+    private List<ExpectedRequestResult> expectedRequestResults = new ArrayList<>();
+    private List<RequestResult> uncalledExpectedRequests = new ArrayList<>();
 
     public StepResult(String projectCode, Step step) {
         this.projectCode = projectCode;

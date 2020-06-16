@@ -32,7 +32,7 @@
 
   <div *ngIf="scenario">
     <app-scenario-title-item [scenario]="scenario" [projectCode]="projectCode" (onSaveSteps)="saveSteps()" [stepList]="stepList"></app-scenario-title-item>
-    <div class="container-fluid">
+    <div class="container-fluid" style="margin-top: 15px">
       <a [routerLink]="['/project/' + projectCode + '/scenario/' + (scenario.scenarioGroup ? scenario.scenarioGroup + '/' : '') + scenario.code + '/settings']">{{'Settings' | translate}}</a>
       <button class="btn btn-danger pull-right" (click)="deleteScenario()">{{'Delete scenario' | translate}}</button>
     </div>

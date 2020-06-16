@@ -49,9 +49,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.bsc.test.at.executor.model.RequestData;
-import ru.bsc.test.at.executor.model.Scenario;
-import ru.bsc.test.at.executor.model.StepResult;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.autotester.report.AbstractReportGenerator;
 import ru.bsc.test.autotester.report.impl.allure.attach.builder.AttachBuilder;
 import ru.bsc.test.autotester.report.impl.allure.plugin.DefaultCategoriesPlugin;
@@ -87,6 +85,7 @@ public class AllureReportGenerator extends AbstractReportGenerator {
     private final Gson gson = new Gson();
     private final AttachBuilder<StepResult> stepResultAttachBuilder;
     private final AttachBuilder<RequestData> requestDataAttachBuilder;
+    private final AttachBuilder<ExpectedRequestResult> expectedRequestAttachBuilder;
     private final ReportGenerator generator;
     private final Configuration configuration;
     private final HistoryFilesProcessor historyFilesProcessor;
@@ -95,13 +94,15 @@ public class AllureReportGenerator extends AbstractReportGenerator {
     public AllureReportGenerator(
             AttachBuilder<StepResult> stepResultAttachBuilder,
             AttachBuilder<RequestData> requestDataAttachBuilder,
-            HistoryFilesProcessor historyFilesProcessor
+            HistoryFilesProcessor historyFilesProcessor,
+            AttachBuilder<ExpectedRequestResult> expectedRequestAttachBuilder
     ) {
         this.stepResultAttachBuilder = stepResultAttachBuilder;
         this.requestDataAttachBuilder = requestDataAttachBuilder;
         this.historyFilesProcessor = historyFilesProcessor;
         this.configuration = createConfiguration();
         this.generator = new ReportGenerator(configuration);
+        this.expectedRequestAttachBuilder = expectedRequestAttachBuilder;
     }
 
     @Override
@@ -276,6 +277,7 @@ public class AllureReportGenerator extends AbstractReportGenerator {
                 .withStop(result.getStop())
                 .withStatus(result.getResult().isPositive() ? PASSED : FAILED)
                 .withAttachments(stepResultAttachBuilder.build(resultDirectory, result));
+        step.getAttachments().addAll(expectedRequestAttachBuilder.buildAll(resultDirectory, result.getExpectedRequestResults()));
         List<RequestData> requestDataList = result.getRequestDataList();
         if (isNotEmpty(requestDataList) && requestDataList.size() > 1) {
             step = step.withSteps(buildStepsForCyclicRequest(resultDirectory, step.getStatus(), requestDataList));

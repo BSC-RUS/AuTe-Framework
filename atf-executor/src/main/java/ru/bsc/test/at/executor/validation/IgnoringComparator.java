@@ -21,18 +21,14 @@ package ru.bsc.test.at.executor.validation;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.skyscreamer.jsonassert.Customization;
-import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.skyscreamer.jsonassert.JSONCompareResult;
+import org.skyscreamer.jsonassert.*;
 import org.skyscreamer.jsonassert.comparator.CustomComparator;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.arrayOfJsonObjectToMap;
-import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.formatUniqueKey;
-import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.getKeys;
-import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.isUsableAsUniqueKey;
+import static java.util.stream.Collectors.toMap;
+import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.*;
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by rrudakov on 10/7/16.
@@ -40,6 +36,8 @@ import static org.skyscreamer.jsonassert.comparator.JSONCompareUtil.isUsableAsUn
  */
 public class IgnoringComparator extends CustomComparator {
     private static final String IGNORE = "*ignore*";
+    //Ignored tags in Mock requests
+    private List<Customization> customizations;
 
     public IgnoringComparator(JSONCompareMode mode) {
         super(mode);
@@ -47,6 +45,7 @@ public class IgnoringComparator extends CustomComparator {
 
     public IgnoringComparator(JSONCompareMode mode, List<Customization> customizations) {
         super(mode, customizations.toArray(new Customization[0]));
+        this.customizations = customizations;
     }
 
     @Override
@@ -55,9 +54,19 @@ public class IgnoringComparator extends CustomComparator {
             return;
         }
 
+        Customization customization = getCustomization(prefix);
         if (expectedValue instanceof String && actualValue instanceof String && ((String) expectedValue).contains(IGNORE)) {
             if (!MaskComparator.compare((String) expectedValue, (String) actualValue)) {
                 result.fail(prefix, expectedValue, actualValue);
+            }
+        } else if (customization != null) {
+            try {
+                if (!customization.matches(prefix, actualValue, expectedValue, result)) {
+                    result.fail(prefix, expectedValue, actualValue);
+                }
+            }
+            catch (ValueMatcherException e) {
+                result.fail(prefix, e);
             }
         } else {
             super.compareValues(prefix, expectedValue, actualValue, result);
@@ -66,8 +75,12 @@ public class IgnoringComparator extends CustomComparator {
 
     @Override
     public void compareJSONArrayOfJsonObjects(String prefix, JSONArray expected, JSONArray actual, JSONCompareResult result) throws JSONException {
-        String uniqueKey = findUniqueKey(expected);
-        if (uniqueKey == null || !isUsableAsUniqueKey(uniqueKey, actual)) {
+        String uniqueKey = findUniqueKeyWithSupportIgnore(expected, prefix);
+        if (uniqueKey == null && isAllObjectEquals(expected, prefix)) {
+            compareJSONArrayWithStrictOrder(prefix, expected, actual, result);
+            return;
+        }
+        if (uniqueKey == null || !isUsableAsUniqueKeyWithSupportIgnore(uniqueKey, actual, prefix)) {
             // An expensive last resort
             recursivelyCompareJSONArray(prefix, expected, actual, result);
             return;
@@ -90,15 +103,68 @@ public class IgnoringComparator extends CustomComparator {
         }
     }
 
-    private static String findUniqueKey(JSONArray expected) throws JSONException {
-        // Find a unique key for the object (id, name, whatever)
-        JSONObject o = (JSONObject)expected.get(0); // There's at least one at this point
-        for(String candidate : getKeys(o)) {
-            if (!IGNORE.equals(o.get(candidate)) && isUsableAsUniqueKey(candidate, expected)) {
-                return candidate;
+    private boolean isAllObjectEquals(JSONArray array, String key) throws JSONException {
+        JSONObject firstObject = (JSONObject) array.get(0);
+        Map<String, Object> values = nullSafeStream(getKeys(firstObject)).collect(toMap(field -> field, firstObject::get));
+        for (int i = 1; i < array.length(); i++) {
+            JSONObject item = (JSONObject) array.get(i);
+            if (!compareObjects(values, item, key)) {
+                return false;
             }
         }
-        // No usable unique key :-(
-        return null;
+        return true;
+    }
+
+    private boolean compareObjects(Map<String, Object> values, JSONObject object, String key) {
+        return values.entrySet().stream().allMatch(field -> {
+            if (object.has(field.getKey())) {
+                Object value = object.get(field.getKey());
+                if (isSimpleValue(value)) {
+                    return getCustomization(key + "." + field.getKey()) != null || Objects.equals(field.getValue(), object.get(field.getKey()));
+                }
+            }
+            return true;
+        });
+    }
+
+    private String findUniqueKeyWithSupportIgnore(JSONArray expected, String key) throws JSONException {
+        return getKeys((JSONObject) expected.get(0)).stream()
+            .filter(candidate -> isUsableAsUniqueKeyWithSupportIgnore(candidate, expected, key))
+            .findFirst().orElse(null);
+    }
+
+    private boolean isUsableAsUniqueKeyWithSupportIgnore(String candidate, JSONArray array, String key) throws JSONException {
+        if (getCustomization(key + "." + candidate) != null) {
+            return false;
+        }
+
+        Set<Object> seenValues = new HashSet<>();
+        for (int i = 0 ; i < array.length() ; i++) {
+            JSONObject o = (JSONObject) array.get(i);
+            if (o.has(candidate)) {
+                Object value = o.get(candidate);
+                if (isSimpleValue(value) && !seenValues.contains(value) && !IGNORE.equals(value)) {
+                    seenValues.add(value);
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Customization getCustomization(String path) {
+        StringBuilder correctPath = new StringBuilder(path.replaceAll("\\[.*?]", ""));
+        if (correctPath.indexOf(".") == 0) {
+            correctPath.deleteCharAt(0);
+        }
+        if (correctPath.length() != 0 && correctPath.lastIndexOf(".") == correctPath.length() - 1) {
+            correctPath.deleteCharAt(correctPath.length() - 1);
+        }
+        return nullSafeStream(customizations)
+            .filter(c -> c.appliesToPath(correctPath.toString()))
+            .findFirst().orElse(null);
     }
 }

@@ -22,7 +22,7 @@ import {Mapping} from '../model/mapping';
 import {Observable} from 'rxjs/Observable';
 import {RequestList} from '../model/request-list';
 import 'rxjs/add/operator/map';
-import {JmsMapping, JmsMappings} from "../model/jms-mapping";
+import {JmsMapping, JmsMappingList} from '../model/jms-mapping';
 
 @Injectable()
 export class WireMockService {
@@ -42,11 +42,11 @@ export class WireMockService {
       .catch(reason => console.log(reason));
   }
 
-  getJmsMappings(): Promise<JmsMappings> {
+  getJmsMappings(): Promise<JmsMappingList> {
     return this.http
       .get(this.jmsUrl + '/mappings/group')
       .toPromise()
-      .then(response => response.json() as JmsMappings)
+      .then(response => response.json() as JmsMappingList)
       .catch(reason => console.log(reason));
   }
 

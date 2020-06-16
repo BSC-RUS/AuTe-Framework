@@ -25,11 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.autotester.component.JsonDiffCalculator;
 import ru.bsc.test.autotester.model.ExecutionResult;
-import ru.bsc.test.autotester.ro.ExecutionResultRo;
-import ru.bsc.test.autotester.ro.ScenarioResultRo;
+import ru.bsc.test.autotester.ro.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 @Mapper(config = Config.class)
 public abstract class ExecutionResultRoMapper {
@@ -83,8 +84,16 @@ public abstract class ExecutionResultRoMapper {
             return;
         }
         executionResultRo.getScenarioResultList().stream()
-                .map(ScenarioResultRo::getStepResultList)
-                .flatMap(List::stream)
-                .forEach(result -> result.setDiff(diffCalculator.calculate(result.getActual(), result.getExpected())));
+            .map(ScenarioResultRo::getStepResultList)
+            .flatMap(List::stream)
+            .forEach(result -> {
+                result.setDiff(diffCalculator.calculate(result.getActual(), result.getExpected()));
+                setDiffForExpectedRequestResults(result.getExpectedRequestResults());
+            });
+    }
+
+    private void setDiffForExpectedRequestResults(List<ExpectedServiceRequestResultRo> expectedRequestResults) {
+        nullSafeStream(expectedRequestResults)
+            .forEach(request -> request.setDiff(diffCalculator.calculateAndTrim(request.getActualRequest().getBody(), request.getExpectedRequest())));
     }
 }

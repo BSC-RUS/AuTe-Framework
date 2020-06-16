@@ -17,11 +17,13 @@
  */
 
 import {Component, OnInit} from '@angular/core';
-import {Mapping} from '../../model/mapping';
+import {Mapping, MappingList} from '../../model/mapping';
 import {WireMockService} from '../../service/wire-mock.service';
 import {EventService} from '../../service/event-service';
 import {Router} from '@angular/router';
 import {MessageService} from '../../service/message-service';
+import {CheckboxStatus} from '../checkbox/checkbox.component';
+import {GroupStatus} from '../../model/group-status';
 
 @Component({
   selector: 'app-mapping-list',
@@ -29,10 +31,11 @@ import {MessageService} from '../../service/message-service';
 })
 export class MappingListComponent implements OnInit {
 
-  mappingList: Mapping[];
+  mappingList: MappingList;
   displayDetails = false;
-  scenariosName = [];
   disabledDeleteSelected = true;
+  disabledSelectedAll = true;
+  selectedAll = false;
   isBusy = false;
 
   constructor(
@@ -48,27 +51,65 @@ export class MappingListComponent implements OnInit {
       if (value) {
         this.getMappings();
       }
-    })
+    });
   }
 
-  getMappings() {
-    this.wireMockService.getMappingList()
-      .then(mappingList => {
-        this.mappingList = mappingList
-          .sort((a, b) =>
-            (a.name ? a.name : (a.request.url ? a.request.url : (a.request.urlPattern ? a.request.urlPattern : 'no name'))) >
-            (b.name ? b.name : (b.request.url ? b.request.url : (b.request.urlPattern ? b.request.urlPattern : 'no name'))) ? 1 : -1
-          );
-        mappingList
-          .forEach(
-            value => {
-              if (value.scenarioName && this.scenariosName.indexOf(value.scenarioName) === -1) {
-                this.scenariosName.push(value.scenarioName)
-              }
-            }
-          );
-        this.scenariosName.sort((a, b) => a > b ? 1 : -1);
-      });
+  /**
+   * Функция получения маппингов.
+   * @description После запроса происходит сортировка и распределение по группам.
+   **/
+  async getMappings() {
+    this.isBusy = true;
+    try {
+      const mappingList = await this.wireMockService.getMappingList();
+      this.setMappingList(mappingList);
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      this.isBusy = false;
+    }
+  }
+
+  /**
+   * Функция распределения маппингов.
+   * @description Так как в wireMockService.getMappingList приходит список общей кучей, то для приведения к общему виду с
+   * JmsMappingListComponent испольуем эту функцию.
+   * Сначала сортируются маппинги, затем происходит создание групп (в mappingList.groups) и рапределение маппингов по группам.
+   * Маппинги без групп попадают в общей список (mappingList.messages).
+   *
+   * @param {Mapping[]} mappingList
+   **/
+  setMappingList(mappingList) {
+    this.mappingList = {
+      groups: [],
+      messages: []
+    };
+
+    // Сортировка маппингов
+    mappingList.sort((a, b) => (a.name || a.request.url || a.request.urlPattern || 'no name')
+        .localeCompare(b.name || b.request.url || b.request.urlPattern || 'no name'));
+
+    // Распределение маппингов по группам
+    mappingList.forEach(value => {
+      if (!value.scenarioName) { // если нет группы
+        this.mappingList.messages.push(value);
+      } else if (this.mappingList.groups.findIndex(group => value.scenarioName === group.name) === -1) { // создание новой группы
+        this.mappingList.groups.push({
+          name: value.scenarioName,
+          selected: CheckboxStatus.FALSE,
+          messages: [value]
+        });
+      } else { // добавление в существующую группу
+        const index: number = this.mappingList.groups.findIndex(group => group.name === value.scenarioName);
+        const messages = this.mappingList.groups[index].messages;
+        messages.push(value as Mapping);
+      }
+    });
+
+    // Сортировка названий групп
+    this.mappingList.groups.sort((a, b) => a.name > b.name ? 1 : -1);
+
+    this.changeStatusButtons();
   }
 
   detailsToggle() {
@@ -76,17 +117,101 @@ export class MappingListComponent implements OnInit {
   }
 
   /**
+   * Функция изменения состояния кнопок удаления и выделения.
+   * @description Ищет есть ли выбранные маппинги и изменяет статусы кнопок.
+   **/
+  changeStatusButtons() {
+    const predicate = el => el.selected === CheckboxStatus.TRUE;
+    const isNotSelected = el => (el.selected === CheckboxStatus.FALSE || el.selected === undefined);
+    const isEmpty = !(this.mappingList.messages.length + this.mappingList.groups.length);
+
+    // Если маппингов нет, то кнопки блокируются
+    if (!isEmpty) {
+      this.disabledDeleteSelected = !(
+        this.mappingList.messages.some(predicate) ||
+        this.mappingList.groups.some(group => (group.selected !== CheckboxStatus.FALSE))
+      );
+      this.disabledSelectedAll = false;
+      this.selectedAll = !(
+        this.mappingList.messages.some(isNotSelected) ||
+        this.mappingList.groups.some(group => (group.selected !== CheckboxStatus.TRUE))
+      );
+    } else {
+      this.disabledDeleteSelected = this.disabledSelectedAll = true;
+    }
+  }
+
+  /**
+   * Функция выделения всех маппингов.
+   * @description Отметка всех маппингов.
+   * Изменение статуса кнопки "Выделить все".
+   * Изменение статуса кнопки удаления.
+   **/
+  selectAll() {
+    this.selectedAll = !this.selectedAll;
+
+    const select = mapping => mapping.selected = CheckboxStatus.TRUE;
+    const remove = mapping => mapping.selected = CheckboxStatus.FALSE;
+
+    this.mappingList.groups.forEach(group => {
+      group.selected = this.selectedAll ? CheckboxStatus.TRUE : CheckboxStatus.FALSE;
+      group.messages.forEach(mapping => {
+        mapping.selected = group.selected;
+      });
+    });
+    this.mappingList.messages.forEach(this.selectedAll ? select : remove);
+
+    this.disabledDeleteSelected = !this.selectedAll;
+  }
+
+  /**
+   * Функция выделения группы маппингов.
+   * @description Отметка всех зависимых маппингов.
+   * Изменение статуса кнопки удаления.
+   * checked приведится к логическому типу, так как может поступить значение 'indeterminate'.
+   *
+   * @param {CheckboxStatus} checked
+   * @param {string} groupName
+   **/
+  selectGroup(checked: CheckboxStatus, groupName: string): void {
+    const groupList = this.mappingList.groups.find(group => group.name === groupName);
+
+    groupList.selected = checked;
+    groupList.messages.forEach(mapping => {
+      mapping.selected = groupList.selected;
+    });
+
+    this.changeStatusButtons();
+  }
+
+  /**
    * Функция для отметки маппинга на удаление.
    * @description Отмечает выбранный маппинг на удаление.
+   * Изменяет состояние кнопки "Выделить все".
    * Разблокирует/блокирует кнопку для удаления выбранных маппингов.
+   * Изменяет состояние чекбокса зависимой группы.
    *
-   * @param {boolean} checked
+   * @param {CheckboxStatus} checked
    * @param {Mapping} mapping
    **/
-  onChange(checked: boolean, mapping: Mapping): void {
+  onChange(checked: CheckboxStatus, mapping: Mapping): void {
     mapping.selected = checked;
 
-    this.disabledDeleteSelected = !(this.mappingList.some(el => el.selected));
+    const mappingList = this.mappingList.groups.find(group => group.name === mapping.scenarioName);
+    const isSelected = el => (el.selected !== CheckboxStatus.FALSE && el.selected !== undefined);
+
+    if (mappingList) {
+      // Проверка на checked нужна для ускорения работы, чтобы избегать лишних переборов массива
+      if (checked && mappingList.messages.every(isSelected)) {
+        mappingList.selected = CheckboxStatus.TRUE;
+      } else if (checked || mappingList.messages.some(isSelected)) {
+        mappingList.selected = CheckboxStatus.INDETERMINATE;
+      } else {
+        mappingList.selected = CheckboxStatus.FALSE;
+      }
+    }
+
+    this.changeStatusButtons();
   }
 
   /**
@@ -113,7 +238,14 @@ export class MappingListComponent implements OnInit {
   * Если список selected пуст, то выводится предупреждение.
   **/
   async deleteSelected() {
-    const selected: Mapping[] = this.mappingList.filter(mapping => mapping.selected);
+    // Выбор из mappings.messages маппингов на удаление
+    let selected: Mapping[] = this.mappingList.messages.filter(mapping => mapping.selected);
+    // Выбор из mappings.groups маппингов на удаление
+    if (this.mappingList.groups) {
+      this.mappingList.groups.forEach(group => {
+        selected = selected.concat(group.messages.filter(mapping => mapping.selected));
+      });
+    }
 
     let messageService;
 
@@ -130,7 +262,7 @@ export class MappingListComponent implements OnInit {
         console.warn(e);
       } finally {
         if (this.router.isActive('/mapping', true)) {
-          this.getMappings();
+          await this.getMappings();
         } else {
           await this.router.navigate(['/mapping']);
         }
@@ -140,7 +272,7 @@ export class MappingListComponent implements OnInit {
         this.messageService.success('Маппинги успешно удалены');
 
         this.isBusy = false;
-        this.disabledDeleteSelected = true;
+        this.changeStatusButtons();
       }
     } else {
       this.messageService.error('Не выбраны маппинги');

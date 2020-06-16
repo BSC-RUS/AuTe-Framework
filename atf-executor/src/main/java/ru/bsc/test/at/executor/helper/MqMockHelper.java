@@ -24,15 +24,31 @@ import org.apache.commons.lang3.StringUtils;
 import org.xmlunit.XMLUnitException;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockedRequest;
-import ru.bsc.test.at.executor.exception.*;
-import ru.bsc.test.at.executor.model.*;
+import ru.bsc.test.at.executor.exception.ComparisonException;
+import ru.bsc.test.at.executor.exception.JsonParsingException;
+import ru.bsc.test.at.executor.exception.UnMockedRequestsException;
+import ru.bsc.test.at.executor.model.ExpectedMqRequest;
+import ru.bsc.test.at.executor.model.ExpectedRequestResult;
+import ru.bsc.test.at.executor.model.RequestResult;
+import ru.bsc.test.at.executor.model.ScenarioVariableFromMqRequest;
+import ru.bsc.test.at.executor.model.Step;
+import ru.bsc.test.at.executor.model.StepResult;
 import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 @Slf4j
 public class MqMockHelper {
@@ -46,7 +62,7 @@ public class MqMockHelper {
     }
 
     public void assertMqRequests(WireMockAdmin mqMockerAdmin, String testId, Step step, Map<String, Object> scenarioVariables, Integer mqCheckCount,
-            Long mqCheckInterval) throws Exception {
+            Long mqCheckInterval, StepResult stepResult) throws Exception {
         if (mqMockerAdmin == null) {
             return;
         }
@@ -66,10 +82,12 @@ public class MqMockHelper {
                     counter++;
                 }
 
-                if (!Boolean.TRUE.equals(step.getIgnoreUndeclaredMqRequests()) && !actualMqRequestList.isEmpty()) {
+                putRequestResults(stepResult, actualMqRequestList, step.getExpectedMqRequestList(), scenarioVariables);
+
+                if (isNotTrue(step.getIgnoreUndeclaredMqRequests()) && !isEmpty(actualMqRequestList)) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Sent request without mock : \n");
-                    actualMqRequestList.forEach(r -> sb.append("queue: " + r.getSourceQueue() + "body: " + r.getRequestBody() + "\n"));
+                    actualMqRequestList.forEach(r -> sb.append("queue: ").append(r.getSourceQueue()).append("body: ").append(r.getRequestBody()).append("\n"));
                     throw new UnMockedRequestsException(sb.toString());
                 }
 
@@ -85,10 +103,10 @@ public class MqMockHelper {
         for (int counter = 0; counter < maxCount; counter++) {
             actualMqRequestList = mqMockerAdmin.getMqRequestListByTestId(testId);
             List<MockedRequest> actualMqRequestListF = actualMqRequestList;
-            if (!Boolean.TRUE
-                    .equals(step.getIgnoreRequestsInvocations())) { // если не стоит галочка и есть запросы для которых нет заглушек, то запоминаем и ругаемся
-                unMockedRequests = actualMqRequestList.stream().filter(actual ->
-                        step.getExpectedMqRequestList().stream().filter(exp -> isSame(actual, exp, scenarioVariables)).count() == 0).collect(toList());
+            if (isNotTrue(step.getIgnoreRequestsInvocations())) { // если не стоит галочка и есть запросы для которых нет заглушек, то запоминаем и ругаемся
+                unMockedRequests = actualMqRequestList.stream()
+                    .filter(actual -> step.getExpectedMqRequestList().stream().filter(exp -> isSame(actual, exp, scenarioVariables)).count() == 0)
+                    .collect(toList());
                 if (!isEmpty(unMockedRequests)) {
                     break;
                 }
@@ -120,9 +138,9 @@ public class MqMockHelper {
         if (step.getScenarioVariableFromMqRequestList() != null) {
             for (ScenarioVariableFromMqRequest variable : step.getScenarioVariableFromMqRequestList()) {
                 MockedRequest actual = actualMqRequestList.stream()
-                                                          .filter(mockedRequest -> Objects.equals(mockedRequest.getSourceQueue(), variable.getSourceQueue()))
-                                                          .findAny()
-                                                          .orElse(null);
+                    .filter(mockedRequest -> Objects.equals(mockedRequest.getSourceQueue(), variable.getSourceQueue()))
+                    .findAny()
+                    .orElse(null);
                 if (actual != null) {
                     scenarioVariables.put(
                             variable.getVariableName().trim(),
@@ -132,16 +150,18 @@ public class MqMockHelper {
             }
         }
 
+        putRequestResults(stepResult, actualMqRequestList, step.getExpectedMqRequestList(), scenarioVariables);
+
         for (ExpectedMqRequest expectedMqRequest : step.getExpectedMqRequestList()) {
             MockedRequest actualRequest = actualMqRequestList.stream()
-                                                             .filter(mockedRequest -> mockedRequest.getSourceQueue().equals(expectedMqRequest.getSourceQueue()))
-                                                             .findAny().orElse(null);
+                .filter(mockedRequest -> mockedRequest.getSourceQueue().equals(expectedMqRequest.getSourceQueue()))
+                .findAny().orElse(null);
             if (actualRequest != null) {
                 actualMqRequestList.remove(actualRequest);
 
-                ComparisonResult comparisonResult =
-                        compareRequestsBody(expectedMqRequest, actualRequest, scenarioVariables);
+                ComparisonResult comparisonResult = compareRequestsBody(expectedMqRequest, actualRequest, scenarioVariables);
                 if (comparisonResult.isHasDifferences()) {
+                    updateDiffStatus(stepResult, actualRequest);
                     throw new ComparisonException(
                             comparisonResult.getDiff(),
                             comparisonResult.getExpectedRequestBody(),
@@ -149,6 +169,7 @@ public class MqMockHelper {
                     );
                 }
             } else {
+                stepResult.getUncalledExpectedRequests().add(transform(expectedMqRequest, 1));
                 throw new Exception(String.format("Queue %s is not called", expectedMqRequest.getSourceQueue()));
             }
         }
@@ -167,6 +188,7 @@ public class MqMockHelper {
                         expectedCount,
                         entry.getValue().size()
                 ));
+                stepResult.getUncalledExpectedRequests().add(transform(entry.getKey(), (int) expectedCount - entry.getValue().size()));
                 int i = 0;
                 for (MockedRequest actual : entry.getValue()) {
                     message.append(String.format(
@@ -183,19 +205,55 @@ public class MqMockHelper {
         if (!isEmpty(unMockedRequests)) {
             StringBuilder sb = new StringBuilder();
             sb.append("Sent request without mock : \n");
-            unMockedRequests.forEach(r -> sb.append("queue: " + r.getSourceQueue() + "body: " + r.getRequestBody() + "\n"));
+            unMockedRequests.forEach(r -> sb.append("queue: ").append(r.getSourceQueue()).append("body: ").append(r.getRequestBody()).append("\n"));
             throw new UnMockedRequestsException(sb.toString());
         }
 
+    }
+
+    private void putRequestResults(StepResult stepResult, List<MockedRequest> actualMqRequestList, List<ExpectedMqRequest> expectedMqRequests, Map<String, Object> scenarioVariables) {
+        stepResult.getExpectedRequestResults().addAll(nullSafeStream(actualMqRequestList)
+            .map(actual -> {
+                String expectedRequest = nullSafeStream(expectedMqRequests)
+                    .filter(ex -> isSame(actual, ex, scenarioVariables))
+                    .map(ExpectedMqRequest::getRequestBody)
+                    .findFirst().orElse(null);
+                return new ExpectedRequestResult(expectedRequest != null, expectedRequest, transform(actual), false);
+            }).collect(toList()));
+    }
+
+    private void updateDiffStatus(StepResult stepResult, MockedRequest actualMqRequest) {
+        stepResult.getExpectedRequestResults().stream()
+            .filter(r -> r.equalsActualRequest(actualMqRequest))
+            .findFirst()
+            .ifPresent(r -> r.setHasDiff(true));
+    }
+
+    private RequestResult transform(MockedRequest mockedRequest) {
+        RequestResult result = new RequestResult();
+        result.setBody(mockedRequest.getRequestBody());
+        result.setLoggedDate(mockedRequest.getDate());
+        result.setMethod("MQ");
+        result.setSource(mockedRequest.getSourceQueue());
+        return result;
+    }
+
+    private RequestResult transform(ExpectedMqRequest expected, int count) {
+        RequestResult result = new RequestResult();
+        result.setBody(expected.getRequestBody());
+        result.setMethod("MQ");
+        result.setSource(expected.getSourceQueue());
+        result.setCount(count);
+        return result;
     }
 
     protected ComparisonResult compareRequestsBody(ExpectedMqRequest expectedMqRequest, MockedRequest actualRequest, Map<String, Object> scenarioVariables) {
         Set<String> ignoredTags;
         if (expectedMqRequest.getIgnoredTags() != null) {
             ignoredTags = new HashSet<>(Arrays.stream(expectedMqRequest.getIgnoredTags()
-                                                                       .split(","))
-                                              .map(String::trim)
-                                              .collect(toList()));
+                .split(","))
+                .map(String::trim)
+                .collect(toList()));
         } else {
             ignoredTags = new HashSet<>();
         }

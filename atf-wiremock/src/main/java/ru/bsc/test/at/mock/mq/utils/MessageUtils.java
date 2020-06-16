@@ -29,6 +29,10 @@ public class MessageUtils {
     public static String extractByteMessageBody(BytesMessage message) throws JMSException {
         byte[] byteData = new byte[(int) message.getBodyLength()];
         message.readBytes(byteData);
+        return extractBodyFromByte(byteData);
+    }
+
+    public static String extractBodyFromByte(byte[] byteData) {
         return new String(byteData).replaceAll("<\\?xml(.+?)\\?>", "").trim();
     }
 

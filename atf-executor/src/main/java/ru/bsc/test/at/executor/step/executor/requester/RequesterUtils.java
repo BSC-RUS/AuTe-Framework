@@ -30,6 +30,7 @@ import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.validation.IgnoringComparator;
 import ru.bsc.test.at.executor.validation.MaskComparator;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -147,7 +148,7 @@ public class RequesterUtils {
         }
         boolean retry = true;
         try {
-            if (StringUtils.isNotEmpty(content) && JsonPath.read(content, step.getPollingJsonXPath()) != null) {
+            if (checkByJsonPath(content, step)) {
                 log.info("Required attribute for polling found in path {}. Stop polling", step.getPollingJsonXPath());
                 retry = false;
             }
@@ -193,5 +194,16 @@ public class RequesterUtils {
 
     private static void jsonComparing(String expectedResponse, ClientResponse responseData, String jsonCompareMode) throws Exception {
             jsonComparing(expectedResponse, responseData.getContent(), jsonCompareMode);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private static boolean checkByJsonPath(String content, Step step) {
+        if (StringUtils.isEmpty(content)) {
+            return false;
+        }
+        Object result = JsonPath.read(content, step.getPollingJsonXPath());
+        return result instanceof List ?
+            ((List) result).size() > 0 :
+            result != null;
     }
 }

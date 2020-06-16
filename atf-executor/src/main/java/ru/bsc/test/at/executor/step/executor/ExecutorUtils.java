@@ -23,41 +23,20 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
-import ru.bsc.test.at.executor.ei.wiremock.model.BasicAuthCredentials;
-import ru.bsc.test.at.executor.ei.wiremock.model.MockDefinition;
-import ru.bsc.test.at.executor.ei.wiremock.model.MqMockDefinition;
-import ru.bsc.test.at.executor.ei.wiremock.model.MqMockDefinitionResponse;
-import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
+import ru.bsc.test.at.executor.ei.wiremock.model.*;
 import ru.bsc.test.at.executor.helper.NamedParameterStatement;
 import ru.bsc.test.at.executor.helper.client.impl.mq.ClientMQRequest;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
-import ru.bsc.test.at.executor.model.MockServiceResponse;
-import ru.bsc.test.at.executor.model.MqMessage;
-import ru.bsc.test.at.executor.model.MqMock;
-import ru.bsc.test.at.executor.model.MqMockResponse;
-import ru.bsc.test.at.executor.model.NameValueProperty;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.SqlData;
-import ru.bsc.test.at.executor.model.SqlResultType;
-import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.model.StepResult;
-import ru.bsc.test.at.executor.step.executor.scriptengine.JSScriptEngine;
-import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngine;
-import ru.bsc.test.at.executor.step.executor.scriptengine.ScriptEngineFunctionResult;
+import ru.bsc.test.at.executor.model.*;
+import ru.bsc.test.at.executor.step.executor.scriptengine.*;
 import ru.bsc.test.at.util.MultipartConstant;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 import java.util.regex.Matcher;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
@@ -289,16 +268,16 @@ public class ExecutorUtils {
                 mockMessage.setSourceQueueName(mqMock.getSourceQueueName());
                 mockMessage.setHttpUrl(mqMock.getHttpUrl());
                 mockMessage.setTestId(testId);
-
-                for (MqMockResponse part : mqMock.getResponses()) {
-                    MqMockDefinitionResponse definitionPart = new MqMockDefinitionResponse(
-                            evaluateExpressions(part.getResponseBody(), scenarioVariables),
-                            part.getDestinationQueueName()
-                    );
-                    mockMessage.getResponses().add(definitionPart);
-                }
+                mockMessage.setXpath(mqMock.getXpath());
+                mockMessage.setResponses(mqMock.getResponses().stream().map(x-> getDefinitionPart(x, scenarioVariables)).collect(toList()));
                 wireMockAdmin.addMqMapping(mockMessage);
             }
         }
+    }
+
+    static private MqMockDefinitionResponse getDefinitionPart(MqMockResponse part, Map<String, Object> scenarioVariables) {
+        String bodyWithSavedValues = insertSavedValues(part.getResponseBody(), scenarioVariables);
+        String bodyWithEvaluatedExpression = evaluateExpressions(bodyWithSavedValues, scenarioVariables);
+        return new MqMockDefinitionResponse(bodyWithEvaluatedExpression, part.getDestinationQueueName());
     }
 }

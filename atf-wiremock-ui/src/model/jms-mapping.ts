@@ -15,25 +15,22 @@
  */
 
 import {JmsResponse} from './jms-response'
+import {GroupStatus} from './group-status';
+import {CheckboxStatus} from '../app/checkbox/checkbox.component';
 
-export class JmsMappings {
-  groups: JmsMappingGroup[] = [];
-  messages: JmsMapping[] = [];
-}
-
-export class JmsMappingGroup {
-  name: string;
+export class JmsMappingList {
+  groups: GroupStatus<JmsMapping>[] = [];
   messages: JmsMapping[] = [];
 }
 
 export class JmsMapping {
   guid: string;
   name: string;
-  group: string;
+  group: string; // аналог scenarioName в Mapping
   sourceQueueName: string;
   responses: JmsResponse[] = [];
   httpUrl: string;
   xpath: string;
   priority: number;
-  selected?: boolean; // select for delete in jms-mapping-list
+  selected?: CheckboxStatus; // select for delete in jms-mapping-list
 }

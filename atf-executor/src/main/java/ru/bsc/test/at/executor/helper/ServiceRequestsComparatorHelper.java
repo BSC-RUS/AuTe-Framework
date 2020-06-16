@@ -18,20 +18,14 @@
 
 package ru.bsc.test.at.executor.helper;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.skyscreamer.jsonassert.Customization;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.xml.sax.SAXParseException;
 import org.xmlunit.XMLUnitException;
-import org.xmlunit.builder.DiffBuilder;
-import org.xmlunit.diff.Diff;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.ei.wiremock.model.MockRequest;
 import ru.bsc.test.at.executor.ei.wiremock.model.RequestMatcher;
@@ -41,15 +35,17 @@ import ru.bsc.test.at.executor.exception.IncorrectRequestsOrderException;
 import ru.bsc.test.at.executor.exception.InvalidNumberOfMockRequests;
 import ru.bsc.test.at.executor.exception.JsonParsingException;
 import ru.bsc.test.at.executor.exception.UnMockedRequestsException;
+import ru.bsc.test.at.executor.model.ExpectedRequestResult;
 import ru.bsc.test.at.executor.model.ExpectedServiceRequest;
 import ru.bsc.test.at.executor.model.Project;
+import ru.bsc.test.at.executor.model.RequestResult;
 import ru.bsc.test.at.executor.model.ScenarioVariableFromServiceRequest;
 import ru.bsc.test.at.executor.model.Step;
 import ru.bsc.test.at.executor.model.StepMode;
+import ru.bsc.test.at.executor.model.StepResult;
 import ru.bsc.test.at.executor.service.AtProjectExecutor;
 import ru.bsc.test.at.executor.service.DelayUtilities;
 import ru.bsc.test.at.executor.step.executor.ExecutorUtils;
-import ru.bsc.test.at.executor.validation.IgnoringComparator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,15 +55,14 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
-import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by sdoroshin on 30.05.2017.
@@ -78,16 +73,17 @@ public class ServiceRequestsComparatorHelper {
     private static final String REGEX_PART = "\\u002A" + "part" + "\\u002A";
     private static final String STRING_PART = "*part*";
 
-    public void assertTestCaseWSRequests(Project project, Map<String, Object> variables, WireMockAdmin wireMockAdmin, String testId, Step step) throws Exception {
+    public void assertTestCaseWSRequests(Project project, Map<String, Object> variables, WireMockAdmin wireMockAdmin, String testId, Step step, StepResult stepResult) throws Exception {
         if (wireMockAdmin == null) {
             return;
         }
 
         if (step.getExpectedServiceRequests().isEmpty()) {
             List<WireMockRequest> actualRequestsByTestIds = wireMockAdmin.findRestRequests(getMockRequest(project, testId));
-            LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedServiceRequestListMap = getOrderedRequestsByExpectedMap(wireMockAdmin, project, step, testId, variables);
-            List<WireMockRequest> actualRequests = getRequestsByExpected(expectedServiceRequestListMap);
-            checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests);
+            LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedRequestListMap = getOrderedRequestsByExpectedMap(wireMockAdmin, project, step, testId, variables);
+            List<WireMockRequest> actualRequests = getRequestsByExpected(expectedRequestListMap);
+            putExpectedRequestResults(stepResult, expectedRequestListMap);
+            checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests, stepResult);
             checkRequestsOrder(step, actualRequestsByTestIds, actualRequests);
             return;
         }
@@ -96,7 +92,24 @@ public class ServiceRequestsComparatorHelper {
             pollWiremockUntilRequested(wireMockAdmin, project, step, variables, testId);
         }
 
-        checkExpectedServiceRequests(project, variables, wireMockAdmin, testId, step);
+        checkExpectedServiceRequests(project, variables, wireMockAdmin, testId, step, stepResult);
+    }
+
+    private void putExpectedRequestResults(StepResult stepResult, LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedRequestListMap) {
+        stepResult.getExpectedRequestResults().addAll(expectedRequestListMap.entrySet().stream()
+            .flatMap(entry -> nullSafeStream(entry.getValue()).map(wireMockRequest ->
+                new ExpectedRequestResult(true, entry.getKey().getExpectedServiceRequest(), transform(wireMockRequest), false)
+            ))
+            .collect(Collectors.toList()));
+    }
+
+    private RequestResult transform(WireMockRequest wireMockRequest) {
+        RequestResult result = new RequestResult();
+        result.setBody(wireMockRequest.getBody());
+        result.setLoggedDate(wireMockRequest.getLoggedDate());
+        result.setMethod(wireMockRequest.getMethod());
+        result.setSource(wireMockRequest.getUrl());
+        return result;
     }
 
     private void pollWiremockUntilRequested(WireMockAdmin wireMockAdmin, Project project, Step step, Map<String, Object> variables, String testId) throws IOException {
@@ -133,18 +146,12 @@ public class ServiceRequestsComparatorHelper {
         return true;
     }
 
-    private void checkExpectedServiceRequests(
-            Project project,
-            Map<String, Object> variables,
-            WireMockAdmin wireMockAdmin,
-            String testId,
-            Step step)
-            throws Exception {
-
+    private void checkExpectedServiceRequests(Project project, Map<String, Object> variables, WireMockAdmin wireMockAdmin, String testId, Step step, StepResult stepResult) throws Exception {
         List<WireMockRequest> actualRequestsByTestIds = wireMockAdmin.findRestRequests(getMockRequest(project, testId));
         LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> expectedServiceRequestListMap = getOrderedRequestsByExpectedMap(wireMockAdmin, project, step, testId, variables);
         List<WireMockRequest> actualRequests = getRequestsByExpected(expectedServiceRequestListMap);
-        checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests);
+        putExpectedRequestResults(stepResult, expectedServiceRequestListMap);
+        checkUnMockedRequest(step, actualRequestsByTestIds, actualRequests, stepResult);
         checkRequestsOrder(step, actualRequestsByTestIds, actualRequests);
 
         List<ExpectedServiceRequest> requestList = step.getExpectedServiceRequests();
@@ -152,26 +159,45 @@ public class ServiceRequestsComparatorHelper {
             List<WireMockRequest> requests = expectedServiceRequestListMap.get(request);
             long repeatCount = AtProjectExecutor.parseLongOrVariable(variables, request.getCount(), 1);
             if (requests.size() != repeatCount) {
+                stepResult.getUncalledExpectedRequests().add(transform(request, (int) repeatCount - requests.size()));
                 throw new InvalidNumberOfMockRequests(repeatCount, requests.size(), request.getServiceName());
             }
 
             String expression = ExecutorUtils.insertSavedValues(request.getExpectedServiceRequest(), variables);
-            String requestText =
-                    request.getNotEvalExprInBody() ? expression : ExecutorUtils.evaluateExpressions(expression, variables);
+            String requestText = request.getNotEvalExprInBody() ? expression : ExecutorUtils.evaluateExpressions(expression, variables);
             Set<String> ignoredTags = isNotEmpty(request.getIgnoredTags()) ?
                     Arrays.stream(request.getIgnoredTags().split(","))
                             .map(String::trim)
                             .collect(Collectors.toSet()) :
                     Collections.emptySet();
             for (WireMockRequest actualRequest : requests) {
-                compareWSRequest(requestText, actualRequest, ignoredTags, request.getJsonCompareMode());
-
+                try {
+                    compareWSRequest(requestText, actualRequest, ignoredTags, request.getJsonCompareMode());
+                } catch (Exception e) {
+                    updateDiffStatus(stepResult, actualRequest);
+                    throw e;
+                }
                 // save variables from service request body
-                this.saveVariablesFromServiceRequest(
-                        actualRequest.getBody(), request.getScenarioVariablesFromServiceRequest(), variables);
+                this.saveVariablesFromServiceRequest(actualRequest.getBody(), request.getScenarioVariablesFromServiceRequest(), variables);
             }
         });
 
+    }
+
+    private void updateDiffStatus(StepResult stepResult, WireMockRequest actualRequest) {
+        stepResult.getExpectedRequestResults().stream()
+            .filter(r -> r.equalsActualRequest(actualRequest))
+            .findFirst()
+            .ifPresent(r -> r.setHasDiff(true));
+    }
+
+    private RequestResult transform(ExpectedServiceRequest expected, int count) {
+        RequestResult result = new RequestResult();
+        result.setBody(expected.getExpectedServiceRequest());
+        result.setMethod("REST");
+        result.setSource(expected.getServiceName());
+        result.setCount(count);
+        return result;
     }
 
     private MockRequest getMockRequest(Project project, String testId) {
@@ -191,7 +217,6 @@ public class ServiceRequestsComparatorHelper {
             }
         }
     }
-
 
     private LinkedHashMap<ExpectedServiceRequest, List<WireMockRequest>> getOrderedRequestsByExpectedMap(WireMockAdmin wireMockAdmin, Project project, Step step, String testId, Map<String, Object> variables) {
         return step.getExpectedServiceRequests().stream().collect(Collectors.toMap(identity(), request -> {
@@ -213,9 +238,14 @@ public class ServiceRequestsComparatorHelper {
     /**
      * получаем список запросов из wiremock для которых нет заглушек
      */
-    private void checkUnMockedRequest(Step step, List<WireMockRequest> actualRequestsByTestIds, List<WireMockRequest> actualRequestsOrderedList) {
-        List<WireMockRequest> unMockedRequests = actualRequestsByTestIds.stream().
-                filter(r -> !actualRequestsOrderedList.contains(r)).collect(Collectors.toList());
+    private void checkUnMockedRequest(Step step, List<WireMockRequest> actualRequestsByTestIds, List<WireMockRequest> actualRequestsOrderedList, StepResult stepResult) {
+        List<WireMockRequest> unMockedRequests = actualRequestsByTestIds.stream()
+            .filter(r -> !actualRequestsOrderedList.contains(r))
+            .collect(Collectors.toList());
+
+        stepResult.getExpectedRequestResults().addAll(unMockedRequests.stream()
+            .map(request -> new ExpectedRequestResult(false, null, transform(request), false))
+            .collect(Collectors.toList()));
 
         if (!Boolean.TRUE.equals(step.getIgnoreRequestsInvocations()) && !unMockedRequests.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -385,8 +415,8 @@ public class ServiceRequestsComparatorHelper {
     @Getter
     @AllArgsConstructor
     private static class Request {
-        private String contentType;
-        private String expectedBody;
-        private String actualBody;
+        private final String contentType;
+        private final String expectedBody;
+        private final String actualBody;
     }
 }

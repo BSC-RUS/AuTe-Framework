@@ -45,6 +45,7 @@ import java.util.function.Function;
 public abstract class BaseYamlRepository {
     protected static final String MAIN_YML_FILENAME = "main.yml";
     protected static final String SCENARIO_YML_FILENAME = "scenario.yml";
+    protected static final String SCENARIOS_FOLDER_NAME = "scenarios";
     private static final String FILE_ENCODING = "UTF-8";
     private static final String REQUEST_JSON = "request.json";
     private static final String MQ_MOCK_RESPONSES_PATH = "mq-mock-responses";
@@ -412,7 +413,7 @@ public abstract class BaseYamlRepository {
 
     protected Scenario loadScenarioFromFiles(File scenarioDirectory, String group, boolean fetchSteps) throws IOException {
         File scenarioFile = new File(scenarioDirectory, SCENARIO_YML_FILENAME);
-        if (scenarioFile.exists()) {
+        if (scenarioFile.exists() && scenarioFile.length() > 0) {
             Scenario scenario = YamlUtils.loadAs(scenarioFile, Scenario.class);
             scenario.setCode(scenarioFile.getParentFile().getName());
             scenario.setScenarioGroup(group);
@@ -424,6 +425,9 @@ public abstract class BaseYamlRepository {
             }
             return scenario;
         } else {
+            if(scenarioFile.length() == 0) {
+                log.warn("Scenario file {} is empty and will be ignored", scenarioFile.getAbsolutePath());
+            }
             Scenario scenario = new Scenario();
             scenario.setScenarioGroup(group);
             return  scenario;

@@ -61,7 +61,6 @@ public abstract class RestAbstractStepRequester implements StepRequester {
         ClientResponse responseData = call();
 
         stepResult.setActual(responseData.getContent());
-        stepResult.setExpected(step.getExpectedResponse());
 
         // 4. Сохранить полученные значения
         log.debug("Saving scenario variables by JSON XPath");

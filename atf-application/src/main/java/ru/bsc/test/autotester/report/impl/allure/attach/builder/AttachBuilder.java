@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
+
 /**
  * Created by smakarov
  * 30.03.2018 12:17
@@ -40,6 +42,14 @@ public abstract class AttachBuilder<T> {
     public List<Attachment> build(File resultDirectory, T result) {
         return extractors.stream()
                 .map(extractor -> extractor.extract(resultDirectory, result))
+                .filter(Objects::nonNull)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    public List<Attachment> buildAll(File resultDirectory, List<T> results) {
+        return extractors.stream()
+                .flatMap(extractor -> nullSafeStream(results).map(result -> extractor.extract(resultDirectory, result)))
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());

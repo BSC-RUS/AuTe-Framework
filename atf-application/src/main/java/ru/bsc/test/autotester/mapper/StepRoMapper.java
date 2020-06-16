@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
+
 /**
  * Created by sdoroshin on 14.09.2017.
  */
@@ -102,19 +104,32 @@ public abstract class StepRoMapper {
 
     public List<StepResultRo> convertStepResultListToStepResultRoWithDiff(List<StepResult> stepResultList) {
         List<StepResultRo> stepResultRos = convertStepResultListToStepResultRo(stepResultList);
-        if (stepResultRos != null) {
-            stepResultRos.stream()
-                    .filter(Objects::nonNull)
-                    .forEach(s -> s.setDiff(diffCalculator.calculate(s.getActual(), s.getExpected())));
-        }
+        nullSafeStream(stepResultRos)
+            .filter(Objects::nonNull)
+            .forEach(step -> {
+                step.setDiff(diffCalculator.calculate(step.getActual(), step.getExpected()));
+                setDiffForExpectedRequestResults(step.getExpectedRequestResults());
+            });
         return stepResultRos;
     }
 
+    private void setDiffForExpectedRequestResults(List<ExpectedServiceRequestResultRo> expectedRequestResults) {
+        nullSafeStream(expectedRequestResults)
+            .forEach(request -> request.setDiff(diffCalculator.calculateAndTrim(request.getActualRequest().getBody(), request.getExpectedRequest())));
+    }
+
     @Mappings({
-            @Mapping(target = "diff", ignore = true),
-            @Mapping(target = "result", source = "result.text")
+        @Mapping(target = "diff", ignore = true),
+        @Mapping(target = "result", source = "result.text")
     })
     abstract StepResultRo stepResultToStepResultRo(StepResult stepResult);
+
+    @Mappings({
+        @Mapping(target = "diff", ignore = true),
+        @Mapping(target = "actualDiff", ignore = true),
+        @Mapping(target = "expectedDiff", ignore = true)
+    })
+    abstract ExpectedServiceRequestResultRo expectedServiceRequestResultToExpectedServiceRequestResultRo(ExpectedRequestResult expectedRequestResult);
 
     RequestDataRo requestDataToRequestDataRo(RequestData requestData) {
         if ( requestData == null ) {

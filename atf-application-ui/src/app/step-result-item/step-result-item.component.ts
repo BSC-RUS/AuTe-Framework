@@ -28,12 +28,7 @@ import { StepItemComponent } from '../step-item/step-item.component';
 @Component({
   selector: 'app-step-result-item',
   templateUrl: './step-result-item.component.html',
-  styles: [
-    '.nav-tabs > li > a { padding-top: 3px; padding-bottom: 3px; }',
-    '.tab-content { border: 1px solid #ddd; border-top-width: 0;}',
-    '.row { margin-bottom: 5px; }',
-    '.input-group-btn > select { padding: 0; width: 85px; border-top-left-radius: 5px; border-bottom-left-radius: 5px; border-right: 0; }'
-  ]
+  styleUrls: ['./step-result-item.component.css']
 })
 export class StepResultItemComponent implements OnInit {
 
@@ -83,7 +78,10 @@ export class StepResultItemComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe((params: ParamMap) => {
       this.projectCode = params['projectCode'];
-      this.formatText();
+      this.formatText(this, this.stepResult.diff);
+      for (let x = 0; x < this.stepResult.expectedRequestResults.length; x++) {
+        this.formatText(this.stepResult.expectedRequestResults[x], this.stepResult.expectedRequestResults[x].diff);
+      }
     });
 
     this.step = this.stepResult.step;
@@ -91,7 +89,6 @@ export class StepResultItemComponent implements OnInit {
       this.showRestartNotify = true;
       const foundStep = this.stepList.find(s => s.code === this.step.code);
       const diffs = StepService.differ(foundStep, this.step);
-      console.log('diffs = ', diffs);
       if (diffs.length === 0) {
         this.step = foundStep;
         this.readonly = false;
@@ -99,15 +96,14 @@ export class StepResultItemComponent implements OnInit {
     }
   }
 
-  formatText() {
-
-    const diffs: any = this.stepResult.diff;
+  formatText(result, diff) {
+    const diffs: any = diff;
     if (!diffs) {
       return;
     }
 
-    this.expectedDiff = '';
-    this.actualDiff = '';
+    result.expectedDiff = '';
+    result.actualDiff = '';
 
     // выделяем запись в ожидаемых, в случае если прерации EQUAL-INSERT-EQUAL и rownum записей не отличаются
     const expectedChanges: number[] = [];
@@ -129,7 +125,7 @@ export class StepResultItemComponent implements OnInit {
       switch (op) {
         case 'INSERT':
           {
-            this.actualDiff = this.actualDiff.concat(StepResultItemComponent.wrapChanged(text, 'added'));
+            result.actualDiff = result.actualDiff.concat(StepResultItemComponent.wrapChanged(text, 'added'));
             prevOps = prevOps + 'I';
             insertText = text;
             break;
@@ -137,7 +133,7 @@ export class StepResultItemComponent implements OnInit {
         case 'DELETE':
           {
             rowNum = rowNum + text.split('\n').length - 1;
-            this.expectedDiff = this.expectedDiff.concat(StepResultItemComponent.wrapChanged(text, 'removed'));
+            result.expectedDiff = result.expectedDiff.concat(StepResultItemComponent.wrapChanged(text, 'removed'));
             prevOps = '';
             break;
           }
@@ -145,8 +141,8 @@ export class StepResultItemComponent implements OnInit {
           {
             const splitted = text.split('\n');
             rowNum = rowNum + splitted.length - 1;
-            this.actualDiff = this.actualDiff.concat(text);
-            this.expectedDiff = this.expectedDiff.concat(text);
+            result.actualDiff = result.actualDiff.concat(text);
+            result.expectedDiff = result.expectedDiff.concat(text);
             const iLength = insertText.split('\n').filter(v => v.trim() !== '').length;
 
             // последняя строка предпоследнего изменения
@@ -154,7 +150,7 @@ export class StepResultItemComponent implements OnInit {
             const firstCurrent = text.split('\n')[0];
 
             // нам надо выделить строку
-            if (prevOps === 'EI' && iLength > 1 && !this.actualDiff.includes(lastPrev + firstCurrent)) {
+            if (prevOps === 'EI' && iLength > 1 && !result.actualDiff.includes(lastPrev + firstCurrent)) {
               expectedChanges.push(prevRowNum);
             }
             insertText = '';
@@ -166,8 +162,8 @@ export class StepResultItemComponent implements OnInit {
       }
     }
 
-    this.actualDiff = this.wrapChangedLines(this.actualDiff, 'added', 'added-row', []);
-    this.expectedDiff = this.wrapChangedLines(this.expectedDiff, 'removed', 'removed-row', expectedChanges);
+    result.actualDiff = this.wrapChangedLines(result.actualDiff, 'added', 'added-row', []);
+    result.expectedDiff = this.wrapChangedLines(result.expectedDiff, 'removed', 'removed-row', expectedChanges);
 
   }
 

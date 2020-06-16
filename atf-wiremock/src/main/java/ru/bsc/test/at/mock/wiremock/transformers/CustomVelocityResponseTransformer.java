@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.extension.Parameters;
 import com.github.tomakehurst.wiremock.extension.ResponseDefinitionTransformer;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
+import com.github.tomakehurst.wiremock.http.MultiValue;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.codec.binary.Base64.isBase64;
 import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServletRequest.DOUBLE_DASH;
@@ -67,6 +69,7 @@ import static ru.bsc.test.at.mock.filter.utils.MultipartToBase64ConverterServlet
 public class CustomVelocityResponseTransformer extends ResponseDefinitionTransformer {
     private static final String NEW_LINE_VAR = "\r|\n|(\r\n)|(\n\n)|(\r\r)";
 
+    private final UrlParametersExtractor urlExtractor = new UrlParametersExtractor();
     private final Map<String, Map<String, Object>> staticContexts = new HashMap<>();
 
     private final MqProperties properties;
@@ -82,21 +85,25 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         final ResponseDefinition responseDefinition,
         final FileSource files,
         final Parameters parameters
-    ) {
+    ) throws RuntimeException {
         final VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         final ToolManager toolManager = new ToolManager();
         toolManager.setVelocityEngine(velocityEngine);
+
         context = toolManager.createContext();
+        URL url = getRequestUrl(request);
         addBodyToContext(request.getBodyAsString());
         addHeadersToContext(request.getHeaders());
         context.put("requestAbsoluteUrl", request.getAbsoluteUrl());
         context.put("requestUrl", request.getUrl());
         context.put("requestMethod", request.getMethod());
-        context.put("staticContext", getStaticContextFor(request));
+        context.put("queryParams", urlExtractor.extractQueryParameters(url));
+        context.put("pathSegments", urlExtractor.extractPathSegments(url));
+        context.put("staticContext", staticContexts.computeIfAbsent(url.getPath(), k -> new HashMap<>()));
         context.put(ExtendedScript.MQ_PROPERTIES, properties);
-        String body;
 
+        String body;
         if (responseDefinition.specifiesBodyFile() && templateDeclared(responseDefinition)) {
             body = getRenderedBody(responseDefinition);
         } else if (responseDefinition.specifiesBodyContent()) {
@@ -117,12 +124,12 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
         return buildResponse(null, body, responseDefinition, false);
     }
 
-    private Map<String, Object> getStaticContextFor(Request request) {
+    private URL getRequestUrl(Request request) {
         try {
-            String key = new URL(request.getAbsoluteUrl()).getPath();
-            return staticContexts.computeIfAbsent(key, k -> new HashMap<>());
+            return new URL(request.getAbsoluteUrl());
         } catch (MalformedURLException e) {
-            return null;
+            log.error("Invalid url", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -181,11 +188,11 @@ public class CustomVelocityResponseTransformer extends ResponseDefinitionTransfo
     }
 
     private void addHeadersToContext(final HttpHeaders headers) {
-        for (HttpHeader header : headers.all()) {
-            final String rawKey = header.key();
-            final String transformedKey = rawKey.replaceAll("-", "");
-            context.put("requestHeader".concat(transformedKey), header.values().toString());
-        }
+        context.put("headers", headers.all().stream()
+            .collect(Collectors.toMap(
+                MultiValue::key,
+                h -> h.values().size() != 1 ? h.values() : h.values().get(0))
+            ));
     }
 
     private void addBodyToContext(final String body) {

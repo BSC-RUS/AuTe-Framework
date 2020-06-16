@@ -114,6 +114,7 @@
   "Service name": "Название сервиса",
   "Ignored tags": "Игнорируемые теги",
   "Expected request": "Ожидаемый запрос",
+  "Requests to mock": "Запросы к заглушкам",
   "Add saved variable from mock request": "Добавить переменнyю",
   "Mock request var delete": "Удалить переменную",
   "Mock request var name": "Имя переменной",
@@ -197,5 +198,9 @@
   "Response as base64": "Ответ в формате base64",
   "Used in case of several identical requests for one url.": "Используется в случае нескольких одинаковых запросов на один url.",
   "The order is determined within a single url.": "Порядок определяется в пределах одного url.",
-  "0 - no identical requests.": "0 - нет одинаковых запросов."
+  "0 - no identical requests.": "0 - нет одинаковых запросов.",
+  "Unexpected": "Неожидаемый",
+  "Actual requests": "Фактические запросы",
+  "Uncalled expected requests": "Невызванные ожидаемые запросы",
+  "Need calls": "Необходимо вызовов"
 }

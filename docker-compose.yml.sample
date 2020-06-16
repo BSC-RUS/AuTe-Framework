@@ -1,0 +1,21 @@
+version: '3'
+services:
+    atf:
+        container_name: atf-application
+        image: bscmsc/aute-framework:4.13.0
+        volumes:
+            - ./atf/config:/app/config
+            - ./atf/repository:/app/repository
+            - ./atf/allure-plugins:/app/allure-plugins
+        ports:
+            - '8080:8080'
+    wiremock:
+        container_name: atf-wiremock
+        image: bscmsc/aute-wiremock:4.13.0
+        ports:
+            - '1398:1398'
+        volumes:
+            - ./wiremock/mappings:/app/mappings
+            - ./wiremock/jms-mappings:/app/jms-mappings
+        environment:
+            TEST_ID_HEADER: testHeaderId

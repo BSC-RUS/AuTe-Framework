@@ -43,7 +43,7 @@ import java.util.stream.Stream;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
-import static ru.bsc.test.autotester.utils.StreamUtils.nullSafeStream;
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by sdoroshin on 27.10.2017.
@@ -75,11 +75,7 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
     @Override
     public Scenario findScenario(String projectCode, String scenarioPath) throws IOException {
         String[] pathParts = scenarioPath.split("/");
-        return loadScenarioFromFiles(
-                Paths.get(projectsPath, projectCode, "scenarios", scenarioPath).toFile(),
-                pathParts.length > 1 ? pathParts[0] : null,
-                true
-        );
+        return loadScenarioFromFiles(getScenarioFolder(projectCode, scenarioPath), pathParts.length > 1 ? pathParts[0] : null, true);
     }
 
     @Override
@@ -99,15 +95,15 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
             String oldScenarioPath = getScenarioPath(groupPart, codePart);
 
             if (!Objects.equals(newScenarioPath, oldScenarioPath)) {
-                if (Paths.get(projectsPath, projectCode, "scenarios", newScenarioPath).toFile().exists()) {
+                if (getScenarioFolder(projectCode, newScenarioPath).exists()) {
                     throw new IOException("Directory already exists");
                 }
             }
 
-            Path path = Paths.get(projectsPath, projectCode, "scenarios", scenarioPath);
-            if (Files.exists(path)) {
-                File renamed = new File(path.toFile().getParentFile(), data.getCode() + "-" + UUID.randomUUID().toString());
-                boolean canRemove = path.toFile().renameTo(renamed);
+            File scenarioFolder = getScenarioFolder(projectCode, scenarioPath);
+            if (scenarioFolder.exists()) {
+                File renamed = new File(scenarioFolder.getParentFile(), data.getCode() + "-" + UUID.randomUUID().toString());
+                boolean canRemove = scenarioFolder.renameTo(renamed);
                 if (canRemove) {
                     FileUtils.deleteDirectory(renamed);
                 } else {
@@ -115,19 +111,14 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
                 }
             }
         } else {
-            if (Paths.get(projectsPath, projectCode, "scenarios", newScenarioPath).toFile().exists()) {
+            if (getScenarioFolder(projectCode, newScenarioPath).exists()) {
                 throw new IOException("Directory already exists");
             }
         }
 
         data.setCode(newCode);
-        File scenarioFile = Paths.get(
-                projectsPath,
-                projectCode,
-                "scenarios",
-                newScenarioPath,
-                SCENARIO_YML_FILENAME
-        ).toFile();
+        checkExistingScenariosFolder(projectCode);
+        File scenarioFile = getScenarioFile(projectCode, newScenarioPath);
 
         log.info("scenarioFile: {}", scenarioFile);
 
@@ -135,6 +126,25 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
         saveScenarioToFiles(data, scenarioFile);
         data.getStepList().forEach(step -> loadStepFromFiles(step, scenarioRootDirectory));
         return data;
+    }
+
+    private void checkExistingScenariosFolder(String projectCode) throws IOException {
+        Path scenariosPath = Paths.get(projectsPath, projectCode, SCENARIOS_FOLDER_NAME);
+        if (Files.notExists(scenariosPath)) {
+            Files.createDirectory(scenariosPath);
+        }
+    }
+
+    private Path getScenarioFolderPath(String projectCode, String scenarioPath) {
+        return Paths.get(projectsPath, projectCode, SCENARIOS_FOLDER_NAME, scenarioPath);
+    }
+
+    private File getScenarioFolder(String projectCode, String scenarioPath) {
+        return getScenarioFolderPath(projectCode, scenarioPath).toFile();
+    }
+
+    private File getScenarioFile(String projectCode, String scenarioPath) {
+        return Paths.get(projectsPath, projectCode, SCENARIOS_FOLDER_NAME, scenarioPath, SCENARIO_YML_FILENAME).toFile();
     }
 
     private String getScenarioPath(String scenarioGroup, String code) {
@@ -150,14 +160,13 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
 
     @Override
     public void delete(String projectCode, String scenarioPath) throws IOException {
-        Path scenarioDirectory = Paths.get(projectsPath, projectCode, "scenarios", scenarioPath);
-        try (Stream<Path> filesStream = Files.walk(scenarioDirectory, FileVisitOption.FOLLOW_LINKS)) {
+        try (Stream<Path> filesStream = Files.walk(getScenarioFolderPath(projectCode, scenarioPath), FileVisitOption.FOLLOW_LINKS)) {
             filesStream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
         }
     }
 
     private List<Scenario> findScenarios(String projectCode, boolean fetchSteps) {
-        File scenariosDirectory = Paths.get(projectsPath, projectCode, "scenarios").toFile();
+        File scenariosDirectory = Paths.get(projectsPath, projectCode, SCENARIOS_FOLDER_NAME).toFile();
         if (!scenariosDirectory.exists()) {
             return Collections.emptyList();
         }
@@ -167,20 +176,29 @@ public class YamlScenarioRepositoryImpl extends BaseYamlRepository implements Sc
         nullSafeStream(directories).forEach(directory -> {
             File scenarioYml = new File(directory, SCENARIO_YML_FILENAME);
             if (scenarioYml.exists()) {
-                try {
-                    scenarios.add(loadScenarioFromFiles(directory, null, fetchSteps));
-                } catch (IOException e) {
-                    log.error("Read file " + scenarioYml.getAbsolutePath(), e);
+                if(scenarioYml.length() > 0) {
+                    try {
+                        scenarios.add(loadScenarioFromFiles(directory, null, fetchSteps));
+                    } catch(IOException e) {
+                        log.error("Read file " + scenarioYml.getAbsolutePath(), e);
+                    }
+                } else {
+                    log.warn("Scenario file {} is empty and will be ignored", scenarioYml.getAbsolutePath());
                 }
             } else {
                 File[] innerDirectories = directory.listFiles(File::isDirectory);
                 nullSafeStream(innerDirectories)
                     .filter(this::scenarioYmlFileExist)
                     .forEach(scenarioYmlInGroup -> {
-                        try {
-                            scenarios.add(loadScenarioFromFiles(scenarioYmlInGroup, directory.getName(), fetchSteps));
-                        } catch (IOException | ReaderException e) {
-                            log.error("Read file {} {}", scenarioYmlInGroup, e);
+                        File scenarioFile = new File(scenarioYmlInGroup, SCENARIO_YML_FILENAME);
+                        if(scenarioFile.length() > 0) {
+                            try {
+                                scenarios.add(loadScenarioFromFiles(scenarioYmlInGroup, directory.getName(), fetchSteps));
+                            } catch (IOException | ReaderException e) {
+                                log.error("Read file {} {}", scenarioYmlInGroup, e);
+                            }
+                        } else {
+                            log.warn("Scenario file {} is empty and will be ignored", scenarioFile.getAbsolutePath());
                         }
                     });
             }

@@ -16,18 +16,21 @@
 
 <div style="margin-bottom: 20px;">
   <button class="btn btn-default" (click)="detailsToggle()">Details</button>
-  <button class="btn btn-default" [routerLink]="['/jms-mapping/new']">
-    <span class="glyphicon glyphicon-plus"></span>
-    <i>Add mapping</i>
-  </button>
+  <button class="btn btn-default" [routerLink]="['/jms-mapping/new']"><span class="glyphicon glyphicon-plus"></span><i>Add mapping</i></button>
   <button class="btn btn-default" (click)="confirmDeleteSelected()" [disabled]="disabledDeleteSelected || isBusy">Delete selected</button>
+  <button class="btn btn-default" (click)="selectAll()" [disabled]="disabledSelectedAll">{{selectedAll ? 'Remove selected' : 'Select all'}}</button>
 </div>
 <div class="just-padding">
-  <div class="list-group list-group-root well" *ngIf="mappings">
-    <div *ngFor="let group of mappings.groups; let i = index" style="overflow: hidden">
-      <a href= "#item{{i}}" data-toggle="collapse" class="list-group-item">
-        <span class="glyphicon glyphicon-folder-open"></span> {{group.name}}
-      </a>
+  <div class="list-group list-group-root well" *ngIf="mappingList">
+    <div *ngFor="let group of mappingList.groups; let i = index" style="overflow: hidden">
+      <div class="list-group-container">
+        <app-checkbox (toggle)="selectGroup($event, group.name)" [selected]="group.selected"></app-checkbox>
+        <div class="list-group-item-container">
+          <a href="#item{{i}}" data-toggle="collapse" class="list-group-item" data-target="#item{{i}}" role="button">
+            <span class="glyphicon glyphicon-folder-open"></span> {{group.name}}
+          </a>
+        </div>
+      </div>
       <div class="list-group collapse" id="item{{i}}">
         <div class="list-group-container" *ngFor="let mapping of group.messages">
           <app-checkbox [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
@@ -39,7 +42,7 @@
         </div>
       </div>
     </div>
-    <div class="list-group-container" *ngFor="let mapping of mappings.messages">
+    <div class="list-group-container" *ngFor="let mapping of mappingList.messages">
       <app-checkbox [selected]="mapping.selected" (toggle)="onChange($event, mapping)"></app-checkbox>
       <div class="list-group-item-container">
         <a class="list-group-item" [routerLink]="['/jms-mapping', mapping.guid]" [routerLinkActive]="'active'" style="overflow: hidden;">

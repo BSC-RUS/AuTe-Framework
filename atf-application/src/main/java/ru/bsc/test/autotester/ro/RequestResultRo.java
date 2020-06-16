@@ -16,20 +16,21 @@
  * limitations under the License.
  */
 
-package ru.bsc.test.autotester.utils;
+package ru.bsc.test.autotester.ro;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Stream;
+import io.swagger.annotations.ApiModel;
+import lombok.Getter;
+import lombok.Setter;
 
-public class StreamUtils {
+import java.util.*;
 
-	public static <T> Stream<T> nullSafeStream(Collection<T> collection) {
-		return collection == null ? Stream.empty() : collection.stream();
-	}
-
-	public static <T> Stream<T> nullSafeStream(T[] array) {
-		return array == null ? Stream.empty() : Arrays.stream(array);
-	}
-
+@Getter
+@Setter
+@ApiModel
+public class RequestResultRo {
+	private String method;
+	private String source;
+	private String body;
+	private Date loggedDate;
+	private Integer count;
 }

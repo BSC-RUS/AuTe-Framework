@@ -16,28 +16,10 @@
  * limitations under the License.
  */
 
-import {RequestMapping} from './request-mapping';
-import {ResponseMapping} from './response-mapping';
-import {GroupStatus} from './group-status';
 import {CheckboxStatus} from '../app/checkbox/checkbox.component';
 
-export class MappingList {
-  groups: GroupStatus<Mapping>[] = [];
-  messages: Mapping[] = [];
-}
-
-export class Mapping {
-  id: string;
-  request: RequestMapping;
-  response: ResponseMapping;
-  uuid: string;
-  priority: number;
-  scenarioName: string; // аналог group в JmsMapping
+export class GroupStatus<T> {
   name: string;
-  selected?: CheckboxStatus; // select for delete in mapping-list
-
-  constructor() {
-    this.request = new RequestMapping;
-    this.response = new ResponseMapping;
-  }
+  messages: T[];
+  selected: CheckboxStatus;
 }

@@ -25,6 +25,9 @@ import ru.bsc.test.autotester.diff.Diff;
 import ru.bsc.test.autotester.diff.DiffMatchPatch;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by smakarov
@@ -39,6 +42,14 @@ public class JsonDiffCalculator {
     private final RequestResponseFormatter requestResponseFormatter;
 
     public List<Diff> calculate(String actual, String expected) {
+        return dmp.diffMain(requestResponseFormatter.format(expected), requestResponseFormatter.format(actual));
+    }
+
+    public List<Diff> calculateAndTrim(String actual, String expected) {
+        if (expected != null) {
+            String[] lines = expected.split("\n");
+            expected = nullSafeStream(lines).map(String::trim).collect(Collectors.joining(""));
+        }
         return dmp.diffMain(requestResponseFormatter.format(expected), requestResponseFormatter.format(actual));
     }
 }

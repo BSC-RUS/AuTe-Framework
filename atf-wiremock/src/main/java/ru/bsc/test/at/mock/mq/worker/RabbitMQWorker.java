@@ -18,19 +18,14 @@
 
 package ru.bsc.test.at.mock.mq.worker;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.lang3.StringUtils;
+import ru.bsc.test.at.mock.mq.JmsMessageHeadersExtractor;
 import ru.bsc.test.at.mock.mq.components.MqProperties;
 import ru.bsc.test.at.mock.mq.http.HttpClient;
-import ru.bsc.test.at.mock.mq.models.MockMessage;
-import ru.bsc.test.at.mock.mq.models.MockMessageResponse;
-import ru.bsc.test.at.mock.mq.models.MockedRequest;
+import ru.bsc.test.at.mock.mq.models.*;
 import ru.bsc.velocity.transformer.VelocityTransformer;
 
 import java.io.IOException;
@@ -104,51 +99,67 @@ public class RabbitMQWorker extends AbstractMqWorker {
                 String testId = properties.getHeaders().get(getTestIdHeaderName()) == null ? null : properties.getHeaders().get(getTestIdHeaderName()).toString();
                 mockedRequest.setTestId(testId);
 
-                MockMessage mockMessage = findMockMessage(testId, stringBody);
-                log.debug("found mock message: {}", mockMessage);
-                if (mockMessage != null) {
-                    mockedRequest.setMappingGuid(mockMessage.getGuid());
-                    for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
-                        byte[] response;
-
-                        if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
-                            response = velocityTransformer.transform(mockMessage.getGuid(), stringBody, null, mockResponse.getResponseBody()).getBytes();
-                        } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
-                            try (HttpClient httpClient = new HttpClient()) {
-                                response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
-                            }
-                            mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
-                        } else {
-                            response = body;
-                        }
-
-                        mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
-
-                        //noinspection ConstantConditions
-                        if (isNotEmpty(mockResponse.getDestinationQueueName()) && response != null) {
-                            mockedRequest.setResponseBody(new String(response, StandardCharsets.UTF_8));
-
-                            try (Channel channel = connection.createChannel()) {
-                                channel.basicPublish("", mockResponse.getDestinationQueueName(), properties, response);
-                                log.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), new String(response, StandardCharsets.UTF_8));
-                            } catch (TimeoutException e) {
-                                log.error("Caught:", e);
-                            }
-                        }
-                    }
-                } else {
-                    // Переслать сообщение в очередь "по-умолчанию".
-                    String defaultQueue = getProperties().getDefaultDestinationQueueName();
-                    mockedRequest.setDestinationQueue(defaultQueue);
-                    if (isNotEmpty(defaultQueue)) {
-                        mockedRequest.setResponseBody(stringBody);
-                        channelTo.basicPublish("", defaultQueue, properties, body);
-                        log.info(" [x] Send >>> {} '{}'", defaultQueue, new String(body, StandardCharsets.UTF_8));
+                try {
+                    MockMessage mockMessage = findMockMessage(testId, stringBody);
+                    log.debug("found mock message: {}", mockMessage);
+                    if (mockMessage != null) {
+                        sendMockMessage(mockedRequest, mockMessage, properties, body, stringBody, testId);
                     } else {
-                        log.info(" [x] Send >>> ***black hole***");
+                        sendMessageToDefaultQueue(mockedRequest, properties, body, stringBody);
                     }
+                } catch (Exception e) {
+                    log.error("Error while sending mock message: properties - {}, body - {}", properties, body, e);
                 }
             }
         });
+    }
+
+    private void sendMockMessage(MockedRequest mockedRequest, MockMessage mockMessage, AMQP.BasicProperties properties, byte[] body, String stringBody, String testId) throws IOException {
+
+        mockedRequest.setMappingGuid(mockMessage.getGuid());
+        for (MockMessageResponse mockResponse : mockMessage.getResponses()) {
+            byte[] response;
+
+            if (StringUtils.isNotEmpty(mockResponse.getResponseBody())) {
+                JmsMessageHeadersExtractor extractor = new JmsMessageHeadersExtractor();
+                response = velocityTransformer
+                    .transform(mockMessage.getGuid(), stringBody, extractor.createContext(properties.getHeaders(), body), mockResponse.getResponseBody())
+                    .getBytes();
+            } else if (StringUtils.isNotEmpty(mockMessage.getHttpUrl())) {
+                try (HttpClient httpClient = new HttpClient()) {
+                    response = httpClient.sendPost(mockMessage.getHttpUrl(), new String(body, StandardCharsets.UTF_8), getTestIdHeaderName(), testId).getBytes();
+                }
+                mockedRequest.setHttpRequestUrl(mockMessage.getHttpUrl());
+            } else {
+                response = body;
+            }
+
+            mockedRequest.setDestinationQueue(mockResponse.getDestinationQueueName());
+
+            //noinspection ConstantConditions
+            if (isNotEmpty(mockResponse.getDestinationQueueName()) && response != null) {
+                mockedRequest.setResponseBody(new String(response, StandardCharsets.UTF_8));
+
+                try (Channel channel = connection.createChannel()) {
+                    channel.basicPublish("", mockResponse.getDestinationQueueName(), properties, response);
+                    log.info(" [x] Send >>> {} '{}'", mockResponse.getDestinationQueueName(), new String(response, StandardCharsets.UTF_8));
+                } catch (TimeoutException e) {
+                    log.error("Caught:", e);
+                }
+            }
+        }
+    }
+
+    private void sendMessageToDefaultQueue(MockedRequest mockedRequest, AMQP.BasicProperties properties, byte[] body, String stringBody) throws IOException {
+        // Переслать сообщение в очередь "по-умолчанию".
+        String defaultQueue = getProperties().getDefaultDestinationQueueName();
+        mockedRequest.setDestinationQueue(defaultQueue);
+        if (isNotEmpty(defaultQueue)) {
+            mockedRequest.setResponseBody(stringBody);
+            channelTo.basicPublish("", defaultQueue, properties, body);
+            log.info(" [x] Send >>> {} '{}'", defaultQueue, new String(body, StandardCharsets.UTF_8));
+        } else {
+            log.info(" [x] Send >>> ***black hole***");
+        }
     }
 }

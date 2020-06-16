@@ -38,7 +38,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 import static java.util.stream.Collectors.toList;
-import static ru.bsc.test.autotester.utils.StreamUtils.nullSafeStream;
+import static ru.bsc.test.at.executor.utils.StreamUtils.nullSafeStream;
 
 /**
  * Created by sdoroshin on 27.10.2017.
@@ -81,6 +81,10 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
                 log.debug("Reading directory: {}", projectDirectory.getAbsolutePath());
                 File mainYml = new File(projectDirectory, MAIN_YML_FILENAME);
                 if (!mainYml.exists()) {
+                    continue;
+                }
+                if (mainYml.length() == 0) {
+                    log.warn("Main file {} is empty and will be ignored", mainYml.getAbsolutePath());
                     continue;
                 }
 
@@ -135,7 +139,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
             FileUtils.deleteDirectory(Paths.get(
                     environmentProperties.getProjectsDirectoryPath(),
                     project.getCode(),
-                    "scenarios",
+                    SCENARIOS_FOLDER_NAME,
                     group).toFile());
             project.getGroupList().remove(group);
 
@@ -147,7 +151,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         File file = Paths.get(
                 environmentProperties.getProjectsDirectoryPath(),
                 projectCode,
-                "scenarios",
+                SCENARIOS_FOLDER_NAME,
                 groupName
         ).toFile();
         if (file.exists()) {
@@ -164,7 +168,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         File file = Paths.get(
                 environmentProperties.getProjectsDirectoryPath(),
                 projectCode,
-                "scenarios",
+                SCENARIOS_FOLDER_NAME,
                 oldGroupName
         ).toFile();
         if (new File(file, SCENARIO_YML_FILENAME).exists() || !file.isDirectory()) {
@@ -173,7 +177,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
             File newGroupDirectory = Paths.get(
                     environmentProperties.getProjectsDirectoryPath(),
                     projectCode,
-                    "scenarios",
+                    SCENARIOS_FOLDER_NAME,
                     newGroupName
             ).toFile();
             if (!file.renameTo(newGroupDirectory)) {
@@ -186,6 +190,10 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         log.debug("Reading directory: {}", directory.getAbsolutePath());
         File mainYml = new File(directory, MAIN_YML_FILENAME);
         if (!mainYml.exists()) {
+            return null;
+        }
+        if (mainYml.length() == 0) {
+            log.warn("Main file {} is empty and will be ignored", mainYml.getAbsolutePath());
             return null;
         }
         try {
@@ -236,7 +244,7 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
     }
 
     private List<String> readGroups(File projectDirectory){
-        File scenariosDirectory = new File(projectDirectory, "scenarios");
+        File scenariosDirectory = new File(projectDirectory, SCENARIOS_FOLDER_NAME);
         if (!scenariosDirectory.exists()) {
             return new ArrayList<>();
         }
@@ -260,30 +268,39 @@ public class YamlProjectRepositoryImpl extends BaseYamlRepository implements Pro
         File file = Paths.get(
                 environmentProperties.getProjectsDirectoryPath(),
                 project.getCode(),
-                "scenarios"
+                SCENARIOS_FOLDER_NAME
         ).toFile();
         File[] fileList = file.listFiles(File::isDirectory);
         if (fileList != null) {
             for (File directory : fileList) {
                 File scenarioYml = new File(directory, SCENARIO_YML_FILENAME);
                 if (scenarioYml.exists()) {
-                    try {
-                        project.getScenarioList().add(loadScenarioFromFiles(directory, null));
-                    } catch (IOException e) {
-                        log.error("Read file {}", scenarioYml.getAbsolutePath(), e);
+                    if(scenarioYml.length() > 0) {
+                        try {
+                            project.getScenarioList().add(loadScenarioFromFiles(directory, null));
+                        } catch(IOException e) {
+                            log.error("Read file {}", scenarioYml.getAbsolutePath(), e);
+                        }
+                    } else {
+                        log.warn("Scenario file {} is empty and will be ignored", scenarioYml.getAbsolutePath());
                     }
                 } else {
                     File[] innerFileList = directory.listFiles(File::isDirectory);
                     if (innerFileList != null) {
                         for (File scenarioYmlInGroup : innerFileList) {
-                            if (new File(scenarioYmlInGroup, SCENARIO_YML_FILENAME).exists()) {
-                                try {
-                                    project.getScenarioList().add(loadScenarioFromFiles(
-                                            scenarioYmlInGroup,
-                                            directory.getName()
-                                    ));
-                                } catch (IOException e) {
-                                    log.error("Read file {}", scenarioYmlInGroup, e);
+                            File scenarioFile = new File(scenarioYmlInGroup, SCENARIO_YML_FILENAME);
+                            if (scenarioFile.exists()) {
+                                if(scenarioFile.length() > 0) {
+                                    try {
+                                        project.getScenarioList().add(loadScenarioFromFiles(
+                                                scenarioYmlInGroup,
+                                                directory.getName()
+                                        ));
+                                    } catch (IOException e) {
+                                        log.error("Read file {}", scenarioYmlInGroup, e);
+                                    }
+                                } else {
+                                    log.warn("Scenario file {} is empty and will be ignored", scenarioFile.getAbsolutePath());
                                 }
                             }
                         }

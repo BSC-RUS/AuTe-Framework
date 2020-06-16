@@ -20,7 +20,8 @@
   <input
     style="margin: 8px 6px 8px 0;"
     type="checkbox"
-    [(ngModel)]="selected"
-    (change)="onToggle()"
+    [indeterminate]="selected === 2"
+    [ngModel]="selected"
+    (change)="onToggle($event)"
   />
 </div>

@@ -39,8 +39,11 @@
         <li [class.active]="tab == 'details'"><a href="#" (click)="selectTab('details')">{{'Details' | translate}}</a></li>
         <li *ngIf="stepResult.editable" [class.active]="tab == 'stepEdit'"><a href="#" (click)="selectTab('stepEdit')">{{'Step' | translate}}</a></li>
         <li [class.active]="tab == 'requests'"><a href="#" (click)="selectTab('requests')">{{'Requests' | translate}} ({{stepResult.requestDataList?.length}})</a></li>
+        <li *ngIf="stepResult.expectedRequestResults.length != 0" [class.active]="tab == 'expectedRequests'">
+          <a href="#" (click)="selectTab('expectedRequests')">{{'Requests to mock' | translate}}</a>
+        </li>
       </ul>
-      <div class="tab-content" style="padding: 10px;">
+      <div class="tab-content" style="padding: 10px;background: white">
         <div *ngIf="tab == 'requests' || tab == 'all'">
           <div class="row">
             <div class="col-sm-12" style="color: gray;">
@@ -75,7 +78,7 @@
                   {{stepResult.savedParameters}}
                 </pre>
               </div>
-              
+
               <div>
                 <b>{{'Cookies' | translate}}:</b>
                 <pre style="white-space: normal; border: none; color: gray;">
@@ -106,7 +109,7 @@
             </div>
             <div class="clearfix"></div>
             <div class="col-sm-6">
-              <label>Actual</label> <br/>
+              <label>{{'Actual' | translate}}</label> <br/>
               {{'Status of actual response' | translate}}: {{stepResult.status}} <br/>
               <div class="form-control"
                    #actualResult
@@ -115,7 +118,7 @@
               </div>
             </div>
             <div class="col-sm-6">
-              <label>Expected</label> <br/>
+              <label>{{'Expected' | translate}}</label> <br/>
               <br/>
               <div class="form-control"
                    #expectedResult
@@ -144,6 +147,70 @@
             <button disabled class="btn btn-xs btn-success">{{'Save step' | translate}}</button>
             <span style="margin-top: 2px; margin-left: 6px;" *ngIf="showRestartNotify">{{'Step was changed. Restart scenario.' | translate}}</span>
             <span style="margin-top: 2px; margin-left: 6px;" *ngIf="!showRestartNotify">{{'Readonly mode. Open scenario details to edit.' | translate}}</span>
+          </div>
+        </div>
+        <div *ngIf="(tab == 'expectedRequests' || tab == 'all') && (stepResult.uncalledExpectedRequests.length != 0 || stepResult.expectedRequestResults.length != 0)">
+          <div *ngIf="stepResult.expectedRequestResults.length != 0">
+            <div style="font-weight: bold; margin-bottom: 5px">{{'Actual requests' | translate}}</div>
+            <div class="request-element" *ngFor="let result of stepResult.expectedRequestResults">
+              <input id="{{result.actualRequest.source}}{{result.actualRequest.loggedDate}}" type="checkbox" name="tabs">
+              <label for="{{result.actualRequest.source}}{{result.actualRequest.loggedDate}}" class="request-element-header">
+                <div class="request-element-header-method" [class.red]="result.hasDiff || !result.expected">
+                  {{result.actualRequest.method}}
+                </div>
+                {{result.actualRequest.source}}
+                <div class="request-element-header-time" [class.red]="result.hasDiff || !result.expected">
+                  {{result.actualRequest.loggedDate|date:'HH:mm:ss'}}
+                </div>
+                <div *ngIf="!result.expected" class="request-element-header-expected">
+                  {{'Unexpected' | translate}}
+                </div>
+              </label>
+              <div class="request-element-content">
+                <div class="row">
+                  <div class="col-sm-6" style="padding-right: 1px">
+                    <label class="request-element-table-header">{{'Actual' | translate}}</label>
+                    <div class="form-control"
+                      #actualResult
+                      style="overflow: auto; height: 600px;"
+                      [appSyncScroll]="expectedResult" innerHTML="<pre class='pretransparent'>{{result.actualDiff}}</pre>">
+                    </div>
+                  </div>
+                  <div class="col-sm-6" style="padding-left: 1px">
+                    <label class="request-element-table-header">{{'Expected' | translate}}</label>
+                    <div class="form-control"
+                      #expectedResult
+                      style="overflow: auto; height: 600px;"
+                      [appSyncScroll]="actualResult" innerHTML="<pre class='pretransparent'>{{result.expectedDiff}}</pre>">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="stepResult.uncalledExpectedRequests.length != 0">
+            <div style="font-weight: bold; margin-bottom: 5px; margin-top: 10px">{{'Uncalled expected requests' | translate}}</div>
+            <div class="request-element" *ngFor="let uncalledExpectedRequest of stepResult.uncalledExpectedRequests">
+              <input id="{{uncalledExpectedRequest.source}}" type="checkbox" name="tabs">
+              <label for="{{uncalledExpectedRequest.source}}" class="request-element-header">
+                <div class="request-element-header-method">{{uncalledExpectedRequest.method}}</div>
+                {{uncalledExpectedRequest.source}}
+                <div class="request-element-header-time">
+                  {{'Need calls' | translate}} - {{uncalledExpectedRequest.count}}
+                </div>
+              </label>
+              <div class="request-element-content">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <label class="request-element-table-header">{{'Expected' | translate}}</label>
+                    <div class="form-control"
+                      style="overflow: auto; height: 600px;"
+                      innerHTML="<pre class='pretransparent'>{{uncalledExpectedRequest.body}}</pre>">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

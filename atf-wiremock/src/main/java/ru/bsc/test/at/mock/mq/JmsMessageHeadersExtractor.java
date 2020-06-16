@@ -27,6 +27,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
+import static ru.bsc.test.at.mock.mq.utils.MessageUtils.extractBodyFromByte;
+
 /**
  * Created by smakarov
  * 05.07.2019 13:00
@@ -44,6 +46,16 @@ public class JmsMessageHeadersExtractor {
         headers.put(HEADERS_OUT_KEY, new HashMap<>());
         context.put(HEADERS_KEY, headers);
         context.put(BODY_KEY, MessageUtils.extractMessageBody(message));
+        return context;
+    }
+
+    public Map<String, Object> createContext(Map<String, Object> messageHeaders, byte[] body) {
+        Map<String, Object> context = new HashMap<>();
+        Map<Object, Object> headers = new HashMap<>();
+        headers.put(HEADERS_IN_KEY, Collections.unmodifiableMap(messageHeaders));
+        headers.put(HEADERS_OUT_KEY, new HashMap<>());
+        context.put(HEADERS_KEY, headers);
+        context.put(BODY_KEY, extractBodyFromByte(body));
         return context;
     }
 

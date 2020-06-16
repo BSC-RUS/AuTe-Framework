@@ -16,24 +16,38 @@
  * limitations under the License.
  */
 
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, Output} from '@angular/core';
+
+export enum CheckboxStatus {
+  FALSE = 0,
+  TRUE = 1,
+  INDETERMINATE = 2
+}
 
 @Component({
   selector: 'app-checkbox',
   templateUrl: './checkbox.component.html'
 })
-export class CheckboxComponent implements OnInit {
-  @Input() selected: boolean;
-  @Output() toggle = new EventEmitter<boolean>();
+export class CheckboxComponent {
 
-  constructor(
-  ) {
+  @Input()
+  selected: CheckboxStatus;
+  @Output()
+  toggle = new EventEmitter<CheckboxStatus>();
+
+  private setStatus(v: any) {
+    if (v.indeterminate) {
+      this.selected = CheckboxStatus.INDETERMINATE;
+    } else if (v.checked) {
+      this.selected = CheckboxStatus.TRUE;
+    } else {
+      this.selected = CheckboxStatus.FALSE;
+    }
   }
 
-  ngOnInit() {
-  }
+  onToggle(e: any) {
+    this.setStatus(e.target);
 
-  onToggle() {
     this.toggle.emit(this.selected);
   }
 }

@@ -20,6 +20,8 @@ package ru.bsc.test.at.executor.step.executor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.helper.client.impl.http.HttpClient;
 import ru.bsc.test.at.executor.helper.client.impl.mq.MqClient;
@@ -35,11 +37,9 @@ import ru.bsc.test.at.executor.step.executor.requester.StepRequester;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 import static ru.bsc.test.at.executor.model.StepMode.REST;
 import static ru.bsc.test.at.executor.model.StepMode.REST_ASYNC;
@@ -117,11 +117,24 @@ public class RestStepExecutor implements IStepExecutor {
             return stand.getServiceUrl();
         }
         String stepUrl = ExecutorUtils.insertSavedValues(step.getRelativeUrl(), scenarioVariables);
+        stepUrl = encodeUrl(stepUrl);
         try {
             return new URI(stepUrl).isAbsolute() ? stepUrl : stand.getServiceUrl() + stepUrl;
         } catch (URISyntaxException e) {
             return stand.getServiceUrl() + stepUrl;
         }
+    }
+
+    private String encodeUrl(String url) {
+        if (url != null && url.contains("?")) {
+            int startParam = url.indexOf("?");
+            String baseUrl = url.substring(0, startParam + 1);
+            String paramsUrl = url.substring(startParam + 1, url.length());
+            List<NameValuePair> paramsList = URLEncodedUtils.parse(paramsUrl, StandardCharsets.UTF_8);
+            paramsUrl = URLEncodedUtils.format(paramsList, StandardCharsets.UTF_8);
+            return baseUrl + paramsUrl;
+        }
+        return url;
     }
 
     private Map<String, String> generateHeaders(String template, Map<String, Object> scenarioVariables) {

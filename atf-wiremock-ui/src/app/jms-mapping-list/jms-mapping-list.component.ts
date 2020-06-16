@@ -17,9 +17,10 @@
 import {Component, OnInit} from '@angular/core';
 import {WireMockService} from '../../service/wire-mock.service';
 import {EventService} from '../../service/event-service';
-import {JmsMapping, JmsMappings} from '../../model/jms-mapping';
+import {JmsMapping, JmsMappingList} from '../../model/jms-mapping';
 import {Router} from '@angular/router';
 import {MessageService} from '../../service/message-service';
+import {CheckboxStatus} from '../checkbox/checkbox.component';
 
 @Component({
   selector: 'app-jms-mapping-list',
@@ -27,9 +28,11 @@ import {MessageService} from '../../service/message-service';
 })
 export class JmsMappingListComponent implements OnInit {
 
-  mappings: JmsMappings;
+  mappingList: JmsMappingList;
   displayDetails = false;
   disabledDeleteSelected = true;
+  disabledSelectedAll = true;
+  selectedAll = false;
   isBusy = false;
 
   constructor(
@@ -49,8 +52,20 @@ export class JmsMappingListComponent implements OnInit {
     });
   }
 
-  getMappings() {
-    this.wireMockService.getJmsMappings().then(mappings => this.mappings = mappings);
+  /**
+   * Функция получения маппингов.
+   * @description Получение маппингов.
+   **/
+  async getMappings() {
+    this.isBusy = true;
+    try {
+      this.mappingList = await this.wireMockService.getJmsMappings();
+    } catch (e) {
+      console.warn(e);
+    } finally {
+      this.isBusy = false;
+      this.changeStatusButtons();
+    }
   }
 
   detailsToggle() {
@@ -58,21 +73,101 @@ export class JmsMappingListComponent implements OnInit {
   }
 
   /**
+   * Функция изменения состояния кнопок удаления и выделения.
+   * @description Ищет есть ли выбранные маппинги и изменяет статусы кнопок.
+   **/
+  changeStatusButtons() {
+    const predicate = el => el.selected === CheckboxStatus.TRUE;
+    const isNotSelected = el => (el.selected === CheckboxStatus.FALSE || el.selected === undefined);
+    const isEmpty = !(this.mappingList.messages.length + this.mappingList.groups.length);
+
+    // Если маппингов нет, то кнопки блокируются
+    if (!isEmpty) {
+      this.disabledDeleteSelected = !(
+        this.mappingList.messages.some(predicate) ||
+        (this.mappingList.groups.some(group => (group.selected !== undefined && group.selected !== CheckboxStatus.FALSE)))
+      );
+      this.disabledSelectedAll = false;
+      this.selectedAll = !(
+        this.mappingList.messages.some(isNotSelected) ||
+        this.mappingList.groups.some(group => (group.selected !== CheckboxStatus.TRUE))
+      );
+    } else {
+      this.disabledDeleteSelected = this.disabledSelectedAll = true;
+    }
+  }
+
+  /**
+   * Функция выделения всех маппингов.
+   * @description Отметка всех маппингов.
+   * Изменение статуса кнопки "Выделить все".
+   * Изменение статуса кнопки удаления.
+   **/
+  selectAll() {
+    this.selectedAll = !this.selectedAll;
+
+    const select = mapping => mapping.selected = CheckboxStatus.TRUE;
+    const remove = mapping => mapping.selected = CheckboxStatus.FALSE;
+
+    this.mappingList.groups.forEach(group => {
+      group.selected = this.selectedAll ? CheckboxStatus.TRUE : CheckboxStatus.FALSE;
+      group.messages.forEach(mapping => {
+        mapping.selected = group.selected;
+      });
+    });
+    this.mappingList.messages.forEach(this.selectedAll ? select : remove);
+
+    this.disabledDeleteSelected = !this.selectedAll;
+  }
+
+  /**
+   * Функция выделения группы маппингов.
+   * @description Отметка всех зависимых маппингов.
+   * Изменение статуса кнопки удаления.
+   * checked приведится к логическому типу, так как может поступить значение 'indeterminate'.
+   *
+   * @param {CheckboxStatus} checked
+   * @param {string} groupName
+   **/
+  selectGroup(checked: CheckboxStatus, groupName: string): void {
+    const groupList = this.mappingList.groups.find(group => group.name === groupName);
+
+    groupList.selected = checked;
+    groupList.messages.forEach(mapping => {
+      mapping.selected = groupList.selected;
+    });
+
+    this.changeStatusButtons();
+  }
+
+  /**
    * Функция для отметки маппинга на удаление.
    * @description Отмечает выбранный маппинг на удаление.
+   * Изменяет состояние кнопки "Выделить все".
    * Разблокирует/блокирует кнопку для удаления выбранных маппингов.
+   * Изменяет состояние чекбокса зависимой группы.
    *
-   * @param {boolean} checked
+   * @param {CheckboxStatus} checked
    * @param {JmsMapping} mapping
    **/
-  onChange(checked: boolean, mapping: JmsMapping): void {
+  onChange(checked: CheckboxStatus, mapping: JmsMapping): void {
     mapping.selected = checked;
 
-    this.disabledDeleteSelected = !(
-      (this.mappings.messages && (this.mappings.messages.some(el => el.selected))) ||
-      (this.mappings.groups && this.mappings.groups.length &&
-        this.mappings.groups.some(group => group.messages.some(el => el.selected)))
-    );
+    const mappingList = this.mappingList.groups.find(group => group.name === mapping.group);
+    const isSelected = el => (el.selected !== CheckboxStatus.FALSE && el.selected !== undefined);
+
+    if (mappingList) {
+      // Проверка на checked нужна для ускорения работы, чтобы избегать лишних переборов массива
+      if (checked && mappingList.messages.every(isSelected)) {
+        mappingList.selected = CheckboxStatus.TRUE;
+      } else if (checked || mappingList.messages.some(isSelected)) {
+        mappingList.selected = CheckboxStatus.INDETERMINATE;
+      } else {
+        mappingList.selected = CheckboxStatus.FALSE;
+      }
+    }
+
+    this.changeStatusButtons();
   }
 
   /**
@@ -90,7 +185,7 @@ export class JmsMappingListComponent implements OnInit {
 
   /**
    * Функция для удаления выбранных маппингов.
-   * @description Из mappings выбираются маппинги с отметкой selected.
+   * @description Из mappingList выбираются маппинги с отметкой selected.
    * Создается messageService переменная для изменения уведомлений и их состояния.
    * Блокируется кнопка удаления на время выполнения запросов.
    * Если получившийся массив selected содержит элементы, то одновременно отправляются запросы на удаление для этих маппингов.
@@ -99,11 +194,11 @@ export class JmsMappingListComponent implements OnInit {
    * Если список selected пуст, то выводится предупреждение.
    **/
   async deleteSelected() {
-    // Выбор из mappings.messages маппингов на удаление
-    let selected: JmsMapping[] = this.mappings.messages.filter(mapping => mapping.selected);
-    // Выбор из mappings.groups маппингов на удаление
-    if (this.mappings.groups) {
-      this.mappings.groups.forEach(group => {
+    // Выбор из mappingList.messages маппингов на удаление
+    let selected: JmsMapping[] = this.mappingList.messages.filter(mapping => mapping.selected);
+    // Выбор из mappingList.groups маппингов на удаление
+    if (this.mappingList.groups) {
+      this.mappingList.groups.forEach(group => {
         selected = selected.concat(group.messages.filter(mapping => mapping.selected));
       });
     }
@@ -123,7 +218,7 @@ export class JmsMappingListComponent implements OnInit {
         console.warn(e);
       } finally {
         if (this.router.isActive('/jms-mapping', true)) {
-          this.getMappings();
+          await this.getMappings();
         } else {
           await this.router.navigate(['/jms-mapping']);
         }
@@ -133,7 +228,7 @@ export class JmsMappingListComponent implements OnInit {
         this.messageService.success('Маппинги успешно удалены');
 
         this.isBusy = false;
-        this.disabledDeleteSelected = true;
+        this.changeStatusButtons();
       }
     } else {
       this.messageService.error('Не выбраны JMS-маппинги');

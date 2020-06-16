@@ -68,4 +68,9 @@ public class StepResultRo {
 
     @ApiModelProperty("List of actual requests made while step executing")
     private List<RequestDataRo> requestDataList;
+
+    @ApiModelProperty
+    private List<ExpectedServiceRequestResultRo> expectedRequestResults;
+    @ApiModelProperty
+    private List<RequestResultRo> uncalledExpectedRequests;
 }

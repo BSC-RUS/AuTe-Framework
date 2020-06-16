@@ -25,23 +25,14 @@ import ru.bsc.test.at.executor.ei.wiremock.WireMockAdmin;
 import ru.bsc.test.at.executor.exception.ScenarioStopException;
 import ru.bsc.test.at.executor.helper.MqMockHelper;
 import ru.bsc.test.at.executor.helper.ServiceRequestsComparatorHelper;
-import ru.bsc.test.at.executor.model.Project;
-import ru.bsc.test.at.executor.model.Stand;
-import ru.bsc.test.at.executor.model.Step;
-import ru.bsc.test.at.executor.model.StepParameterSet;
-import ru.bsc.test.at.executor.model.StepResult;
+import ru.bsc.test.at.executor.model.*;
 import ru.bsc.test.at.executor.service.api.Executor;
 import ru.bsc.test.at.executor.service.api.StepExecutorRequest;
 import ru.bsc.test.at.executor.step.executor.IStepExecutor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
@@ -99,11 +90,15 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
 
                         IStepExecutor stepExecutor = findStepExecutor(step);
                         stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
-                        stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
+                        try {
+                            stepExecutor.execute(wireMockAdmin, stepExecutorRequest.getConnection(), stepExecutorRequest.getStand(), stepExecutorRequest.getHttpClient(), stepExecutorRequest.getMqClient(), stepExecutorRequest.getScenarioVariables(), testId, stepExecutorRequest.getProject(), stepExecutorRequest.getScenario(), step, stepResult, stepExecutorRequest.getProjectPath());
+                        } catch (Exception ex) {
+                            getExpectedRequestIfAssertException(ex, stepExecutorRequest, wireMockAdmin, step, testId, stepResult);
+                        }
 
                         delayUtilities.waitWiremockDelayFromGroovyScripts(step);
-                        serviceRequestsComparatorHelper.assertTestCaseWSRequests(stepExecutorRequest.getProject(), stepExecutorRequest.getScenarioVariables(), wireMockAdmin, testId, step);
-                        mqMockHelper.assertMqRequests(wireMockAdmin, testId, step, stepExecutorRequest.getScenarioVariables(), stepExecutorRequest.getProject().getMqCheckCount(), stepExecutorRequest.getProject().getMqCheckInterval());
+                        serviceRequestsComparatorHelper.assertTestCaseWSRequests(stepExecutorRequest.getProject(), stepExecutorRequest.getScenarioVariables(), wireMockAdmin, testId, step, stepResult);
+                        mqMockHelper.assertMqRequests(wireMockAdmin, testId, step, stepExecutorRequest.getScenarioVariables(), stepExecutorRequest.getProject().getMqCheckCount(), stepExecutorRequest.getProject().getMqCheckInterval(), stepResult);
 
                         stepResult.setSavedParameters(stepExecutorRequest.getScenarioVariables().toString());
                         stepResult.setResult(StepResult.StepResultType.OK);
@@ -126,6 +121,19 @@ public class AtStepExecutor implements Executor<StepExecutorRequest> {
                 }
             }
         }
+    }
+
+    private void getExpectedRequestIfAssertException(Exception ex, StepExecutorRequest stepExecutorRequest, WireMockAdmin wireMockAdmin, Step step, String testId, StepResult stepResult) throws Exception {
+        try {
+            boolean diffStatus = ex.getMessage() != null && ex.getMessage().startsWith("Expected status code");
+            if (ex.getCause() instanceof AssertionError || diffStatus) {
+                serviceRequestsComparatorHelper.assertTestCaseWSRequests(stepExecutorRequest.getProject(), stepExecutorRequest.getScenarioVariables(), wireMockAdmin, testId, step, stepResult);
+                mqMockHelper.assertMqRequests(wireMockAdmin, testId, step, stepExecutorRequest.getScenarioVariables(), stepExecutorRequest.getProject().getMqCheckCount(), stepExecutorRequest.getProject().getMqCheckInterval(), stepResult);
+            }
+        } catch (Exception e) {
+            log.error("[{}] Error during expectedRequest", step.getCode(), ex);
+        }
+        throw ex;
     }
 
     private List<StepParameterSet> getParametersEnvironment(List<StepParameterSet> parametersFromStep) {

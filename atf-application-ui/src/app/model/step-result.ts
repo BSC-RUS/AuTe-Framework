@@ -18,6 +18,8 @@
 
 import {Step} from './step';
 import {RequestData} from '../request-data';
+import {ExpectedRequestResult} from './expected-request-result';
+import {RequestResult} from './request-result';
 
 export class StepResult {
   testId: string;
@@ -38,4 +40,6 @@ export class StepResult {
   cookies: string;
   requestDataList: RequestData[];
   sqlQueryList: string[];
+  expectedRequestResults: ExpectedRequestResult[];
+  uncalledExpectedRequests: RequestResult[];
 }
