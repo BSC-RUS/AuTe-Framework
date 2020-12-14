@@ -19,7 +19,7 @@ Name | Description
 ## Build and run AuTe Framework ##
 1. Clone project
 1. Build project with install nodeJS packages `mvn clean package -P npm-install`
-1. Create working directory for application
+1. Create a working directory for application
 1. Place in working directory:
     * *atf-application-version.jar*
     * *env.yml* from [sample](atf-application/src/main/resources/env.yml.sample)

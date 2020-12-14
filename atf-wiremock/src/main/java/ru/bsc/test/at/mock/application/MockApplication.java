@@ -30,6 +30,9 @@ import com.github.tomakehurst.wiremock.servlet.MultipartRequestConfigurer;
 import com.github.tomakehurst.wiremock.servlet.NotImplementedContainer;
 import com.github.tomakehurst.wiremock.servlet.WarConfiguration;
 import com.github.tomakehurst.wiremock.servlet.WireMockHandlerDispatchingServlet;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -44,6 +47,8 @@ import ru.bsc.test.at.mock.filter.CorsFilter;
 import ru.bsc.test.at.mock.mq.components.MqProperties;
 import ru.bsc.test.at.mock.wiremock.transformers.CustomVelocityResponseTransformer;
 import ru.bsc.test.at.mock.wiremock.webcontextlistener.configuration.CustomWarConfiguration;
+import ru.bsc.velocity.directive.GroovyDirective;
+import ru.bsc.velocity.directive.XPathDirective;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.builders.ResponseMessageBuilder;
@@ -52,16 +57,24 @@ import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
+import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Properties;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static ru.bsc.test.at.mock.wiremock.Constants.VELOCITY_PROPERTIES;
 import static springfox.documentation.schema.AlternateTypeRules.newRule;
 
-
-@SpringBootApplication(scanBasePackages = "ru.bsc.test.at.mock")
+@Slf4j
 @EnableSwagger2
+@SpringBootApplication(scanBasePackages = "ru.bsc.test.at.mock")
 public class MockApplication {
 
     private static final String APP_CONTEXT_KEY = "WireMockApp";
@@ -75,7 +88,26 @@ public class MockApplication {
     }
 
     public static void main(String[] args) {
+        Velocity.init(getVelocityProperties());
         SpringApplication.run(new Class[]{MockApplication.class, SpringWebConfig.class}, args);
+    }
+
+    private static Properties getVelocityProperties() {
+        final Properties properties = new Properties();
+        final String directives = Stream.of(XPathDirective.class, GroovyDirective.class)
+            .map(Class::getName)
+            .collect(Collectors.joining(","));
+
+        properties.setProperty("userdirective", directives);
+        properties.setProperty(RuntimeConstants.RESOURCE_LOADER, "file");
+        properties.setProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, "." + File.separator + "velocity");
+
+        try (final InputStream stream = Files.newInputStream(Paths.get(VELOCITY_PROPERTIES.getValue()))) {
+            properties.load(stream);
+        } catch (Exception e) {
+            log.warn("Error while loading properties: {}. Using default values", e.getMessage());
+        }
+        return properties;
     }
 
     @Bean
